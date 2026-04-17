@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
-const REVEAL_DATE = new Date('2025-05-02T18:00:00-03:00')
-const SECRET_PASSWORD = 'TROCAR_ANTES_DE_ENTREGAR'
+const REVEAL_DATE = new Date('2026-05-02T18:00:00-03:00')
+const SECRET_PASSWORD = 'nana123'
 const MAX_WRONG = 3
 
 interface TimeLeft {
@@ -131,10 +131,64 @@ export default function Countdown({ onReveal }: { onReveal: () => void }) {
               localStorage.setItem('app-revealed', 'true')
               onReveal()
             }}
-            className="mt-2 px-10 py-3 rounded-xl font-semibold text-base transition-all hover:scale-105 active:scale-95 shadow-sm"
-            style={{ backgroundColor: '#e8a0b0', color: '#5a2a3a', border: '1.5px solid #d4889a' }}
+            className="mt-2 font-bold text-base transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
+            style={{
+              padding: '0.5rem 1rem',
+              color: '#5a2e0e',
+              textShadow: '0 1px 0 #e8c49866',
+              letterSpacing: '0.04em',
+              borderRadius: '12px',
+              background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+              boxShadow: '0 4px 12px #8b5a2a55, inset 0 1px 0 #e8b07844',
+              border: '2.5px solid #8b5a2a',
+            }}
           >
-            Vamos lá? 🌱
+            <svg
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 160 48"
+              preserveAspectRatio="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 28 Q30 18 55 26 Q75 32 95 24 Q115 16 148 26"
+                stroke="#8b5a2a"
+                strokeWidth="1.2"
+                fill="none"
+                opacity="0.35"
+              />
+              <path
+                d="M8 36 Q35 28 60 34 Q85 40 110 32 Q130 26 150 34"
+                stroke="#8b5a2a"
+                strokeWidth="1"
+                fill="none"
+                opacity="0.25"
+              />
+              <path
+                d="M20 20 Q40 14 65 20 Q80 24 100 18"
+                stroke="#8b5a2a"
+                strokeWidth="0.9"
+                fill="none"
+                opacity="0.2"
+              />
+              <path
+                d="M60 30 Q65 24 72 30 Q68 36 60 30"
+                stroke="#8b5a2a"
+                strokeWidth="0.9"
+                fill="none"
+                opacity="0.3"
+              />
+              <path
+                d="M105 22 Q112 17 118 23 Q113 28 105 22"
+                stroke="#8b5a2a"
+                strokeWidth="0.8"
+                fill="none"
+                opacity="0.25"
+              />
+            </svg>
+            <span className="relative z-10 flex items-center gap-3">
+              <span>Vamos lá?</span>
+            </span>
           </button>
         </div>
       </div>
@@ -248,7 +302,7 @@ export default function Countdown({ onReveal }: { onReveal: () => void }) {
           </div>
         </div>
 
-        {/* Input secreto invisível */}
+        {/* Input secreto */}
         {showInput && (
           <input
             ref={inputRef}
@@ -256,12 +310,15 @@ export default function Countdown({ onReveal }: { onReveal: () => void }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handlePasswordSubmit}
-            onBlur={() => {
-              setShowInput(false)
-              setPassword('')
-            }}
-            className="w-2 h-2 opacity-0 absolute"
             autoComplete="off"
+            className="rounded-lg px-3 py-2 text-sm text-center outline-none"
+            style={{
+              background: '#fce8ee99',
+              border: '1.5px solid #e8a0b0',
+              color: '#7a4a5a',
+              width: '140px',
+            }}
+            placeholder="🔑"
           />
         )}
 

@@ -1,6 +1,6 @@
 {
-  "name": "template-desktop",
-  "version": "0.1.0",
+  "name": "leafnote",
+  "version": "1.0.0",
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {
@@ -40,8 +40,8 @@
     "vite-plugin-electron-renderer": "^0.14.0"
   },
   "build": {
-    "appId": "com.template.desktop",
-    "productName": "Template Desktop",
+    "appId": "com.leafnote.app",
+    "productName": "leafnote",
     "directories": {
       "output": "release"
     },
