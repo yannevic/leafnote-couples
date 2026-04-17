@@ -1,13 +1,18 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --color-bg: #0f0f0f;
-  --color-surface: #1a1a1a;
-  --color-border: #2a2a2a;
-  --color-text: #e0e0e0;
-  --color-text-muted: #888888;
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
+@theme {
+  --color-leaf-950: #1a2a1a;
+  --color-leaf-800: #2d4a2d;
+  --color-leaf-600: #4a7a4a;
+  --color-leaf-400: #7fb87f;
+  --color-leaf-100: #e8f5e8;
+  --color-petal-400: #e8a0b0;
+  --color-petal-200: #f5d5dc;
+  --color-bark-700: #8b6914;
+  --color-bark-100: #f5ecd7;
+  --color-wood-400: #c4956a;
+  --color-wood-300: #d4aa80;
+  --color-soil-900: #2c1810;
 }
 
 * {
@@ -17,26 +22,75 @@
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar customizada */
-::-webkit-scrollbar {
-  width: 6px;
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #7fb87f transparent;
+}
+.scrollbar-custom::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #7fb87f;
+  border-radius: 999px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #4a7a4a;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
+/* Pétalas caindo */
+@keyframes petalFall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+@keyframes petalSway {
+  0%,
+  100% {
+    margin-left: 0px;
+  }
+  50% {
+    margin-left: 30px;
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+.petal {
+  position: fixed;
+  top: -20px;
+  font-size: 1.2rem;
+  animation:
+    petalFall linear infinite,
+    petalSway ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Pulso suave no contador */
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.colon-pulse {
+  animation: softPulse 1s ease-in-out infinite;
 }
