@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../lib/firebase'
+import { updateProfile } from 'firebase/auth'
 import {
   BoardItemType,
   AnyBoardItem,
@@ -64,9 +65,20 @@ export default function Board() {
   const boardRef = useRef<HTMLDivElement>(null)
 
   const uid = user?.uid ?? 'anon'
-  const displayName = user?.displayName ?? user?.email?.split('@')[0] ?? 'você'
+  const displayName = user?.displayName ?? ''
   // nome do outro usuário: se eu sou "nana" o outro é "gueguel" e vice-versa (simples por ora)
   const otherName = displayName.toLowerCase() === 'nana' ? 'gueguel' : 'nana'
+  const [nickSaved, setNickSaved] = useState(!!user?.displayName)
+  const [nickInput, setNickInput] = useState('')
+  const [nickLoading, setNickLoading] = useState(false)
+
+  const handleSaveNick = async () => {
+    if (!nickInput.trim() || !user) return
+    setNickLoading(true)
+    await updateProfile(user, { displayName: nickInput.trim() })
+    setNickSaved(true)
+    setNickLoading(false)
+  }
 
   const nextZOrder = () => Math.max(0, ...items.map((i) => i.zOrder ?? 0)) + 1
 
@@ -227,6 +239,73 @@ export default function Board() {
   )
 
   const sortedItems = [...items].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0))
+  if (!nickSaved) {
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ background: 'linear-gradient(160deg, #f0f7f0 0%, #e8f5e8 60%, #f5f0e8 100%)' }}
+      >
+        <div
+          style={{
+            background: '#f2faf2',
+            border: '1px solid #d8eed8',
+            borderRadius: 20,
+            padding: '2rem 2.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14,
+            alignItems: 'center',
+            fontFamily: 'Baloo 2, sans-serif',
+            minWidth: 300,
+          }}
+        >
+          <span style={{ fontSize: 36 }}>🌱</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#2d4a2d' }}>
+            qual é o seu apelido?
+          </div>
+          <input
+            autoFocus
+            type="text"
+            placeholder="ex: nana, gueguel"
+            value={nickInput}
+            onChange={(e) => setNickInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveNick()
+            }}
+            style={{
+              background: '#eaf5ea',
+              border: '1.5px solid #a8d8a8',
+              borderRadius: 10,
+              padding: '0.75rem 1.1rem',
+              fontSize: 13,
+              color: '#2d4a2d',
+              outline: 'none',
+              width: '100%',
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          />
+          <button
+            onClick={handleSaveNick}
+            disabled={nickLoading}
+            style={{
+              padding: '0.45rem 1.4rem',
+              color: '#5a2e0e',
+              fontWeight: 700,
+              borderRadius: 10,
+              background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+              boxShadow: '0 3px 10px #8b5a2a44',
+              border: '2px solid #8b5a2a',
+              cursor: 'pointer',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontSize: 13,
+            }}
+          >
+            {nickLoading ? '...' : 'salvar 🌿'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
