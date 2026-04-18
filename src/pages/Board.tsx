@@ -3,6 +3,7 @@ import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
+
 import {
   BoardItemType,
   AnyBoardItem,
@@ -19,6 +20,8 @@ import Tag from '../components/Tag'
 import Letter from '../components/Letter'
 import DrawingSheet from '../components/DrawingSheet'
 import { DrawingItem } from '../types/board'
+import { usePresence } from '../hooks/usePresence'
+import PresenceBadge from '../components/PresenceBadge'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -85,6 +88,7 @@ export default function Board() {
   const displayName = user?.displayName ?? ''
   // nome do outro usuário: se eu sou "nana" o outro é "gueguel" e vice-versa (simples por ora)
   const otherName = displayName.toLowerCase() === 'nana' ? 'gueguel' : 'nana'
+  const { nanaPresence, gueguelPresence } = usePresence(uid, displayName)
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
   const [nickLoading, setNickLoading] = useState(false)
@@ -494,6 +498,8 @@ export default function Board() {
           {timeStr} · {dateStr}
         </span>
       </div>
+
+      <PresenceBadge nanaPresence={nanaPresence} gueguelPresence={gueguelPresence} />
 
       {/* Toolbar */}
       <Toolbar
