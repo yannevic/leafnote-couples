@@ -11,6 +11,7 @@ import {
   LetterItem,
 } from '../types/board'
 import Toolbar from '../components/Toolbar'
+import StreakCounter from '../components/StreakCounter'
 import PostIt from '../components/PostIt'
 import Checklist from '../components/Checklist'
 import Tag from '../components/Tag'
@@ -369,6 +370,7 @@ export default function Board() {
         onSelect={setSelectedTool}
         onToggleEdit={() => setEditMode((e) => !e)}
       />
+      <StreakCounter />
     </div>
   )
 }
