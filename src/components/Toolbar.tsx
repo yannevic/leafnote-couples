@@ -16,9 +16,9 @@ const TOOLS: Tool[] = [
 ]
 
 interface Props {
-  selected: BoardItemType
+  selected: BoardItemType | null
   editMode: boolean
-  onSelect: (tool: BoardItemType) => void
+  onSelect: (tool: BoardItemType | null) => void
   onToggleEdit: () => void
 }
 
@@ -32,8 +32,8 @@ export default function Toolbar({ selected, editMode, onSelect, onToggleEdit }: 
     setPos((p) => ({ ...p, y: window.innerHeight / 2 - 27 }))
   }, [])
 
-  const currentTool = TOOLS.find((t) => t.type === selected)!
-  const mainIcon = editMode ? '🖐️' : currentTool.icon
+  const currentTool = TOOLS.find((t) => t.type === selected) ?? null
+  const mainIcon = editMode ? '🖐️' : (currentTool?.icon ?? '❤️')
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -160,7 +160,9 @@ export default function Toolbar({ selected, editMode, onSelect, onToggleEdit }: 
                 height: 42,
                 borderRadius: '50%',
                 border:
-                  isSelected && open ? '2.5px solid rgba(255,255,255,0.8)' : '2px solid #8b5a2a',
+                  isSelected && open && selected !== null
+                    ? '2.5px solid rgba(255,255,255,0.8)'
+                    : '2px solid #8b5a2a',
                 background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
                 boxShadow:
                   isSelected && open
@@ -281,7 +283,9 @@ export default function Toolbar({ selected, editMode, onSelect, onToggleEdit }: 
             transform: open ? 'scale(1.08)' : 'scale(1)',
           }}
         >
-          {mainIcon}
+          <span style={{ position: 'relative', zIndex: 2, lineHeight: 1, marginTop: 6 }}>
+            {mainIcon}
+          </span>
           <svg
             aria-hidden="true"
             style={{

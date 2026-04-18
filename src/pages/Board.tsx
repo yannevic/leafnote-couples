@@ -58,7 +58,7 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
 export default function Board() {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
-  const [selectedTool, setSelectedTool] = useState<BoardItemType>('postit')
+  const [selectedTool, setSelectedTool] = useState<BoardItemType | null>(null)
   const [editMode, setEditMode] = useState(false)
   const { saveItem, deleteItem } = useBoard(items, setItems)
   const boardRef = useRef<HTMLDivElement>(null)
@@ -90,6 +90,7 @@ export default function Board() {
   const handleBoardClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (editMode) return
+      if (!selectedTool) return
       const target = e.target as HTMLElement
       const tag = target.tagName.toLowerCase()
       const isBackground =
@@ -112,6 +113,7 @@ export default function Board() {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
       } else if (selectedTool === 'checklist') {
         const item: ChecklistItem = {
           ...makeBase('checklist', x, y),
@@ -121,6 +123,7 @@ export default function Board() {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
       } else if (selectedTool === 'tag') {
         const item: TagItem = {
           ...makeBase('tag', x, y),
@@ -130,6 +133,7 @@ export default function Board() {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
       } else if (selectedTool === 'letter') {
         const item: LetterItem = {
           ...makeBase('letter', x, y),
@@ -141,6 +145,7 @@ export default function Board() {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
       } else if (selectedTool === 'drawing') {
         const item: DrawingItem = {
           ...makeBase('drawing', x, y),
@@ -149,6 +154,7 @@ export default function Board() {
         }
         setItems((prev) => [...prev, item])
         saveItem(item)
+        setSelectedTool(null)
       }
     },
     [editMode, selectedTool, uid, displayName, otherName, items]
