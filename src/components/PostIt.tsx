@@ -1,0 +1,498 @@
+import { useState, useRef, useCallback } from 'react'
+import { PostItItem } from '../types/board'
+
+export const COLOR_MAP: Record<
+  string,
+  { bg: string; border: string; title: string; name: string }
+> = {
+  yellow: { bg: '#fef08a', border: '#d4b800', title: '#5a3e00', name: 'amarelo' },
+  pink: { bg: '#fda4b4', border: '#e8607a', title: '#6b1030', name: 'rosa' },
+  green: { bg: '#86efac', border: '#22a855', title: '#14532d', name: 'verde' },
+  blue: { bg: '#93c5fd', border: '#3b82f6', title: '#1e3a5f', name: 'azul' },
+  lavender: { bg: '#c4b5fd', border: '#7c3aed', title: '#2e1065', name: 'lilás' },
+  peach: { bg: '#fdba74', border: '#ea6c00', title: '#5a2200', name: 'pêssego' },
+}
+
+const COLOR_KEYS = Object.keys(COLOR_MAP)
+
+interface Props {
+  item: PostItItem
+  editMode: boolean
+  zIndex: number
+  onUpdate: (id: string, data: Partial<PostItItem>) => void
+  onDelete: (id: string) => void
+  onBringForward: (id: string) => void
+  onSendBackward: (id: string) => void
+  onFocus: (id: string) => void
+}
+
+export default function PostIt({
+  item,
+  editMode,
+  zIndex,
+  onUpdate,
+  onDelete,
+  onBringForward,
+  onSendBackward,
+  onFocus,
+}: Props) {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
+  const colors = COLOR_MAP[item.color] ?? COLOR_MAP.yellow
+
+  // altura adaptável: mínimo 120, cresce com o conteúdo
+  const isExpanded = !item.compacted && !!item.content
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!editMode) return
+      onFocus(item.id)
+      dragRef.current = {
+        dragging: true,
+        moved: false,
+        sx: e.clientX,
+        sy: e.clientY,
+        px: item.x,
+        py: item.y,
+      }
+      e.preventDefault()
+      const onMove = (ev: MouseEvent) => {
+        const d = dragRef.current
+        if (!d.dragging) return
+        const dx = ev.clientX - d.sx
+        const dy = ev.clientY - d.sy
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true
+        onUpdate(item.id, { x: d.px + dx, y: d.py + dy })
+      }
+      const onUp = () => {
+        dragRef.current.dragging = false
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [editMode, item.x, item.y, item.id, onUpdate, onFocus]
+  )
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (editMode || dragRef.current.moved) return
+    dragRef.current.moved = false
+    setModalOpen(true)
+  }
+
+  return (
+    <>
+      <div
+        data-item
+        onMouseDown={onMouseDown}
+        onClick={handleClick}
+        onMouseEnter={() => setShowMenu(true)}
+        onMouseLeave={() => setShowMenu(false)}
+        style={{
+          position: 'absolute',
+          left: item.x,
+          top: item.y,
+          width: isExpanded ? item.width * 1.4 : item.width,
+          minHeight: item.height,
+          height: item.compacted ? 120 : undefined,
+          background: colors.bg,
+          border: `1.5px solid ${colors.border}`,
+          borderRadius: 4,
+          padding: '16px 12px 12px',
+          boxShadow: '3px 5px 14px rgba(44,20,8,0.22)',
+          cursor: editMode ? 'grab' : 'pointer',
+          userSelect: 'none',
+          fontFamily: 'Baloo 2, sans-serif',
+          zIndex,
+          overflow: isExpanded ? 'visible' : 'hidden',
+          transition: 'width 0.2s ease, height 0.2s ease',
+        }}
+      >
+        {/* fita */}
+        <div
+          style={{
+            position: 'absolute',
+            top: -8,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 38,
+            height: 16,
+            background: 'rgba(255,255,200,0.6)',
+            border: '1px solid rgba(200,180,0,0.25)',
+            borderRadius: 3,
+          }}
+        />
+
+        {/* botões de contexto em modo edição */}
+        {editMode && showMenu && (
+          <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3 }}>
+            <CtxBtn
+              label="↑"
+              title="à frente"
+              onClick={(e) => {
+                e.stopPropagation()
+                onBringForward(item.id)
+              }}
+            />
+            <CtxBtn
+              label="↓"
+              title="atrás"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSendBackward(item.id)
+              }}
+            />
+            <CtxBtn
+              label={item.compacted ? '↕' : '↔'}
+              title={item.compacted ? 'expandir' : 'compactar'}
+              onClick={(e) => {
+                e.stopPropagation()
+                onUpdate(item.id, { compacted: !item.compacted })
+              }}
+            />
+            <CtxBtn
+              label="✕"
+              title="deletar"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(item.id)
+              }}
+            />
+          </div>
+        )}
+
+        {item.title && (
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 11,
+              color: colors.title,
+              marginBottom: 3,
+              lineHeight: 1.3,
+            }}
+          >
+            {item.title}
+          </div>
+        )}
+        <div
+          style={{
+            fontSize: 10,
+            color: '#3d2408',
+            lineHeight: 1.5,
+            opacity: item.content ? 1 : 0.35,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            overflow: item.compacted ? 'hidden' : 'visible',
+            display: item.compacted ? '-webkit-box' : 'block',
+            WebkitLineClamp: item.compacted ? 4 : undefined,
+            WebkitBoxOrient: item.compacted ? 'vertical' : undefined,
+          }}
+        >
+          {item.content || 'clique pra abrir'}
+        </div>
+      </div>
+
+      {modalOpen && (
+        <PostItModal item={item} onUpdate={onUpdate} onClose={() => setModalOpen(false)} />
+      )}
+    </>
+  )
+}
+
+function CtxBtn({
+  label,
+  title,
+  onClick,
+}: {
+  label: string
+  title: string
+  onClick: (e: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      style={{
+        width: 18,
+        height: 18,
+        borderRadius: '50%',
+        background: 'rgba(44,20,8,0.2)',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: 9,
+        color: '#3d2408',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function PostItModal({
+  item,
+  onUpdate,
+  onClose,
+}: {
+  item: PostItItem
+  onUpdate: (id: string, data: Partial<PostItItem>) => void
+  onClose: () => void
+}) {
+  const isNew = item.content === '' && !item.title
+  const [editing, setEditing] = useState(isNew)
+  const [title, setTitle] = useState(item.title ?? '')
+  const [content, setContent] = useState(item.content)
+  const [color, setColor] = useState<PostItItem['color']>(item.color)
+  const colors = COLOR_MAP[color] ?? COLOR_MAP.yellow
+
+  const handleSave = () => {
+    onUpdate(item.id, { title: title.trim() || undefined, content, color })
+    setEditing(false)
+  }
+
+  const handleCancel = () => {
+    if (isNew) {
+      onClose()
+    } else {
+      setTitle(item.title ?? '')
+      setContent(item.content)
+      setColor(item.color)
+      setEditing(false)
+    }
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(44,20,8,0.4)',
+        zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 380,
+          background: colors.bg,
+          border: `2px solid ${colors.border}`,
+          borderRadius: 12,
+          boxShadow: '0 16px 48px rgba(44,20,8,0.28)',
+          fontFamily: 'Baloo 2, sans-serif',
+          overflow: 'hidden',
+          animation: 'popIn 0.25s cubic-bezier(.34,1.56,.64,1)',
+        }}
+      >
+        <style>{`
+          @keyframes popIn {
+            from { transform: scale(0.88) translateY(16px); opacity: 0; }
+            to   { transform: scale(1) translateY(0); opacity: 1; }
+          }
+        `}</style>
+
+        {/* fita decorativa */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: 6,
+            marginBottom: -8,
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <div
+            style={{
+              width: 52,
+              height: 18,
+              background: 'rgba(255,255,200,0.65)',
+              border: '1px solid rgba(200,180,0,0.3)',
+              borderRadius: 3,
+            }}
+          />
+        </div>
+
+        <div style={{ padding: '20px 22px 22px' }}>
+          {editing ? (
+            <>
+              {/* seletor de cor */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14, justifyContent: 'center' }}>
+                {COLOR_KEYS.map((key) => (
+                  <button
+                    key={key}
+                    title={COLOR_MAP[key].name}
+                    onClick={() => setColor(key as PostItItem['color'])}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: COLOR_MAP[key].bg,
+                      border:
+                        color === key
+                          ? `2.5px solid ${COLOR_MAP[key].title}`
+                          : `1.5px solid ${COLOR_MAP[key].border}`,
+                      cursor: 'pointer',
+                      boxShadow:
+                        color === key
+                          ? `0 0 0 2px ${COLOR_MAP[key].bg}, 0 0 0 4px ${COLOR_MAP[key].border}`
+                          : 'none',
+                      transform: color === key ? 'scale(1.2)' : 'scale(1)',
+                      transition: 'transform 0.12s',
+                    }}
+                  />
+                ))}
+              </div>
+
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="título (opcional)"
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.45)',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 8,
+                  padding: '8px 12px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: colors.title,
+                  outline: 'none',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  marginBottom: 10,
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              <textarea
+                autoFocus
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="escreva aqui... 🌸"
+                style={{
+                  width: '100%',
+                  minHeight: 150,
+                  background: 'rgba(255,255,255,0.45)',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  fontSize: 13,
+                  color: '#3d2408',
+                  outline: 'none',
+                  resize: 'vertical',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  lineHeight: 1.6,
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    background: 'none',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 8,
+                    padding: '6px 14px',
+                    fontSize: 11,
+                    color: colors.title,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    background: colors.border,
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '6px 16px',
+                    fontSize: 11,
+                    color: '#fff',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  salvar ✓
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {item.title && (
+                <div
+                  style={{ fontWeight: 700, fontSize: 14, color: colors.title, marginBottom: 8 }}
+                >
+                  {item.title}
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: 13,
+                  color: '#3d2408',
+                  lineHeight: 1.6,
+                  minHeight: 80,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {content || <span style={{ opacity: 0.35 }}>post-it vazio...</span>}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: 16,
+                }}
+              >
+                <button
+                  onClick={onClose}
+                  style={{
+                    background: 'none',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 8,
+                    padding: '6px 14px',
+                    fontSize: 11,
+                    color: colors.title,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  fechar
+                </button>
+                <button
+                  onClick={() => setEditing(true)}
+                  style={{
+                    background: colors.border,
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '6px 16px',
+                    fontSize: 11,
+                    color: '#fff',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  editar ✏️
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

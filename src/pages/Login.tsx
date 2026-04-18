@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   browserLocalPersistence,
   setPersistence,
+  updateProfile,
 } from 'firebase/auth'
 
 type Mode = 'login' | 'register'
@@ -13,18 +14,24 @@ export default function Login() {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit() {
     setError('')
+    if (mode === 'register' && nickname.trim() === '') {
+      setError('coloca seu apelido aí 🍃')
+      return
+    }
     setLoading(true)
     try {
       await setPersistence(auth, browserLocalPersistence)
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password)
       } else {
-        await createUserWithEmailAndPassword(auth, email, password)
+        const cred = await createUserWithEmailAndPassword(auth, email, password)
+        await updateProfile(cred.user, { displayName: nickname.trim() })
       }
     } catch (e) {
       const raw =
@@ -49,14 +56,12 @@ export default function Login() {
       className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
       style={{ background: 'linear-gradient(160deg, #f0f7f0 0%, #e8f5e8 60%, #f5f0e8 100%)' }}
     >
-      {/* Flores decorativas de canto */}
       <div className="fixed top-6 left-8 text-4xl opacity-20 select-none">🌿</div>
       <div className="fixed top-8 right-10 text-3xl opacity-20 select-none">🌱</div>
       <div className="fixed bottom-8 left-12 text-3xl opacity-20 select-none">🍃</div>
       <div className="fixed bottom-6 right-8 text-4xl opacity-20 select-none">🌾</div>
 
       <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-sm px-8">
-        {/* Topo */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-4xl">🌱</span>
           <h1 className="text-2xl font-bold" style={{ color: '#2d4a2d' }}>
@@ -67,7 +72,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Card */}
         <div
           className="flex flex-col gap-4 rounded-2xl"
           style={{
@@ -78,6 +82,25 @@ export default function Login() {
             width: '360px',
           }}
         >
+          {mode === 'register' && (
+            <input
+              type="text"
+              placeholder="seu apelido (ex: nana, gueguel)"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoComplete="nickname"
+              className="rounded-xl outline-none"
+              style={{
+                background: '#eaf5ea',
+                border: '1.5px solid #a8d8a8',
+                color: '#2d4a2d',
+                padding: '0.85rem 1.2rem',
+                fontSize: '0.9rem',
+                width: '100%',
+              }}
+            />
+          )}
           <input
             type="email"
             placeholder="email"
@@ -119,7 +142,6 @@ export default function Login() {
             </p>
           )}
 
-          {/* Botão tronco */}
           <button
             onClick={handleSubmit}
             disabled={loading}
@@ -133,7 +155,6 @@ export default function Login() {
               background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
               boxShadow: '0 3px 10px #8b5a2a44, inset 0 1px 0 #e8b07844',
               border: '2px solid #8b5a2a',
-              cursor: 'pointer',
             }}
           >
             <svg
@@ -171,14 +192,13 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Trocar modo */}
         <button
           onClick={() => {
             setMode(mode === 'login' ? 'register' : 'login')
             setError('')
           }}
           className="text-xs transition-opacity hover:opacity-80 cursor-pointer"
-          style={{ color: '#4a7a4a', cursor: 'pointer' }}
+          style={{ color: '#4a7a4a' }}
         >
           {mode === 'login' ? 'primeira vez aqui? cria sua conta' : 'já tem conta? entra aqui'}
         </button>
