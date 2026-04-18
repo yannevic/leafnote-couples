@@ -225,8 +225,370 @@ function TulipSVG({ stage, wilted }: { stage: number; wilted: boolean }) {
     </svg>
   )
 }
+function MargaridaSVG({ stage, wilted }: { stage: number; wilted: boolean }) {
+  const gray = wilted ? 'grayscale(1) opacity(0.5)' : 'none'
+  return (
+    <svg
+      viewBox="0 0 100 200"
+      width="160"
+      height="280"
+      style={{ filter: gray, transition: 'filter 0.8s' }}
+    >
+      <defs>
+        <linearGradient id="soil-g2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#8B5E3C" />
+          <stop offset="100%" stopColor="#5C3A1E" />
+        </linearGradient>
+        <linearGradient id="pot-g2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C4956A" />
+          <stop offset="100%" stopColor="#8B5A2A" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M18 125 L8 160 Q8 168 18 168 L82 168 Q92 168 92 160 L82 125Z"
+        fill="url(#pot-g2)"
+        stroke="#7a4a20"
+        strokeWidth="1"
+      />
+      <ellipse
+        cx="50"
+        cy="125"
+        rx="32"
+        ry="8"
+        fill="url(#soil-g2)"
+        stroke="#7a4a20"
+        strokeWidth="1"
+      />
+      {stage >= 1 && (
+        <g>
+          <ellipse cx="50" cy="121" rx="7" ry="5" fill="#8B6914" stroke="#5C3A1E" strokeWidth="1" />
+          <path
+            d="M50 121 Q54 116 58 118"
+            stroke="#4a7a4a"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {stage >= 2 && (
+        <path d="M50 123 L50 90" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage >= 3 && (
+        <path d="M50 123 L50 65" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage >= 4 && (
+        <path d="M50 123 L50 50" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage === 2 && (
+        <g>
+          <path
+            d="M50 98 Q42 92 40 85 Q48 88 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 98 Q58 92 60 85 Q52 88 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage === 3 && (
+        <g>
+          <path
+            d="M50 100 Q36 88 30 72 Q44 80 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 100 Q64 88 70 72 Q56 80 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 82 Q40 72 38 60 Q50 66 50 79"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 82 Q60 72 62 60 Q50 66 50 79"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage >= 4 && (
+        <g>
+          <path
+            d="M50 98 Q38 90 28 86"
+            stroke="#4a7a4a"
+            strokeWidth="1.8"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 98 Q62 90 72 86"
+            stroke="#4a7a4a"
+            strokeWidth="1.8"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 108 Q32 96 24 80 Q42 88 50 103"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 108 Q68 96 76 80 Q58 88 50 103"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M28 86 Q18 76 16 62 Q28 70 30 84"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M72 86 Q82 76 84 62 Q72 70 70 84"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 72 Q38 62 36 48 Q50 56 50 69"
+            fill="#c8e8a0"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 72 Q62 62 64 48 Q50 56 50 69"
+            fill="#c8e8a0"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage >= 5 && (
+        <g>
+          {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+            <g key={deg} transform={`rotate(${deg} 50 45)`}>
+              <ellipse
+                cx="50"
+                cy="31"
+                rx="4.5"
+                ry="12"
+                fill="white"
+                stroke="#ccc"
+                strokeWidth="0.8"
+              />
+            </g>
+          ))}
+          <circle cx="50" cy="45" r="9" fill="#fdd835" stroke="#f9a825" strokeWidth="1" />
+          <circle cx="50" cy="45" r="4.5" fill="#f57f17" />
+        </g>
+      )}
+    </svg>
+  )
+}
+
+function GirassolSVG({ stage, wilted }: { stage: number; wilted: boolean }) {
+  const gray = wilted ? 'grayscale(1) opacity(0.5)' : 'none'
+  return (
+    <svg
+      viewBox="0 0 100 200"
+      width="160"
+      height="280"
+      style={{ filter: gray, transition: 'filter 0.8s' }}
+    >
+      <defs>
+        <linearGradient id="soil-g3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#8B5E3C" />
+          <stop offset="100%" stopColor="#5C3A1E" />
+        </linearGradient>
+        <linearGradient id="pot-g3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C4956A" />
+          <stop offset="100%" stopColor="#8B5A2A" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M18 125 L8 160 Q8 168 18 168 L82 168 Q92 168 92 160 L82 125Z"
+        fill="url(#pot-g3)"
+        stroke="#7a4a20"
+        strokeWidth="1"
+      />
+      <ellipse
+        cx="50"
+        cy="125"
+        rx="32"
+        ry="8"
+        fill="url(#soil-g3)"
+        stroke="#7a4a20"
+        strokeWidth="1"
+      />
+      {stage >= 1 && (
+        <g>
+          <ellipse cx="50" cy="121" rx="7" ry="5" fill="#8B6914" stroke="#5C3A1E" strokeWidth="1" />
+          <path
+            d="M50 121 Q54 116 58 118"
+            stroke="#4a7a4a"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {stage >= 2 && (
+        <path d="M50 123 L50 90" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage >= 3 && (
+        <path d="M50 123 L50 65" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage >= 4 && (
+        <path d="M50 123 L50 50" stroke="#4a7a4a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      {stage === 2 && (
+        <g>
+          <path
+            d="M50 98 Q42 92 40 85 Q48 88 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 98 Q58 92 60 85 Q52 88 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage === 3 && (
+        <g>
+          <path
+            d="M50 100 Q36 88 30 72 Q44 80 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 100 Q64 88 70 72 Q56 80 50 95"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 82 Q40 72 38 60 Q50 66 50 79"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 82 Q60 72 62 60 Q50 66 50 79"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage >= 4 && (
+        <g>
+          <path
+            d="M50 98 Q38 90 28 86"
+            stroke="#4a7a4a"
+            strokeWidth="1.8"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 98 Q62 90 72 86"
+            stroke="#4a7a4a"
+            strokeWidth="1.8"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 108 Q32 96 24 80 Q42 88 50 103"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 108 Q68 96 76 80 Q58 88 50 103"
+            fill="#7fb87f"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M28 86 Q18 76 16 62 Q28 70 30 84"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M72 86 Q82 76 84 62 Q72 70 70 84"
+            fill="#a0d080"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 72 Q38 62 36 48 Q50 56 50 69"
+            fill="#c8e8a0"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M50 72 Q62 62 64 48 Q50 56 50 69"
+            fill="#c8e8a0"
+            stroke="#4a7a4a"
+            strokeWidth="0.8"
+          />
+        </g>
+      )}
+      {stage >= 5 && (
+        <g>
+          {[
+            0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315,
+            337.5,
+          ].map((deg, i) => (
+            <g key={deg} transform={`rotate(${deg} 50 45)`}>
+              <ellipse
+                cx="50"
+                cy="29"
+                rx="5.5"
+                ry="14"
+                fill={i % 2 === 0 ? '#fdd835' : '#fbc02d'}
+                stroke="#f9a825"
+                strokeWidth="0.8"
+              />
+            </g>
+          ))}
+          <circle cx="50" cy="45" r="13" fill="#5d4037" stroke="#3e2723" strokeWidth="1" />
+          <circle cx="44" cy="41" r="1.5" fill="#8d6e63" />
+          <circle cx="50" cy="39" r="1.5" fill="#8d6e63" />
+          <circle cx="56" cy="41" r="1.5" fill="#8d6e63" />
+          <circle cx="42" cy="47" r="1.5" fill="#8d6e63" />
+          <circle cx="48" cy="49" r="1.5" fill="#8d6e63" />
+          <circle cx="54" cy="48" r="1.5" fill="#8d6e63" />
+          <circle cx="58" cy="45" r="1.5" fill="#8d6e63" />
+        </g>
+      )}
+    </svg>
+  )
+}
 
 function getPlantSVG(flowerType: FlowerType, stage: number, wilted: boolean) {
+  if (flowerType === 'margarida') return <MargaridaSVG stage={stage} wilted={wilted} />
+  if (flowerType === 'girassol') return <GirassolSVG stage={stage} wilted={wilted} />
   return <TulipSVG stage={stage} wilted={wilted} />
 }
 
