@@ -60,7 +60,7 @@ export async function initPlant(flowerType: FlowerType): Promise<void> {
     flowerType,
     stage: 0,
     daysWatered: 0,
-    lastWateredDate: null,
+    lastWateredDate: '',
     water: { nana: false, gueguel: false },
     wilted: false,
     unlockedAt: new Date().toISOString(),
@@ -75,25 +75,25 @@ export async function waterPlant(nick: 'nana' | 'gueguel'): Promise<void> {
   const plant = snap.val() as PlantData
 
   const today = new Date().toISOString().split('T')[0]
-  const isNewDay = plant.lastWateredDate !== today
+  const isNewDay = !plant.lastWateredDate || plant.lastWateredDate !== today
 
-  const newWater: WaterEntry = isNewDay
-    ? { nana: nick === 'nana', gueguel: nick === 'gueguel' }
-    : { ...plant.water, [nick]: true }
+  const alreadyDoneToday = plant.water.nana || plant.water.gueguel
+  const newWater: WaterEntry =
+    isNewDay && !alreadyDoneToday
+      ? { nana: nick === 'nana', gueguel: nick === 'gueguel' }
+      : { ...plant.water, [nick]: true }
 
   const bothWatered = newWater.nana && newWater.gueguel
-  const newDaysWatered = bothWatered && isNewDay ? plant.daysWatered + 1 : plant.daysWatered
-
+  const newDaysWatered = bothWatered ? plant.daysWatered + 1 : plant.daysWatered
   const newStage = Math.min(5, Math.floor(newDaysWatered / 3))
-  const newWilted = false
 
   await set(plantRef, {
     ...plant,
     water: newWater,
-    lastWateredDate: bothWatered ? today : plant.lastWateredDate,
+    lastWateredDate: bothWatered ? today : '',
     daysWatered: newDaysWatered,
     stage: newStage,
-    wilted: newWilted,
+    wilted: false,
   })
 }
 

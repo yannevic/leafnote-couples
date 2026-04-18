@@ -21,14 +21,8 @@ export function useGarden(nick: 'nana' | 'gueguel') {
     await waterPlant(nick)
   }
 
-  const today = new Date().toISOString().split('T')[0]
-  const alreadyWatered = plant
-    ? plant.lastWateredDate === today
-      ? nick === 'nana'
-        ? plant.water.nana
-        : plant.water.gueguel
-      : false
-    : false
+  const myWater = plant ? (nick === 'nana' ? plant.water.nana : plant.water.gueguel) : false
+  const alreadyWatered = myWater
 
   return { plant, loading, water, alreadyWatered }
 }

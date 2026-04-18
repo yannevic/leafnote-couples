@@ -17,6 +17,8 @@ export default function GardenView({ nick, onBack }: Props) {
   const [rolling, setRolling] = useState(false)
 
   const partnerNick = nick === 'nana' ? 'gueguel' : 'nana'
+  const { water: waterAsPartner } = useGarden(partnerNick)
+  const today = new Date().toISOString().split('T')[0]
   const partnerWatered = plant
     ? partnerNick === 'nana'
       ? plant.water.nana
@@ -432,6 +434,32 @@ export default function GardenView({ nick, onBack }: Props) {
             </div>
           </div>
 
+          {/* barrinha de rega */}
+          <div
+            style={{
+              width: 160,
+              height: 6,
+              background: '#d8eed8',
+              borderRadius: 10,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width:
+                  alreadyWatered && partnerWatered
+                    ? '100%'
+                    : alreadyWatered || partnerWatered
+                      ? '50%'
+                      : '0%',
+                background: 'linear-gradient(90deg, #60b8e8, #3a8abf)',
+                borderRadius: 10,
+                transition: 'width 0.6s ease',
+              }}
+            />
+          </div>
+
           {/* planta SVG */}
           <Plant plant={plant} />
 
@@ -486,6 +514,24 @@ export default function GardenView({ nick, onBack }: Props) {
             partnerWatered={partnerWatered}
             onWater={water}
           />
+          {/* REMOVER ANTES DO BUILD */}
+          <button
+            onClick={waterAsPartner}
+            style={{
+              marginTop: 4,
+              padding: '6px 16px',
+              borderRadius: 10,
+              background: '#e8f5e8',
+              border: '1.5px dashed #4a7a4a',
+              color: '#4a7a4a',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            🧪 regar como {partnerNick}
+          </button>
         </div>
       )}
     </div>
