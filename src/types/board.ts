@@ -40,6 +40,7 @@ export interface ChecklistItem extends BoardItem {
 export interface DrawingItem extends BoardItem {
   type: 'drawing'
   drawingData: string
+  rotation?: number
 }
 
 export interface TagItem extends BoardItem {

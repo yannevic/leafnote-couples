@@ -6,7 +6,7 @@ import { AnyBoardItem } from '../types/board'
 const BOARD_PATH = 'board/items'
 
 export function useBoard(
-  items: AnyBoardItem[],
+  _items: AnyBoardItem[],
   setItems: React.Dispatch<React.SetStateAction<AnyBoardItem[]>>
 ) {
   const loaded = useRef(false)

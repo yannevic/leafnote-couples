@@ -87,9 +87,6 @@ export default function Letter({
   const ENV_H = 70
   // tampa: ponto central desce até 40% quando fechada, sobe pra 15% abrindo
   const flapY = opening ? ENV_H * 0.15 : ENV_H * 0.42
-  // papel: quando aberto/abrindo, sobe acima do envelope
-  const paperTop = item.opened ? -44 : opening ? -20 : ENV_H - 12
-  const containerH = item.opened ? ENV_H + 48 : opening ? ENV_H + 24 : ENV_H + 18
 
   return (
     <>

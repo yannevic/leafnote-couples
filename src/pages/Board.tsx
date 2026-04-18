@@ -15,6 +15,8 @@ import PostIt from '../components/PostIt'
 import Checklist from '../components/Checklist'
 import Tag from '../components/Tag'
 import Letter from '../components/Letter'
+import DrawingSheet from '../components/DrawingSheet'
+import { DrawingItem } from '../types/board'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -139,8 +141,13 @@ export default function Board() {
         setItems((prev) => [...prev, item])
         saveItem(item)
       } else if (selectedTool === 'drawing') {
-        // DrawingSheet: placeholder por enquanto
-        // será implementado na próxima etapa
+        const item: DrawingItem = {
+          ...makeBase('drawing', x, y),
+          type: 'drawing',
+          drawingData: '',
+        }
+        setItems((prev) => [...prev, item])
+        saveItem(item)
       }
     },
     [editMode, selectedTool, uid, displayName, otherName, items]
@@ -327,6 +334,9 @@ export default function Board() {
                 otherName={otherName}
               />
             )
+          }
+          if (item.type === 'drawing') {
+            return <DrawingSheet {...commonProps} item={item as DrawingItem} />
           }
           return null
         })}
