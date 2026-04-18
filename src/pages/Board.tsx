@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../lib/firebase'
@@ -63,6 +63,23 @@ export default function Board() {
   const [editMode, setEditMode] = useState(false)
   const { saveItem, deleteItem } = useBoard(items, setItems)
   const boardRef = useRef<HTMLDivElement>(null)
+  const [now, setNow] = useState(new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const weekDay = now.toLocaleDateString('pt-BR', { weekday: 'long' })
+  const dateStr = now.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+  const timeStr = now.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
@@ -447,6 +464,36 @@ export default function Board() {
           </p>
         </div>
       )}
+
+      {/* Data e hora */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 14,
+          right: 14,
+          zIndex: 48,
+          background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
+          border: '1.5px solid #e8a0b0',
+          borderRadius: 14,
+          padding: '6px 14px',
+          fontFamily: 'Baloo 2, sans-serif',
+          boxShadow: '0 2px 12px rgba(44,20,8,0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          userSelect: 'none',
+          lineHeight: 1.3,
+        }}
+      >
+        <span
+          style={{ fontSize: 9, fontWeight: 700, color: '#c87090', textTransform: 'capitalize' }}
+        >
+          🕰️ {weekDay}
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: '#7a3040' }}>
+          {timeStr} · {dateStr}
+        </span>
+      </div>
 
       {/* Toolbar */}
       <Toolbar
