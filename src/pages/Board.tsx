@@ -22,6 +22,7 @@ import DrawingSheet from '../components/DrawingSheet'
 import { DrawingItem } from '../types/board'
 import { usePresence } from '../hooks/usePresence'
 import PresenceBadge from '../components/PresenceBadge'
+import { useNavigate } from 'react-router-dom'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -61,6 +62,7 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
 
 export default function Board() {
   const [user] = useAuthState(auth)
+  const navigate = useNavigate()
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [selectedTool, setSelectedTool] = useState<BoardItemType | null>(null)
   const [editMode, setEditMode] = useState(false)
@@ -88,6 +90,7 @@ export default function Board() {
   const displayName = user?.displayName ?? ''
   // nome do outro usuário: se eu sou "nana" o outro é "gueguel" e vice-versa (simples por ora)
   const otherName = displayName.toLowerCase() === 'nana' ? 'gueguel' : 'nana'
+  const nick: 'nana' | 'gueguel' = displayName.toLowerCase() === 'nana' ? 'nana' : 'gueguel'
   const { nanaPresence, gueguelPresence } = usePresence(uid, displayName)
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
@@ -500,6 +503,33 @@ export default function Board() {
       </div>
 
       <PresenceBadge nanaPresence={nanaPresence} gueguelPresence={gueguelPresence} />
+
+      {/* Botão jardim */}
+      <div
+        onClick={() => navigate('/garden')}
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          zIndex: 48,
+          background: 'linear-gradient(180deg, #a0d080 0%, #4a7a4a 100%)',
+          border: '2px solid #2d4a2d',
+          borderRadius: '50%',
+          width: 54,
+          height: 54,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 26,
+          cursor: 'pointer',
+          boxShadow: '0 4px 14px rgba(44,74,44,0.4)',
+          transition: 'transform 0.2s',
+          userSelect: 'none',
+        }}
+        title="abrir jardim"
+      >
+        🌱
+      </div>
 
       {/* Toolbar */}
       <Toolbar
