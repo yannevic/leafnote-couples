@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './lib/firebase'
 import Countdown from './pages/Countdown'
+import Board from './pages/Board'
 import Login from './pages/Login'
 
 function App() {
@@ -42,20 +43,7 @@ function App() {
         />
         <Route
           path="/board"
-          element={
-            user !== null ? (
-              <div
-                className="fixed inset-0 flex items-center justify-center"
-                style={{ background: '#F5ECD7' }}
-              >
-                <p className="text-2xl font-bold" style={{ color: '#2C1810' }}>
-                  mural em breve 🌿
-                </p>
-              </div>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={user !== null ? <Board /> : <Navigate to="/login" replace />}
         />
         <Route path="*" element={<Navigate to={user !== null ? '/board' : '/login'} replace />} />
       </Routes>

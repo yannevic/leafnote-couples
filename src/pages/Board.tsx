@@ -44,30 +44,58 @@ export default function Board() {
           <path d="M-100 720 Q500 705 900 725 Q1300 745 1700 718 Q2000 700 2200 722" />
         </g>
 
-        {/* Nós do tronco — esquerda */}
+        {/* Nó do tronco — esquerda */}
+        <g stroke="#7a4a20" fill="none" opacity="0.28">
+          <path
+            d="M100 268 Q140 252 185 258 Q225 263 248 278 Q228 298 185 302 Q140 306 100 292 Q82 282 100 268Z"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M118 272 Q150 262 183 266 Q212 270 228 280 Q212 294 183 297 Q150 300 118 288 Q104 281 118 272Z"
+            strokeWidth="1"
+          />
+          <path
+            d="M142 275 Q162 269 183 272 Q200 275 208 281 Q200 289 183 291 Q162 293 142 286 Q134 281 142 275Z"
+            strokeWidth="0.8"
+          />
+          <path d="M100 280 Q50 276 -100 272" strokeWidth="1.2" />
+          <path d="M248 278 Q400 274 650 278" strokeWidth="1.2" />
+          <path d="M96 270 Q40 264 -100 260" strokeWidth="0.8" opacity="0.6" />
+          <path d="M248 282 Q420 286 650 284" strokeWidth="0.8" opacity="0.6" />
+        </g>
+
+        {/* Nó do tronco — direita */}
         <g stroke="#7a4a20" fill="none" opacity="0.22">
-          <ellipse cx="180" cy="280" rx="55" ry="28" strokeWidth="1.5" />
-          <ellipse cx="180" cy="280" rx="38" ry="18" strokeWidth="1" />
-          <ellipse cx="180" cy="280" rx="20" ry="9" strokeWidth="1" />
-          <path d="M125 280 Q60 270 -100 265" strokeWidth="1" />
-          <path d="M235 280 Q400 272 600 278" strokeWidth="1" />
+          <path
+            d="M1020 506 Q1065 488 1118 494 Q1168 499 1192 516 Q1170 538 1118 542 Q1065 546 1020 530 Q998 520 1020 506Z"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M1038 510 Q1075 498 1116 503 Q1150 507 1168 517 Q1150 531 1116 534 Q1075 538 1038 526 Q1022 519 1038 510Z"
+            strokeWidth="1"
+          />
+          <path
+            d="M1065 513 Q1090 506 1116 509 Q1138 512 1148 518 Q1138 526 1116 528 Q1090 531 1065 524 Q1055 519 1065 513Z"
+            strokeWidth="0.8"
+          />
+          <path d="M1020 518 Q880 514 650 518" strokeWidth="1.2" />
+          <path d="M1192 516 Q1380 512 1700 516" strokeWidth="1.2" />
+          <path d="M1016 508 Q870 503 650 506" strokeWidth="0.8" opacity="0.6" />
+          <path d="M1192 522 Q1385 526 1700 522" strokeWidth="0.8" opacity="0.6" />
         </g>
 
-        {/* Nós do tronco — direita */}
+        {/* Nó menor — canto inferior esquerdo */}
         <g stroke="#7a4a20" fill="none" opacity="0.18">
-          <ellipse cx="1100" cy="520" rx="65" ry="30" strokeWidth="1.5" />
-          <ellipse cx="1100" cy="520" rx="45" ry="20" strokeWidth="1" />
-          <ellipse cx="1100" cy="520" rx="24" ry="10" strokeWidth="1" />
-          <path d="M1035 520 Q900 514 700 518" strokeWidth="1" />
-          <path d="M1165 520 Q1350 514 1600 520" strokeWidth="1" />
-        </g>
-
-        {/* Nó menor — canto inferior */}
-        <g stroke="#7a4a20" fill="none" opacity="0.15">
-          <ellipse cx="400" cy="750" rx="40" ry="20" strokeWidth="1.2" />
-          <ellipse cx="400" cy="750" rx="25" ry="12" strokeWidth="1" />
-          <path d="M360 750 Q200 744 -100 748" strokeWidth="1" />
-          <path d="M440 750 Q600 744 800 750" strokeWidth="1" />
+          <path
+            d="M340 738 Q368 728 398 732 Q424 736 436 748 Q422 762 398 765 Q368 768 340 756 Q326 748 340 738Z"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M354 742 Q374 735 397 738 Q416 741 426 748 Q416 757 397 759 Q374 762 354 754 Q344 748 354 742Z"
+            strokeWidth="0.9"
+          />
+          <path d="M340 748 Q200 744 -100 748" strokeWidth="1" />
+          <path d="M436 748 Q600 744 820 748" strokeWidth="1" />
         </g>
 
         {/* Overlay de grão sutil */}
