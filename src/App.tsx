@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './lib/firebase'
 import Countdown from './pages/Countdown'
-import Login from './pages/login.tsx'
+import Login from './pages/Login'
 
 function App() {
   const [revealed, setRevealed] = useState(localStorage.getItem('app-revealed') === 'true')
