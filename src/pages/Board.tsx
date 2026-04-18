@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '../lib/firebase'
 import {
@@ -56,6 +57,7 @@ export default function Board() {
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [selectedTool, setSelectedTool] = useState<BoardItemType>('postit')
   const [editMode, setEditMode] = useState(false)
+  const { saveItem, deleteItem } = useBoard(items, setItems)
   const boardRef = useRef<HTMLDivElement>(null)
 
   const uid = user?.uid ?? 'anon'
@@ -97,15 +99,16 @@ export default function Board() {
       const y = e.clientY - rect.top - 40
 
       if (selectedTool === 'postit') {
-        const color = POSTIT_COLORS[colorCursor % POSTIT_COLORS.length]
+        const postitColor = POSTIT_COLORS[colorCursor % POSTIT_COLORS.length]
         colorCursor += 1
         const item: PostItItem = {
           ...makeBase('postit', x, y),
           type: 'postit',
           content: '',
-          color,
+          color: postitColor,
         }
         setItems((prev) => [...prev, item])
+        saveItem(item)
       } else if (selectedTool === 'checklist') {
         const item: ChecklistItem = {
           ...makeBase('checklist', x, y),
@@ -114,6 +117,7 @@ export default function Board() {
           color: 'yellow',
         }
         setItems((prev) => [...prev, item])
+        saveItem(item)
       } else if (selectedTool === 'tag') {
         const item: TagItem = {
           ...makeBase('tag', x, y),
@@ -122,6 +126,7 @@ export default function Board() {
           color: String(Math.floor(Math.random() * 6)),
         }
         setItems((prev) => [...prev, item])
+        saveItem(item)
       } else if (selectedTool === 'letter') {
         const item: LetterItem = {
           ...makeBase('letter', x, y),
@@ -132,6 +137,7 @@ export default function Board() {
           opened: false,
         }
         setItems((prev) => [...prev, item])
+        saveItem(item)
       } else if (selectedTool === 'drawing') {
         // DrawingSheet: placeholder por enquanto
         // será implementado na próxima etapa
@@ -142,8 +148,8 @@ export default function Board() {
 
   const handleUpdate = useCallback(
     (id: string, data: Partial<AnyBoardItem>) => {
-      setItems((prev) =>
-        prev.map((item) =>
+      setItems((prev) => {
+        const next = prev.map((item) =>
           item.id === id
             ? ({
                 ...item,
@@ -153,22 +159,49 @@ export default function Board() {
               } as AnyBoardItem)
             : item
         )
-      )
+        const updated = next.find((item) => item.id === id)
+        if (updated) saveItem(updated)
+        return next
+      })
     },
-    [uid]
+    [uid, saveItem]
   )
 
-  const handleDelete = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }, [])
+  const handleDelete = useCallback(
+    (id: string) => {
+      setItems((prev) => prev.filter((item) => item.id !== id))
+      deleteItem(id)
+    },
+    [deleteItem]
+  )
 
-  const handleBringForward = useCallback((id: string) => {
-    setItems((prev) => bringForward(prev, id))
-  }, [])
+  const handleBringForward = useCallback(
+    (id: string) => {
+      setItems((prev) => {
+        const next = bringForward(prev, id)
+        next.forEach((item) => {
+          const old = prev.find((p) => p.id === item.id)
+          if (old?.zOrder !== item.zOrder) saveItem(item)
+        })
+        return next
+      })
+    },
+    [saveItem]
+  )
 
-  const handleSendBackward = useCallback((id: string) => {
-    setItems((prev) => sendBackward(prev, id))
-  }, [])
+  const handleSendBackward = useCallback(
+    (id: string) => {
+      setItems((prev) => {
+        const next = sendBackward(prev, id)
+        next.forEach((item) => {
+          const old = prev.find((p) => p.id === item.id)
+          if (old?.zOrder !== item.zOrder) saveItem(item)
+        })
+        return next
+      })
+    },
+    [saveItem]
+  )
 
   const handleFocus = useCallback(
     (id: string) => {
