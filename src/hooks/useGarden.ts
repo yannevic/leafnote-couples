@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PlantData, subscribePlant, waterPlant, checkWilt } from '../lib/garden'
 
-export function useGarden(nick: 'nana' | 'gueguel') {
+export function useGarden(uid: string, partnerUid: string) {
   const [plant, setPlant] = useState<PlantData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -18,11 +18,10 @@ export function useGarden(nick: 'nana' | 'gueguel') {
   }, [])
 
   const water = async () => {
-    await waterPlant(nick)
+    await waterPlant(uid, partnerUid)
   }
 
-  const myWater = plant ? (nick === 'nana' ? plant.water.nana : plant.water.gueguel) : false
-  const alreadyWatered = myWater
+  const alreadyWatered = plant ? plant.water[uid] === true : false
 
   return { plant, loading, water, alreadyWatered }
 }

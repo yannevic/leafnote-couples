@@ -22,7 +22,8 @@ export function usePresence(uid: string, displayName: string) {
   const myPresence = allPresence[uid] ?? null
 
   const partnerEntry = Object.entries(allPresence).find(([id]) => id !== uid)
+  const partnerUid = partnerEntry ? partnerEntry[0] : ''
   const partnerPresence = partnerEntry ? partnerEntry[1] : null
 
-  return { myPresence, partnerPresence }
+  return { myPresence, partnerPresence, partnerUid }
 }

@@ -5,7 +5,6 @@ import {
   removeCalendarEvent,
   getCalendarTheme,
   setCalendarTheme,
-  toDateKey,
   CalendarEvent,
   CalendarTheme,
 } from '../lib/calendar'

@@ -5,25 +5,21 @@ import Plant from './Plant'
 import WaterButton from './WaterButton'
 
 interface Props {
-  nick: 'nana' | 'gueguel'
+  uid: string
+  partnerUid: string
+  displayName: string
+  partnerName: string
   onBack: () => void
 }
 
-export default function GardenView({ nick, onBack }: Props) {
-  const { plant, loading, water, alreadyWatered } = useGarden(nick)
+export default function GardenView({ uid, partnerUid, displayName, partnerName, onBack }: Props) {
+  const { plant, loading, water, alreadyWatered } = useGarden(uid, partnerUid)
   const [showDice, setShowDice] = useState(false)
   const [myRoll, setMyRoll] = useState<number | null>(null)
   const [partnerRoll, setPartnerRoll] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
 
-  const partnerNick = nick === 'nana' ? 'gueguel' : 'nana'
-  const { water: waterAsPartner } = useGarden(partnerNick)
-
-  const partnerWatered = plant
-    ? partnerNick === 'nana'
-      ? plant.water.nana
-      : plant.water.gueguel
-    : false
+  const partnerWatered = plant ? plant.water[partnerUid] === true : false
 
   const handleRollMyDice = () => {
     setRolling(true)
@@ -177,7 +173,7 @@ export default function GardenView({ nick, onBack }: Props) {
           <div
             style={{ display: 'flex', gap: 24, alignItems: 'flex-start', justifyContent: 'center' }}
           >
-            {/* dado da nana */}
+            {/* meu dado */}
             <div
               style={{
                 display: 'flex',
@@ -187,7 +183,7 @@ export default function GardenView({ nick, onBack }: Props) {
                 width: 80,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>nana</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>{displayName}</div>
               <div
                 style={{
                   width: 64,
@@ -214,32 +210,30 @@ export default function GardenView({ nick, onBack }: Props) {
                   justifyContent: 'center',
                 }}
               >
-                {nick === 'nana' && (
-                  <button
-                    onClick={handleRollMyDice}
-                    disabled={myRoll !== null || rolling}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: 10,
-                      background:
-                        myRoll !== null ? '#e8f5e8' : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
-                      border: '1.5px solid #4a7a4a',
-                      color: myRoll !== null ? '#4a7a4a' : '#fff',
-                      fontWeight: 700,
-                      fontSize: 11,
-                      cursor: myRoll !== null ? 'default' : 'pointer',
-                      fontFamily: 'Baloo 2, sans-serif',
-                    }}
-                  >
-                    {myRoll !== null ? 'jogado!' : 'jogar'}
-                  </button>
-                )}
+                <button
+                  onClick={handleRollMyDice}
+                  disabled={myRoll !== null || rolling}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 10,
+                    background:
+                      myRoll !== null ? '#e8f5e8' : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
+                    border: '1.5px solid #4a7a4a',
+                    color: myRoll !== null ? '#4a7a4a' : '#fff',
+                    fontWeight: 700,
+                    fontSize: 11,
+                    cursor: myRoll !== null ? 'default' : 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  {myRoll !== null ? 'jogado!' : 'jogar'}
+                </button>
               </div>
             </div>
 
             <div style={{ fontSize: 20, color: '#c87090', fontWeight: 800, marginTop: 44 }}>+</div>
 
-            {/* dado do gueguel */}
+            {/* dado do parceiro */}
             <div
               style={{
                 display: 'flex',
@@ -249,7 +243,7 @@ export default function GardenView({ nick, onBack }: Props) {
                 width: 80,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>gueguel</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>{partnerName}</div>
               <div
                 style={{
                   width: 64,
@@ -276,28 +270,26 @@ export default function GardenView({ nick, onBack }: Props) {
                   justifyContent: 'center',
                 }}
               >
-                {nick === 'gueguel' && (
-                  <button
-                    onClick={handleRollPartnerDice}
-                    disabled={partnerRoll !== null || rolling}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: 10,
-                      background:
-                        partnerRoll !== null
-                          ? '#e8f5e8'
-                          : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
-                      border: '1.5px solid #4a7a4a',
-                      color: partnerRoll !== null ? '#4a7a4a' : '#fff',
-                      fontWeight: 700,
-                      fontSize: 14,
-                      cursor: partnerRoll !== null ? 'default' : 'pointer',
-                      fontFamily: 'Baloo 2, sans-serif',
-                    }}
-                  >
-                    {partnerRoll !== null ? 'jogado!' : 'jogar'}
-                  </button>
-                )}
+                <button
+                  onClick={handleRollPartnerDice}
+                  disabled={partnerRoll !== null || rolling}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 10,
+                    background:
+                      partnerRoll !== null
+                        ? '#e8f5e8'
+                        : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
+                    border: '1.5px solid #4a7a4a',
+                    color: partnerRoll !== null ? '#4a7a4a' : '#fff',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: partnerRoll !== null ? 'default' : 'pointer',
+                    fontFamily: 'Baloo 2, sans-serif',
+                  }}
+                >
+                  {partnerRoll !== null ? 'jogado!' : 'jogar'}
+                </button>
               </div>
             </div>
           </div>
@@ -425,7 +417,7 @@ export default function GardenView({ nick, onBack }: Props) {
             />
           </div>
 
-          {/* linha principal: info esquerda + planta + info direita */}
+          {/* linha principal */}
           <div
             style={{
               display: 'flex',
@@ -569,24 +561,6 @@ export default function GardenView({ nick, onBack }: Props) {
                 partnerWatered={partnerWatered}
                 onWater={water}
               />
-
-              {/* REMOVER ANTES DO BUILD */}
-              <button
-                onClick={waterAsPartner}
-                style={{
-                  padding: '6px 16px',
-                  borderRadius: 10,
-                  background: '#e8f5e8',
-                  border: '1.5px dashed #4a7a4a',
-                  color: '#4a7a4a',
-                  fontFamily: 'Baloo 2, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                }}
-              >
-                🧪 regar como {partnerNick}
-              </button>
             </div>
           </div>
         </div>

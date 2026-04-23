@@ -23,11 +23,11 @@ import WeekCalendar from '../components/WeekCalendar'
 import { DrawingItem } from '../types/board'
 import { usePresence } from '../hooks/usePresence'
 import PresenceBadge from '../components/PresenceBadge'
-import { useNavigate } from 'react-router-dom'
 import Dice from '../components/Dice'
 import Timer, { TimerState, makeInitialTimerState } from '../components/Timer'
 import TimerBar from '../components/TimerBar'
 import ActivityFeed from '../components/ActivityFeed'
+import Roulette from '../components/Roulette'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -67,7 +67,6 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
 
 export default function Board() {
   const [user] = useAuthState(auth)
-  const navigate = useNavigate()
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [selectedTool, setSelectedTool] = useState<BoardItemType | null>(null)
   const [editMode, setEditMode] = useState(false)
@@ -100,7 +99,7 @@ export default function Board() {
   const [nickLoading, setNickLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [showWidgets, setShowWidgets] = useState(false)
-  const [activeWidget, setActiveWidget] = useState<'dice' | 'timer'>('dice')
+  const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
 
@@ -439,7 +438,6 @@ export default function Board() {
         {sortedItems.map((item) => {
           const z = (item.zOrder ?? 0) + 10
           const commonProps = {
-            key: item.id,
             editMode,
             zIndex: z,
             onUpdate: handleUpdate as never,
@@ -450,17 +448,18 @@ export default function Board() {
           }
 
           if (item.type === 'postit') {
-            return <PostIt {...commonProps} item={item as PostItItem} />
+            return <PostIt key={item.id} {...commonProps} item={item as PostItItem} />
           }
           if (item.type === 'checklist') {
-            return <Checklist {...commonProps} item={item as ChecklistItem} />
+            return <Checklist key={item.id} {...commonProps} item={item as ChecklistItem} />
           }
           if (item.type === 'tag') {
-            return <Tag {...commonProps} item={item as TagItem} />
+            return <Tag key={item.id} {...commonProps} item={item as TagItem} />
           }
           if (item.type === 'letter') {
             return (
               <Letter
+                key={item.id}
                 {...commonProps}
                 item={item as LetterItem}
                 currentUid={uid}
@@ -470,7 +469,7 @@ export default function Board() {
             )
           }
           if (item.type === 'drawing') {
-            return <DrawingSheet {...commonProps} item={item as DrawingItem} />
+            return <DrawingSheet key={item.id} {...commonProps} item={item as DrawingItem} />
           }
           return null
         })}
@@ -632,6 +631,9 @@ export default function Board() {
               minWidth: 300,
               maxWidth: 360,
               fontFamily: 'Baloo 2, sans-serif',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={(e) => e.stopPropagation()}
             data-modal="true"
@@ -675,6 +677,7 @@ export default function Board() {
                 [
                   { id: 'dice', label: '🎲 dados' },
                   { id: 'timer', label: '⏱ timer' },
+                  { id: 'roulette', label: '🎡 roleta' },
                 ] as const
               ).map((w) => (
                 <button
@@ -699,32 +702,35 @@ export default function Board() {
                 </button>
               ))}
             </div>
-            {/* Toggle compartilhado — só aparece nos dados */}
-            {activeWidget === 'dice' && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
-                <button
-                  type="button"
-                  onClick={() => setSharedDice((v) => !v)}
-                  style={{
-                    fontSize: 11,
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    padding: '3px 10px',
-                    borderRadius: 20,
-                    border: '1.5px solid #c4956a',
-                    background: sharedDice ? '#c4956a' : 'transparent',
-                    color: sharedDice ? '#fff' : '#8b6914',
-                  }}
-                >
-                  {sharedDice ? '🌐 compartilhado' : '🔒 só eu'}
-                </button>
-              </div>
-            )}
-            {activeWidget === 'dice' && (
-              <Dice uid={uid} displayName={displayName} shared={sharedDice} />
-            )}
-            {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {/* Toggle compartilhado — só aparece nos dados */}
+              {activeWidget === 'dice' && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => setSharedDice((v) => !v)}
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      padding: '3px 10px',
+                      borderRadius: 20,
+                      border: '1.5px solid #c4956a',
+                      background: sharedDice ? '#c4956a' : 'transparent',
+                      color: sharedDice ? '#fff' : '#8b6914',
+                    }}
+                  >
+                    {sharedDice ? '🌐 compartilhado' : '🔒 só eu'}
+                  </button>
+                </div>
+              )}
+              {activeWidget === 'dice' && (
+                <Dice uid={uid} displayName={displayName} shared={sharedDice} />
+              )}
+              {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
+              {activeWidget === 'roulette' && <Roulette />}
+            </div>
           </div>
         </div>
       )}
