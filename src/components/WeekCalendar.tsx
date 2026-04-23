@@ -84,9 +84,10 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           borderRadius: 17,
           paddingTop: 6,
           background: t.bg,
-          backgroundImage: `url(./src/assets/patterns/${theme}.png)`,
-          backgroundSize: '160px',
-          backgroundRepeat: 'repeat',
+          backgroundImage: `url(./src/assets/patterns/${theme}.png), url(./src/assets/patterns/${theme}.png)`,
+          backgroundSize: '60px 60px, 60px 60px',
+          backgroundRepeat: 'repeat, repeat',
+          backgroundPosition: '0px 0px, 150px 150px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
