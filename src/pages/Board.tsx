@@ -24,6 +24,10 @@ import { DrawingItem } from '../types/board'
 import { usePresence } from '../hooks/usePresence'
 import PresenceBadge from '../components/PresenceBadge'
 import { useNavigate } from 'react-router-dom'
+import Dice from '../components/Dice'
+import Timer, { TimerState, makeInitialTimerState } from '../components/Timer'
+import TimerBar from '../components/TimerBar'
+import ActivityFeed from '../components/ActivityFeed'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -97,6 +101,10 @@ export default function Board() {
   const [nickInput, setNickInput] = useState('')
   const [nickLoading, setNickLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showWidgets, setShowWidgets] = useState(false)
+  const [activeWidget, setActiveWidget] = useState<'dice' | 'timer'>('dice')
+  const [sharedDice, setSharedDice] = useState(false)
+  const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
 
   const handleSaveNick = async () => {
     if (!nickInput.trim() || !user) return
@@ -129,6 +137,12 @@ export default function Board() {
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (editMode) return
       if (!selectedTool) return
+      if ((e.target as HTMLElement).closest('[data-modal]')) return
+      console.log(
+        '[board click] target:',
+        (e.target as HTMLElement).tagName,
+        (e.target as HTMLElement).className
+      )
       const target = e.target as HTMLElement
       const tag = target.tagName.toLowerCase()
       const isBackground =
@@ -340,6 +354,16 @@ export default function Board() {
       style={{ background: '#c8a882', cursor: editMode ? 'default' : 'crosshair' }}
       onClick={handleBoardClick}
     >
+      {nickSaved && (
+        <TimerBar
+          timerState={timerState}
+          onOpen={() => {
+            setShowWidgets(true)
+            setActiveWidget('timer')
+          }}
+        />
+      )}
+
       {/* Textura de madeira */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
@@ -533,6 +557,33 @@ export default function Board() {
         🌱
       </div>
 
+      {/* Botão widgets */}
+      <div
+        onClick={() => setShowWidgets(true)}
+        style={{
+          position: 'fixed',
+          bottom: 152,
+          right: 24,
+          zIndex: 48,
+          background: 'linear-gradient(180deg, #f5ecd7 0%, #c4956a 100%)',
+          border: '2px solid #8b6914',
+          borderRadius: '50%',
+          width: 54,
+          height: 54,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 26,
+          cursor: 'pointer',
+          boxShadow: '0 4px 14px rgba(139,105,20,0.4)',
+          transition: 'transform 0.2s',
+          userSelect: 'none',
+        }}
+        title="abrir widgets"
+      >
+        🎮
+      </div>
+
       {/* Botão calendário */}
       <div
         onClick={() => setShowCalendar(true)}
@@ -559,6 +610,127 @@ export default function Board() {
       >
         📅
       </div>
+
+      {/* Painel de widgets */}
+
+      {showWidgets && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 60,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowWidgets(false)}
+        >
+          <div
+            style={{
+              background: 'linear-gradient(160deg, #fdf6f0 0%, #f5ecd7 100%)',
+              border: '2px solid #c4956a',
+              borderRadius: 20,
+              boxShadow: '0 8px 32px rgba(44,24,16,0.35)',
+              padding: '20px 20px 24px',
+              minWidth: 300,
+              maxWidth: 360,
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+            onClick={(e) => e.stopPropagation()}
+            data-modal="true"
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#2d4a2d' }}>🎮 widgets</span>
+              <button
+                type="button"
+                onClick={() => setShowWidgets(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: '#8b6914',
+                  padding: 4,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                marginBottom: 16,
+                background: '#f5ecd7',
+                borderRadius: 12,
+                padding: 4,
+                border: '1px solid #d4aa80',
+              }}
+            >
+              {(
+                [
+                  { id: 'dice', label: '🎲 dados' },
+                  { id: 'timer', label: '⏱ timer' },
+                ] as const
+              ).map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => setActiveWidget(w.id)}
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    borderRadius: 8,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 700,
+                    background: activeWidget === w.id ? '#c4956a' : 'transparent',
+                    color: activeWidget === w.id ? '#fff' : '#8b6914',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+            {/* Toggle compartilhado — só aparece nos dados */}
+            {activeWidget === 'dice' && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setSharedDice((v) => !v)}
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    border: '1.5px solid #c4956a',
+                    background: sharedDice ? '#c4956a' : 'transparent',
+                    color: sharedDice ? '#fff' : '#8b6914',
+                  }}
+                >
+                  {sharedDice ? '🌐 compartilhado' : '🔒 só eu'}
+                </button>
+              </div>
+            )}
+            {activeWidget === 'dice' && <Dice nick={nick} shared={sharedDice} />}
+            {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
+          </div>
+        </div>
+      )}
+
+      <ActivityFeed />
 
       {/* Toolbar */}
       <Toolbar
