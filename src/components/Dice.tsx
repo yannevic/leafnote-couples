@@ -118,10 +118,11 @@ function SingleDie({
 interface DiceProps {
   uid: string
   displayName: string
+  partnerName?: string
   shared?: boolean
 }
 
-export default function Dice({ uid, displayName, shared = false }: DiceProps) {
+export default function Dice({ uid, displayName, partnerName, shared = false }: DiceProps) {
   const [localValues, setLocalValues] = useState<number[]>([1, 1])
   const [localRolling, setLocalRolling] = useState(false)
   const [localDiceCount, setLocalDiceCount] = useState(2)
@@ -281,7 +282,11 @@ export default function Dice({ uid, displayName, shared = false }: DiceProps) {
     if (myVal > partnerVal)
       return <span style={{ color: 'var(--color-leaf-600)' }}>{displayName} ganhou! 🌸</span>
     if (partnerVal > myVal)
-      return <span style={{ color: 'var(--color-petal-400)' }}>{partnerUid} ganhou! 🎉</span>
+      return (
+        <span style={{ color: 'var(--color-petal-400)' }}>
+          {remote?.rolledBy === partnerUid ? (partnerName ?? partnerUid) : partnerUid} ganhou! 🎉
+        </span>
+      )
     return <span style={{ color: 'var(--color-bark-700)' }}>empate! 🤝</span>
   }
 

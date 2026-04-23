@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './lib/firebase'
 import Board from './pages/Board'
@@ -29,7 +29,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route
           path="/login"
@@ -41,7 +41,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to={user !== null ? '/board' : '/login'} replace />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

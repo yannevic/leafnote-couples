@@ -726,7 +726,12 @@ export default function Board() {
                 </div>
               )}
               {activeWidget === 'dice' && (
-                <Dice uid={uid} displayName={displayName} shared={sharedDice} />
+                <Dice
+                  uid={uid}
+                  displayName={displayName}
+                  partnerName={partnerPresence?.displayName ?? '...'}
+                  shared={sharedDice}
+                />
               )}
               {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
               {activeWidget === 'roulette' && <Roulette />}

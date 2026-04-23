@@ -68,8 +68,9 @@ export default function Checklist({
     setModalOpen(true)
   }
 
-  const done = item.entries.filter((e) => e.done).length
-  const total = item.entries.length
+  const entries = item.entries ?? []
+  const done = entries.filter((e) => e.done).length
+  const total = entries.length
 
   return (
     <>
@@ -145,7 +146,7 @@ export default function Checklist({
         )}
 
         {/* todas as entradas */}
-        {item.entries.map((entry) => (
+        {(item.entries ?? []).map((entry) => (
           <div
             key={entry.id}
             style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}
@@ -236,7 +237,7 @@ function ChecklistModal({
   const [editing, setEditing] = useState(isNew)
   const [title, setTitle] = useState(item.title ?? '')
   const [entries, setEntries] = useState<ChecklistEntry[]>(
-    item.entries.length > 0 ? item.entries : [{ id: makeEntryId(), text: '', done: false }]
+    (item.entries ?? []).length > 0 ? item.entries : [{ id: makeEntryId(), text: '', done: false }]
   )
 
   const toggleDone = (id: string) => {
@@ -503,17 +504,20 @@ function ChecklistModal({
               )}
 
               {/* barra de progresso visualização */}
-              {item.entries.length > 0 && (
+              {(item.entries ?? []).length > 0 && (
                 <div style={{ marginBottom: 12 }}>
                   <div
                     style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}
                   >
                     <span style={{ fontSize: 10, color: '#8b6914' }}>
-                      {item.entries.filter((e) => e.done).length} de {item.entries.length} feitos
+                      {(item.entries ?? []).filter((e) => e.done).length} de{' '}
+                      {(item.entries ?? []).length} feitos
                     </span>
                     <span style={{ fontSize: 10, color: '#8b6914', opacity: 0.6 }}>
                       {Math.round(
-                        (item.entries.filter((e) => e.done).length / item.entries.length) * 100
+                        ((item.entries ?? []).filter((e) => e.done).length /
+                          (item.entries ?? []).length) *
+                          100
                       )}
                       %
                     </span>
@@ -531,7 +535,7 @@ function ChecklistModal({
                         height: '100%',
                         borderRadius: 4,
                         background: 'linear-gradient(90deg, #8b6914, #c4956a)',
-                        width: `${(item.entries.filter((e) => e.done).length / item.entries.length) * 100}%`,
+                        width: `${((item.entries ?? []).filter((e) => e.done).length / (item.entries ?? []).length) * 100}%`,
                         transition: 'width 0.3s',
                       }}
                     />
@@ -549,16 +553,16 @@ function ChecklistModal({
                   overflowY: 'auto',
                 }}
               >
-                {item.entries.length === 0 && (
+                {(item.entries ?? []).length === 0 && (
                   <div style={{ fontSize: 12, color: '#3d2408', opacity: 0.35 }}>
                     lista vazia...
                   </div>
                 )}
-                {item.entries.map((entry) => (
+                {(item.entries ?? []).map((entry) => (
                   <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <button
                       onClick={() => {
-                        const updated = item.entries.map((e) =>
+                        const updated = (item.entries ?? []).map((e) =>
                           e.id === entry.id ? { ...e, done: !e.done } : e
                         )
                         onUpdate(item.id, { entries: updated })
