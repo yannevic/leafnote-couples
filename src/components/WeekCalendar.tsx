@@ -191,7 +191,7 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           <div className="grid grid-cols-7" style={{ gap: '8px' }}>
             {cells.map((day, idx) => {
               if (day === null) {
-                return <div key={`empty-${idx}`} style={{ minHeight: 88 }} />
+                return <div key={`empty-${idx}`} style={{ minHeight: 100, maxHeight: 100 }} />
               }
 
               const dateKey = toDateKey(viewYear, viewMonth, day)
@@ -201,11 +201,13 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
               return (
                 <button
                   key={dateKey}
-                  className="flex flex-col rounded-2xl text-left transition-all hover:scale-[1.03] hover:shadow-md active:scale-95"
+                  className="flex flex-col rounded-2xl text-left transition-all hover:scale-[1.03] hover:shadow-md active:scale-95 overflow-hidden"
                   style={{
                     background: isToday ? `${t.accent}28` : `${t.accent}0d`,
                     border: isToday ? `2px solid ${t.accent}` : `1.5px dashed ${t.border}`,
-                    minHeight: 95,
+                    minHeight: 100,
+                    maxHeight: 100,
+                    overflow: 'hidden',
                     padding: '10px 12px',
                     fontFamily: 'Baloo 2, sans-serif',
                     cursor: 'pointer',
@@ -224,7 +226,7 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
                   </span>
 
                   <div className="flex flex-col w-full" style={{ gap: 3 }}>
-                    {entries.slice(0, 3).map((entry) => (
+                    {entries.slice(0, 2).map((entry) => (
                       <div
                         key={entry.id}
                         className="rounded-md truncate"
@@ -244,9 +246,9 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
                         {entry.text}
                       </div>
                     ))}
-                    {entries.length > 3 && (
+                    {entries.length > 2 && (
                       <div style={{ fontSize: 10, color: t.accent, paddingLeft: 4 }}>
-                        +{entries.length - 3} mais
+                        +{entries.length - 2} mais
                       </div>
                     )}
                   </div>
