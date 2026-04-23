@@ -78,9 +78,11 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
         className="relative shadow-2xl flex flex-col"
         style={{
           width: '92vw',
-          maxWidth: 1000,
+          maxWidth: 900,
+          maxHeight: 680,
           height: '90vh',
           borderRadius: 17,
+          paddingTop: 6,
           background: t.bg,
           backgroundImage: `url(./src/assets/patterns/${theme}.png)`,
           backgroundSize: '160px',
@@ -96,8 +98,8 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
 
         {/* ── HEADER ── */}
         <div
-          className="relative z-10 flex items-center justify-between px-10 py-6 shrink-0"
-          style={{ borderBottom: `2px dashed ${t.border}` }}
+          className="relative z-10 flex items-center justify-between px-10 shrink-0"
+          style={{ borderBottom: `2px dashed ${t.border}`, padding: '10px 20px' }}
         >
           <div className="flex items-center gap-4">
             <button
@@ -138,12 +140,14 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           <div className="flex items-center gap-3">
             <button
               ref={themeButtonRef}
-              className="rounded-xl px-5 py-2.5 text-sm font-bold hover:opacity-80 transition-opacity"
+              className="text-sm font-bold hover:opacity-80 transition-opacity"
               style={{
-                background: `${t.accent}22`,
+                background: `${t.accent}18`,
                 color: t.accent,
                 fontFamily: 'Baloo 2, sans-serif',
                 border: `1.5px solid ${t.border}`,
+                borderRadius: 12,
+                padding: '5px 10px',
               }}
               onClick={() => {
                 if (themeButtonRef.current) {
@@ -157,8 +161,8 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
             </button>
 
             <button
-              className="rounded-full w-10 h-10 flex items-center justify-center text-base hover:opacity-70 transition-opacity"
-              style={{ background: `${t.accent}33`, color: t.accent }}
+              className="text-base hover:opacity-70 transition-opacity"
+              style={{ color: t.accent, padding: '4px 8px' }}
               onClick={onClose}
             >
               ✕
