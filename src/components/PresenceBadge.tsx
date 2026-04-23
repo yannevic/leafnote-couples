@@ -1,13 +1,15 @@
 import { PresenceData } from '../lib/presence'
 
 interface Props {
-  nanaPresence: PresenceData | null
-  gueguelPresence: PresenceData | null
+  myPresence: PresenceData | null
+  partnerPresence: PresenceData | null
 }
 
-export default function PresenceBadge({ nanaPresence, gueguelPresence }: Props) {
-  const nanaOnline = nanaPresence?.online === true
-  const gueguelOnline = gueguelPresence?.online === true
+export default function PresenceBadge({ myPresence, partnerPresence }: Props) {
+  const myOnline = myPresence?.online === true
+  const partnerOnline = partnerPresence?.online === true
+  const myName = myPresence?.displayName ?? '...'
+  const partnerName = partnerPresence?.displayName ?? '...'
 
   return (
     <div
@@ -29,35 +31,35 @@ export default function PresenceBadge({ nanaPresence, gueguelPresence }: Props) 
         userSelect: 'none',
       }}
     >
-      {/* Nana — esquerda */}
+      {/* eu — esquerda */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>nana</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>{myName}</span>
         <span
           style={{
             fontSize: 20,
             lineHeight: 1,
-            filter: nanaOnline ? 'none' : 'grayscale(1) opacity(0.45)',
+            filter: myOnline ? 'none' : 'grayscale(1) opacity(0.45)',
           }}
         >
-          {nanaOnline ? '🙆🏻‍♀️' : '🙇🏻‍♀️'}
+          {myOnline ? '🙆🏻‍♀️' : '🙇🏻‍♀️'}
         </span>
       </div>
 
       {/* divisor */}
       <div style={{ width: 1, height: 24, background: '#e8a0b0', opacity: 0.5 }} />
 
-      {/* Gueguel — direita */}
+      {/* parceiro — direita */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span
           style={{
             fontSize: 20,
             lineHeight: 1,
-            filter: gueguelOnline ? 'none' : 'grayscale(1) opacity(0.45)',
+            filter: partnerOnline ? 'none' : 'grayscale(1) opacity(0.45)',
           }}
         >
-          {gueguelOnline ? '🙆🏻‍♂️' : '🙇🏻‍♂️'}
+          {partnerOnline ? '🙆🏻‍♂️' : '🙇🏻‍♂️'}
         </span>
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>gueguel</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>{partnerName}</span>
       </div>
     </div>
   )

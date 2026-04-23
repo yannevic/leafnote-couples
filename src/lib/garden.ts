@@ -29,8 +29,7 @@ export const RARITY_COLORS: Record<FlowerRarity, string> = {
 }
 
 export interface WaterEntry {
-  nana: boolean
-  gueguel: boolean
+  [uid: string]: boolean
 }
 
 export interface PlantData {
@@ -69,7 +68,7 @@ export async function initPlant(flowerType: FlowerType): Promise<void> {
   await set(plantRef, data)
 }
 
-export async function waterPlant(nick: 'nana' | 'gueguel'): Promise<void> {
+export async function waterPlant(uid: string, partnerUid: string): Promise<void> {
   const plantRef = ref(db, GARDEN_PATH)
   const snap = await get(plantRef)
   if (!snap.exists()) return
@@ -78,20 +77,17 @@ export async function waterPlant(nick: 'nana' | 'gueguel'): Promise<void> {
   const today = new Date().toISOString().split('T')[0]
   const isNewDay = !plant.lastWateredDate || plant.lastWateredDate !== today
 
-  const alreadyDoneToday = plant.water.nana || plant.water.gueguel
-  const newWater: WaterEntry =
-    isNewDay && !alreadyDoneToday
-      ? { nana: nick === 'nana', gueguel: nick === 'gueguel' }
-      : { ...plant.water, [nick]: true }
+  const currentWater: WaterEntry = isNewDay ? {} : { ...plant.water }
+  currentWater[uid] = true
 
-  const bothWatered = newWater.nana && newWater.gueguel
+  const bothWatered = currentWater[uid] === true && currentWater[partnerUid] === true
   const newDaysWatered = bothWatered ? plant.daysWatered + 1 : plant.daysWatered
   const newStage = Math.min(5, Math.floor(newDaysWatered / 3))
 
   await set(plantRef, {
     ...plant,
-    water: newWater,
-    lastWateredDate: bothWatered ? today : '',
+    water: currentWater,
+    lastWateredDate: bothWatered ? today : plant.lastWateredDate,
     daysWatered: newDaysWatered,
     stage: newStage,
     wilted: false,

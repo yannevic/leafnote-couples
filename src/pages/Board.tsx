@@ -93,10 +93,8 @@ export default function Board() {
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
-  // nome do outro usuário: se eu sou "nana" o outro é "gueguel" e vice-versa (simples por ora)
-  const otherName = displayName.toLowerCase() === 'nana' ? 'gueguel' : 'nana'
-  const nick: 'nana' | 'gueguel' = displayName.toLowerCase() === 'nana' ? 'nana' : 'gueguel'
-  const { nanaPresence, gueguelPresence } = usePresence(uid, displayName)
+  const { myPresence, partnerPresence } = usePresence(uid, displayName)
+  const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
   const [nickLoading, setNickLoading] = useState(false)
@@ -528,18 +526,17 @@ export default function Board() {
         </span>
       </div>
 
-      <PresenceBadge nanaPresence={nanaPresence} gueguelPresence={gueguelPresence} />
+      <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
 
-      {/* Botão jardim */}
+      {/* Botão jardim — desativado temporariamente */}
       <div
-        onClick={() => navigate('/garden')}
         style={{
           position: 'fixed',
           bottom: 24,
           right: 24,
           zIndex: 48,
-          background: 'linear-gradient(180deg, #a0d080 0%, #4a7a4a 100%)',
-          border: '2px solid #2d4a2d',
+          background: 'linear-gradient(180deg, #c8c8c8 0%, #a0a0a0 100%)',
+          border: '2px solid #888',
           borderRadius: '50%',
           width: 54,
           height: 54,
@@ -547,12 +544,12 @@ export default function Board() {
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: 26,
-          cursor: 'pointer',
-          boxShadow: '0 4px 14px rgba(44,74,44,0.4)',
-          transition: 'transform 0.2s',
+          cursor: 'not-allowed',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
           userSelect: 'none',
+          opacity: 0.5,
         }}
-        title="abrir jardim"
+        title="jardim em breve 🌱"
       >
         🌱
       </div>
@@ -724,7 +721,9 @@ export default function Board() {
                 </button>
               </div>
             )}
-            {activeWidget === 'dice' && <Dice nick={nick} shared={sharedDice} />}
+            {activeWidget === 'dice' && (
+              <Dice uid={uid} displayName={displayName} shared={sharedDice} />
+            )}
             {activeWidget === 'timer' && <Timer state={timerState} onChange={setTimerState} />}
           </div>
         </div>

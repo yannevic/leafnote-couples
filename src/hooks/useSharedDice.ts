@@ -7,7 +7,7 @@ import {
   pushActivityLog,
 } from '../lib/widgets'
 
-export function useSharedDice(nick: 'nana' | 'gueguel') {
+export function useSharedDice(uid: string, displayName: string) {
   const [remote, setRemote] = useState<SharedDiceState | null>(null)
   const [isRolling, setIsRolling] = useState(false)
 
@@ -16,101 +16,86 @@ export function useSharedDice(nick: 'nana' | 'gueguel') {
     return unsub
   }, [])
 
-  // Rola no modo "juntos": grava um único valor que os dois veem
   const rollTogether = useCallback(
     (diceCount: number) => {
       if (isRolling) return
       setIsRolling(true)
-
       let frame = 0
       const frames = 8
-
       const interval = setInterval(() => {
         const val = Math.floor(Math.random() * 6) + 1
         const interim: SharedDiceState = {
           mode: 'together',
-          values: { [nick]: val },
-          rolledBy: nick,
+          values: { [uid]: val },
+          rolledBy: uid,
           rolledAt: Date.now(),
         }
         saveDiceState(interim)
         frame += 1
-
         if (frame >= frames) {
           clearInterval(interval)
-          // Grava N dados como array encodado em nana (juntos = nana guarda tudo)
           const finalValues: number[] = Array.from(
             { length: diceCount },
             () => Math.floor(Math.random() * 6) + 1
           )
           const final: SharedDiceState = {
             mode: 'together',
-            values: { nana: finalValues[0], gueguel: finalValues[1] ?? finalValues[0] },
-            rolledBy: nick,
+            values: { [uid]: finalValues[0] },
+            rolledBy: uid,
             rolledAt: Date.now(),
           }
           saveDiceState(final)
-          pushActivityLog(
-            nick,
-            `girou ${finalValues[0]}${finalValues[1] !== finalValues[0] ? ` e ${finalValues[1]}` : ''} no dado 🎲`
-          )
+          pushActivityLog(displayName, `girou ${finalValues[0]} no dado 🎲`)
           setIsRolling(false)
         }
       }, 60)
     },
-    [isRolling, nick]
+    [isRolling, uid, displayName]
   )
 
-  // Rola no modo "disputa": grava só o valor do nick atual
   const rollVersus = useCallback(() => {
     if (isRolling) return
     setIsRolling(true)
-
     let frame = 0
     const frames = 8
     const current = remote
-
     const interval = setInterval(() => {
       frame += 1
       const val = Math.floor(Math.random() * 6) + 1
       const interim: SharedDiceState = {
         mode: 'versus',
-        values: {
-          ...(current?.values ?? {}),
-          [nick]: val,
-        },
-        rolledBy: nick,
+        values: { ...(current?.values ?? {}), [uid]: val },
+        rolledBy: uid,
         rolledAt: Date.now(),
       }
       saveDiceState(interim)
-
       if (frame >= frames) {
         clearInterval(interval)
         const finalVal = Math.floor(Math.random() * 6) + 1
         const finalState: SharedDiceState = {
           mode: 'versus',
-          values: { ...(current?.values ?? {}), [nick]: finalVal },
-          rolledBy: nick,
+          values: { ...(current?.values ?? {}), [uid]: finalVal },
+          rolledBy: uid,
           rolledAt: Date.now(),
         }
         saveDiceState(finalState)
-        pushActivityLog(nick, `girou um ${finalVal} na disputa ⚔️`)
+        pushActivityLog(displayName, `girou um ${finalVal} na disputa ⚔️`)
         setIsRolling(false)
       }
     }, 60)
-  }, [isRolling, nick, remote])
+  }, [isRolling, uid, displayName, remote])
 
   const setMode = useCallback(
     (mode: DiceMode) => {
       const next: SharedDiceState = {
         mode,
         values: {},
-        rolledBy: nick,
+        rolledBy: uid,
         rolledAt: Date.now(),
       }
       saveDiceState(next)
     },
-    [nick]
+    [uid]
   )
 
   return { remote, isRolling, rollTogether, rollVersus, setMode }

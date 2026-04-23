@@ -6,8 +6,7 @@ import { ref, set, onValue, off, query, orderByChild, limitToLast } from 'fireba
 export type DiceMode = 'together' | 'versus'
 
 export interface DiceValues {
-  nana?: number
-  gueguel?: number
+  [uid: string]: number | undefined
 }
 
 export interface SharedDiceState {

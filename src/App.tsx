@@ -2,14 +2,10 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './lib/firebase'
-import Countdown from './pages/Countdown'
-import Garden from './pages/Garden'
 import Board from './pages/Board'
 import Login from './pages/Login'
-import FlowerTest from './pages/FlowerTest'
 
 function App() {
-  const [revealed, setRevealed] = useState(localStorage.getItem('app-revealed') === 'true')
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
@@ -20,10 +16,6 @@ function App() {
     })
     return unsub
   }, [])
-
-  if (!revealed) {
-    return <Countdown onReveal={() => setRevealed(true)} />
-  }
 
   if (authLoading) {
     return (
@@ -47,11 +39,6 @@ function App() {
           path="/board"
           element={user !== null ? <Board /> : <Navigate to="/login" replace />}
         />
-        <Route
-          path="/garden"
-          element={user !== null ? <Garden /> : <Navigate to="/login" replace />}
-        />
-        <Route path="/flower-test" element={<FlowerTest />} />
         <Route path="*" element={<Navigate to={user !== null ? '/board' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>

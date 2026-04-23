@@ -85,7 +85,7 @@ export default function Login() {
           {mode === 'register' && (
             <input
               type="text"
-              placeholder="seu apelido (ex: nana, gueguel)"
+              placeholder="seu apelido"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               onKeyDown={handleKeyDown}

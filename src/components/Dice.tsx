@@ -116,11 +116,12 @@ function SingleDie({
 }
 
 interface DiceProps {
-  nick: 'nana' | 'gueguel'
+  uid: string
+  displayName: string
   shared?: boolean
 }
 
-export default function Dice({ nick, shared = false }: DiceProps) {
+export default function Dice({ uid, displayName, shared = false }: DiceProps) {
   const [localValues, setLocalValues] = useState<number[]>([1, 1])
   const [localRolling, setLocalRolling] = useState(false)
   const [localDiceCount, setLocalDiceCount] = useState(2)
@@ -132,7 +133,7 @@ export default function Dice({ nick, shared = false }: DiceProps) {
     rollTogether,
     rollVersus,
     setMode,
-  } = useSharedDice(nick)
+  } = useSharedDice(uid, displayName)
 
   const diceMode = remote?.mode ?? 'together'
 
@@ -268,19 +269,19 @@ export default function Dice({ nick, shared = false }: DiceProps) {
   }
 
   // ─── Modo compartilhado ───────────────────────────────────────────────────────
-  const nanaVal = remote?.values?.nana ?? 1
-  const gueguelVal = remote?.values?.gueguel ?? 1
+  const allUids = Object.keys(remote?.values ?? {})
+  const myVal = remote?.values?.[uid] ?? 1
+  const partnerUid = allUids.find((id) => id !== uid) ?? ''
+  const partnerVal = partnerUid ? (remote?.values?.[partnerUid] ?? 1) : 1
   const rolling = sharedRolling
 
   function getVersusResult() {
-    const hasNana = remote?.values?.nana != null
-    const hasGueguel = remote?.values?.gueguel != null
-    if (!hasNana || !hasGueguel) return null
-    const nana = remote!.values.nana!
-    const gueg = remote!.values.gueguel!
-    if (nana > gueg) return <span style={{ color: 'var(--color-leaf-600)' }}>nana ganhou! 🌸</span>
-    if (gueg > nana)
-      return <span style={{ color: 'var(--color-petal-400)' }}>gueguel ganhou! 🎉</span>
+    if (!partnerUid || remote?.values?.[uid] == null || remote?.values?.[partnerUid] == null)
+      return null
+    if (myVal > partnerVal)
+      return <span style={{ color: 'var(--color-leaf-600)' }}>{displayName} ganhou! 🌸</span>
+    if (partnerVal > myVal)
+      return <span style={{ color: 'var(--color-petal-400)' }}>{partnerUid} ganhou! 🎉</span>
     return <span style={{ color: 'var(--color-bark-700)' }}>empate! 🤝</span>
   }
 
@@ -339,20 +340,20 @@ export default function Dice({ nick, shared = false }: DiceProps) {
       {/* Dados */}
       {diceMode === 'together' ? (
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-          <SingleDie value={nanaVal} isRolling={rolling} />
-          <SingleDie value={gueguelVal} isRolling={rolling} />
+          <SingleDie value={myVal} isRolling={rolling} />
+          <SingleDie value={partnerVal} isRolling={rolling} />
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 24, justifyContent: 'center', alignItems: 'flex-end' }}>
           <SingleDie
-            value={nanaVal}
-            isRolling={rolling && remote?.rolledBy === 'nana'}
-            label="nana 🌸"
+            value={myVal}
+            isRolling={rolling && remote?.rolledBy === uid}
+            label={`${displayName} 🌸`}
           />
           <SingleDie
-            value={gueguelVal}
-            isRolling={rolling && remote?.rolledBy === 'gueguel'}
-            label="gueguel 🌿"
+            value={partnerVal}
+            isRolling={rolling && remote?.rolledBy === partnerUid}
+            label={partnerUid ? `parceiro 🌿` : '...'}
           />
         </div>
       )}
@@ -412,7 +413,7 @@ export default function Dice({ nick, shared = false }: DiceProps) {
             transition: 'all 0.15s',
           }}
         >
-          {rolling ? 'Rolando...' : `⚔️ Minha vez (${nick})`}
+          {rolling ? '⚔️ Rolando...' : `⚔️ Minha vez (${displayName})`}
         </button>
       )}
     </div>

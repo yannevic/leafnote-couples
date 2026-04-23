@@ -19,11 +19,10 @@ export function usePresence(uid: string, displayName: string) {
     return () => off(presRef, 'value')
   }, [])
 
-  const nanaPresence =
-    Object.values(allPresence).find((p) => p.displayName?.toLowerCase() === 'nana') ?? null
+  const myPresence = allPresence[uid] ?? null
 
-  const gueguelPresence =
-    Object.values(allPresence).find((p) => p.displayName?.toLowerCase() === 'gueguel') ?? null
+  const partnerEntry = Object.entries(allPresence).find(([id]) => id !== uid)
+  const partnerPresence = partnerEntry ? partnerEntry[1] : null
 
-  return { nanaPresence, gueguelPresence }
+  return { myPresence, partnerPresence }
 }
