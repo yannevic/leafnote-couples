@@ -45,7 +45,10 @@ export default function WeekCalendarModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: 'rgba(26,42,26,0.55)' }}
-      onClick={onClose}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClose()
+      }}
     >
       <div
         className="relative rounded-2xl shadow-2xl flex flex-col"

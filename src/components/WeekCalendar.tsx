@@ -239,7 +239,7 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
                         }}
                       >
                         {entry.time && (
-                          <span className="font-bold mr-1" style={{ color: t.accent }}>
+                          <span className="font-bold" style={{ color: t.accent, marginRight: 6 }}>
                             {entry.time}
                           </span>
                         )}
