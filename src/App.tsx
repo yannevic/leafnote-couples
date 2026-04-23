@@ -6,6 +6,7 @@ import Countdown from './pages/Countdown'
 import Garden from './pages/Garden'
 import Board from './pages/Board'
 import Login from './pages/Login'
+import FlowerTest from './pages/FlowerTest'
 
 function App() {
   const [revealed, setRevealed] = useState(localStorage.getItem('app-revealed') === 'true')
@@ -50,6 +51,7 @@ function App() {
           path="/garden"
           element={user !== null ? <Garden /> : <Navigate to="/login" replace />}
         />
+        <Route path="/flower-test" element={<FlowerTest />} />
         <Route path="*" element={<Navigate to={user !== null ? '/board' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>

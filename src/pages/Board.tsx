@@ -19,6 +19,7 @@ import Checklist from '../components/Checklist'
 import Tag from '../components/Tag'
 import Letter from '../components/Letter'
 import DrawingSheet from '../components/DrawingSheet'
+import WeekCalendar from '../components/WeekCalendar'
 import { DrawingItem } from '../types/board'
 import { usePresence } from '../hooks/usePresence'
 import PresenceBadge from '../components/PresenceBadge'
@@ -95,6 +96,7 @@ export default function Board() {
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
   const [nickLoading, setNickLoading] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
 
   const handleSaveNick = async () => {
     if (!nickInput.trim() || !user) return
@@ -531,6 +533,33 @@ export default function Board() {
         🌱
       </div>
 
+      {/* Botão calendário */}
+      <div
+        onClick={() => setShowCalendar(true)}
+        style={{
+          position: 'fixed',
+          bottom: 88,
+          right: 24,
+          zIndex: 48,
+          background: 'linear-gradient(180deg, #f5d5dc 0%, #e8a0b0 100%)',
+          border: '2px solid #c87090',
+          borderRadius: '50%',
+          width: 54,
+          height: 54,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 26,
+          cursor: 'pointer',
+          boxShadow: '0 4px 14px rgba(200,112,144,0.4)',
+          transition: 'transform 0.2s',
+          userSelect: 'none',
+        }}
+        title="abrir calendário"
+      >
+        📅
+      </div>
+
       {/* Toolbar */}
       <Toolbar
         selected={selectedTool}
@@ -539,6 +568,9 @@ export default function Board() {
         onToggleEdit={() => setEditMode((e) => !e)}
       />
       <StreakCounter />
+      {showCalendar && (
+        <WeekCalendar displayName={displayName} onClose={() => setShowCalendar(false)} />
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { ref, set, get, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 
-export type FlowerType = 'rosa' | 'margarida' | 'tulipa' | 'girassol' | 'orquidea'
+export type FlowerType = 'rosa' | 'margarida' | 'tulipa' | 'girassol' | 'orquidea' | 'especial'
 
 export type FlowerRarity = 'comum' | 'incomum' | 'rara' | 'epica'
 
@@ -18,6 +18,7 @@ export const FLOWERS: Record<FlowerType, FlowerInfo> = {
   tulipa: { type: 'tulipa', name: 'Tulipa', rarity: 'incomum', emoji: '🌷' },
   girassol: { type: 'girassol', name: 'Girassol', rarity: 'incomum', emoji: '🌻' },
   orquidea: { type: 'orquidea', name: 'Orquídea', rarity: 'rara', emoji: '🌺' },
+  especial: { type: 'especial', name: 'Flor Épica', rarity: 'epica', emoji: '🌸' },
 }
 
 export const RARITY_COLORS: Record<FlowerRarity, string> = {

@@ -18,7 +18,7 @@ export default function GardenView({ nick, onBack }: Props) {
 
   const partnerNick = nick === 'nana' ? 'gueguel' : 'nana'
   const { water: waterAsPartner } = useGarden(partnerNick)
-  const today = new Date().toISOString().split('T')[0]
+
   const partnerWatered = plant
     ? partnerNick === 'nana'
       ? plant.water.nana
@@ -392,52 +392,17 @@ export default function GardenView({ nick, onBack }: Props) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 20,
+            gap: 16,
             marginTop: 20,
-            padding: '0 40px',
+            padding: '0 20px',
             width: '100%',
-            maxWidth: 400,
+            maxWidth: 700,
           }}
         >
-          {/* info da flor */}
-          <div
-            style={{
-              background: '#fdf6f0',
-              border: '1.5px solid #e8a0b0',
-              borderRadius: 14,
-              padding: '10px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <span style={{ fontSize: 22 }}>{FLOWERS[plant.flowerType]?.emoji}</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#5a1028' }}>
-                {FLOWERS[plant.flowerType]?.name}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: RARITY_COLORS[FLOWERS[plant.flowerType]?.rarity],
-                }}
-              >
-                {FLOWERS[plant.flowerType]?.rarity}
-              </div>
-            </div>
-            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#4a7a4a' }}>
-                {stageLabels[plant.stage]}
-              </div>
-              <div style={{ fontSize: 10, color: '#7fb87f' }}>{plant.daysWatered} dias regados</div>
-            </div>
-          </div>
-
           {/* barrinha de rega */}
           <div
             style={{
-              width: 160,
+              width: '100%',
               height: 6,
               background: '#d8eed8',
               borderRadius: 10,
@@ -460,78 +425,170 @@ export default function GardenView({ nick, onBack }: Props) {
             />
           </div>
 
-          {/* planta SVG */}
-          <Plant plant={plant} />
-
-          {/* barra de progresso pro próximo estágio */}
-          {plant.stage < 5 && (
-            <div style={{ width: '100%', maxWidth: 280 }}>
-              <div style={{ fontSize: 10, color: '#4a7a4a', fontWeight: 700, marginBottom: 4 }}>
-                progresso pro próximo estágio
-              </div>
-              <div
-                style={{
-                  height: 8,
-                  background: '#d8eed8',
-                  borderRadius: 10,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${((plant.daysWatered % 3) / 3) * 100}%`,
-                    background: 'linear-gradient(90deg, #7fb87f, #4a7a4a)',
-                    borderRadius: 10,
-                    transition: 'width 0.6s ease',
-                  }}
-                />
-              </div>
-              <div style={{ fontSize: 10, color: '#7fb87f', marginTop: 3 }}>
-                {plant.daysWatered % 3}/3 dias
-              </div>
-            </div>
-          )}
-
-          {plant.stage >= 5 && (
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                color: '#7a3040',
-                background: '#fff0f5',
-                borderRadius: 12,
-                padding: '8px 20px',
-                border: '1.5px solid #e8a0b0',
-              }}
-            >
-              florzinha crescida! 🌸
-            </div>
-          )}
-
-          <WaterButton
-            alreadyWatered={alreadyWatered}
-            partnerWatered={partnerWatered}
-            onWater={water}
-          />
-          {/* REMOVER ANTES DO BUILD */}
-          <button
-            onClick={waterAsPartner}
+          {/* linha principal: info esquerda + planta + info direita */}
+          <div
             style={{
-              marginTop: 4,
-              padding: '6px 16px',
-              borderRadius: 10,
-              background: '#e8f5e8',
-              border: '1.5px dashed #4a7a4a',
-              color: '#4a7a4a',
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 700,
-              fontSize: 12,
-              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              gap: 24,
             }}
           >
-            🧪 regar como {partnerNick}
-          </button>
+            {/* coluna esquerda */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                alignItems: 'flex-start',
+                minWidth: 120,
+              }}
+            >
+              <div
+                style={{
+                  background: '#fdf6f0',
+                  border: '1.5px solid #e8a0b0',
+                  borderRadius: 14,
+                  padding: '10px 14px',
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: 22 }}>{FLOWERS[plant.flowerType]?.emoji}</span>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#5a1028' }}>
+                  {FLOWERS[plant.flowerType]?.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: RARITY_COLORS[FLOWERS[plant.flowerType]?.rarity],
+                  }}
+                >
+                  {FLOWERS[plant.flowerType]?.rarity}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#4a7a4a' }}>
+                {stageLabels[plant.stage]}
+              </div>
+              <div style={{ fontSize: 10, color: '#7fb87f' }}>{plant.daysWatered} dias regados</div>
+            </div>
+
+            {/* planta centralizada */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <Plant plant={plant} />
+              {plant.wilted && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 370,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#f0e8e8',
+                    border: '1.5px solid #e8a0b0',
+                    borderRadius: 12,
+                    padding: '8px 18px',
+                    fontSize: 12,
+                    color: '#7a3040',
+                    fontFamily: 'Baloo 2, sans-serif',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    zIndex: 10,
+                  }}
+                >
+                  🥀 reguem juntos pra recuperar a plantinha!
+                </div>
+              )}
+            </div>
+
+            {/* coluna direita */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                alignItems: 'center',
+                minWidth: 160,
+                background: '#fdf6f0',
+                border: '1.5px solid #a8d8a8',
+                borderRadius: 16,
+                padding: '16px 18px',
+              }}
+            >
+              {plant.stage < 5 && (
+                <div style={{ width: '100%' }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: '#4a7a4a',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                      textAlign: 'center',
+                    }}
+                  >
+                    próximo estágio
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      background: '#d8eed8',
+                      borderRadius: 10,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${((plant.daysWatered % 3) / 3) * 100}%`,
+                        background: 'linear-gradient(90deg, #7fb87f, #4a7a4a)',
+                        borderRadius: 10,
+                        transition: 'width 0.6s ease',
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{ fontSize: 10, color: '#7fb87f', marginTop: 3, textAlign: 'center' }}
+                  >
+                    {plant.daysWatered % 3}/3 dias
+                  </div>
+                </div>
+              )}
+
+              {plant.stage >= 5 && (
+                <div
+                  style={{ fontSize: 13, fontWeight: 800, color: '#7a3040', textAlign: 'center' }}
+                >
+                  florzinha crescida! 🌸
+                </div>
+              )}
+
+              <WaterButton
+                alreadyWatered={alreadyWatered}
+                partnerWatered={partnerWatered}
+                onWater={water}
+              />
+
+              {/* REMOVER ANTES DO BUILD */}
+              <button
+                onClick={waterAsPartner}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: 10,
+                  background: '#e8f5e8',
+                  border: '1.5px dashed #4a7a4a',
+                  color: '#4a7a4a',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                🧪 regar como {partnerNick}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
