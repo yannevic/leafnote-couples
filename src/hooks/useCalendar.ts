@@ -13,8 +13,7 @@ import {
 export default function useCalendar(displayName: string) {
   const now = new Date()
   const [theme, setThemeState] = useState<CalendarTheme | null>(null)
-  const [viewYear, setViewYear] = useState(now.getFullYear())
-  const [viewMonth, setViewMonth] = useState(now.getMonth())
+  const [viewDate, setViewDate] = useState({ year: now.getFullYear(), month: now.getMonth() })
   const [dayEntries, setDayEntries] = useState<Record<string, CalendarEvent[]>>({})
 
   useEffect(() => {
@@ -44,36 +43,34 @@ export default function useCalendar(displayName: string) {
   }, [])
 
   const goToPrevMonth = useCallback(() => {
-    setViewMonth((m) => {
-      if (m === 0) {
-        setViewYear((y) => y - 1)
-        return 11
-      }
-      return m - 1
+    setViewDate((prev) => {
+      if (prev.month === 0) return { year: prev.year - 1, month: 11 }
+      return { year: prev.year, month: prev.month - 1 }
     })
   }, [])
 
   const goToNextMonth = useCallback(() => {
-    setViewMonth((m) => {
-      if (m === 11) {
-        setViewYear((y) => y + 1)
-        return 0
-      }
-      return m + 1
+    setViewDate((prev) => {
+      if (prev.month === 11) return { year: prev.year + 1, month: 0 }
+      return { year: prev.year, month: prev.month + 1 }
     })
+  }, [])
+
+  const goToDate = useCallback((year: number, month: number) => {
+    setViewDate({ year, month })
   }, [])
 
   return {
     theme,
     dayEntries,
-    viewYear,
-    viewMonth,
+    viewYear: viewDate.year,
+    viewMonth: viewDate.month,
     subscribeDayEntries,
     addEvent,
     removeEvent,
     changeTheme,
     goToPrevMonth,
     goToNextMonth,
-    toDateKey,
+    goToDate,
   }
 }

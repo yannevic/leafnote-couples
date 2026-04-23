@@ -29,11 +29,16 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
     changeTheme,
     goToPrevMonth,
     goToNextMonth,
+    goToDate,
   } = useCalendar(displayName)
 
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [themePickerPos, setThemePickerPos] = useState({ top: 0, right: 0 })
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [pickerYear, setPickerYear] = useState(viewYear)
+  const [datePickerPos, setDatePickerPos] = useState({ top: 0, left: 0 })
+  const dateButtonRef = useRef<HTMLButtonElement>(null)
   const themeButtonRef = useRef<HTMLButtonElement>(null)
 
   const t = theme ? THEME_COLORS[theme] : null
@@ -70,11 +75,12 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="relative rounded-3xl shadow-2xl flex flex-col"
+        className="relative shadow-2xl flex flex-col"
         style={{
           width: '92vw',
           maxWidth: 1000,
           height: '90vh',
+          borderRadius: 17,
           background: t.bg,
           backgroundImage: `url(./src/assets/patterns/${theme}.png)`,
           backgroundSize: '160px',
@@ -85,7 +91,7 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
         {/* overlay legibilidade */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: `${t.bg}e8`, zIndex: 1 }}
+          style={{ background: `${t.bg}e8`, zIndex: 1, borderRadius: 17 }}
         />
 
         {/* ── HEADER ── */}
@@ -96,17 +102,30 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           <div className="flex items-center gap-4">
             <button
               className="flex items-center justify-center text-2xl font-bold hover:opacity-70 transition-opacity"
-              style={{ color: t.accent, padding: '0 30px' }}
+              style={{ color: t.accent, padding: '0 8px' }}
               onClick={goToPrevMonth}
             >
               ‹
             </button>
-            <h2
-              className="text-2xl font-bold min-w-56 text-center"
-              style={{ fontFamily: 'Baloo 2, sans-serif', color: t.accent }}
-            >
-              {MONTH_NAMES[viewMonth]} {viewYear}
-            </h2>
+
+            <div className="relative">
+              <button
+                ref={dateButtonRef}
+                className="text-2xl font-bold min-w-56 text-center hover:opacity-70 transition-opacity"
+                style={{ fontFamily: 'Baloo 2, sans-serif', color: t.accent }}
+                onClick={() => {
+                  if (dateButtonRef.current) {
+                    const rect = dateButtonRef.current.getBoundingClientRect()
+                    setDatePickerPos({ top: rect.bottom + 8, left: rect.left })
+                  }
+                  setPickerYear(viewYear)
+                  setShowDatePicker((v) => !v)
+                }}
+              >
+                {MONTH_NAMES[viewMonth]} {viewYear} ▾
+              </button>
+            </div>
+
             <button
               className="flex items-center justify-center text-2xl font-bold hover:opacity-70 transition-opacity"
               style={{ color: t.accent, padding: '0 8px' }}
@@ -233,6 +252,70 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           </div>
         </div>
       </div>
+
+      {showDatePicker && (
+        <div
+          className="fixed flex flex-col rounded-2xl"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            top: datePickerPos.top,
+            left: datePickerPos.left,
+            background: t.bg,
+            border: `1.5px solid ${t.border}`,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            zIndex: 9999,
+            padding: '16px',
+            minWidth: 280,
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <button
+              className="text-lg font-bold hover:opacity-70"
+              style={{ color: t.accent, padding: '0 8px' }}
+              onClick={() => setPickerYear((y) => y - 1)}
+            >
+              ‹
+            </button>
+            <span
+              className="font-bold text-lg"
+              style={{ fontFamily: 'Baloo 2, sans-serif', color: t.accent }}
+            >
+              {pickerYear}
+            </span>
+            <button
+              className="text-lg font-bold hover:opacity-70"
+              style={{ color: t.accent, padding: '0 8px' }}
+              onClick={() => setPickerYear((y) => y + 1)}
+            >
+              ›
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3" style={{ gap: 6 }}>
+            {MONTH_NAMES.map((name, i) => {
+              const isSelected = i === viewMonth && pickerYear === viewYear
+              return (
+                <button
+                  key={name}
+                  className="rounded-xl text-sm font-bold hover:opacity-80 transition-opacity"
+                  style={{
+                    fontFamily: 'Baloo 2, sans-serif',
+                    background: isSelected ? t.accent : `${t.accent}18`,
+                    color: isSelected ? '#fff' : t.text,
+                    padding: '8px 4px',
+                  }}
+                  onClick={() => {
+                    goToDate(pickerYear, i)
+                    setShowDatePicker(false)
+                  }}
+                >
+                  {name.slice(0, 3)}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {showThemePicker && (
         <div
