@@ -10,6 +10,8 @@ import {
   Undo2,
   Redo2,
   Trash2,
+  PaintBucket,
+  Brush,
 } from 'lucide-react'
 import { DrawingItem } from '../types/board'
 
@@ -44,10 +46,12 @@ type Tool =
   | 'diamond'
   | 'pentagon'
   | 'hexagon'
+  | 'fill'
 
 const TOOLS: { id: Tool; icon: React.ReactNode }[] = [
   { id: 'pen', icon: <Pencil size={15} /> },
   { id: 'eraser', icon: <Eraser size={15} /> },
+  { id: 'fill', icon: <PaintBucket size={15} /> },
   { id: 'line', icon: <Minus size={15} /> },
   { id: 'arrow', icon: <ArrowRight size={15} /> },
   { id: 'rect', icon: <Square size={15} /> },
@@ -67,6 +71,40 @@ const TOOLS: { id: Tool; icon: React.ReactNode }[] = [
         strokeLinejoin="round"
       >
         <polygon points="12,2 22,12 12,22 2,12" />
+      </svg>
+    ),
+  },
+  {
+    id: 'heart',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'star',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
       </svg>
     ),
   },
@@ -104,45 +142,11 @@ const TOOLS: { id: Tool; icon: React.ReactNode }[] = [
       </svg>
     ),
   },
-  {
-    id: 'star',
-    icon: (
-      <svg
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-      </svg>
-    ),
-  },
-  {
-    id: 'heart',
-    icon: (
-      <svg
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    ),
-  },
 ]
 
 const SIZES = [2, 4, 8, 14]
 const CANVAS_W = 780
-const CANVAS_H = 520
+const CANVAS_H = 580
 
 interface Props {
   item: DrawingItem
@@ -285,6 +289,88 @@ function drawShape(
   ctx.stroke()
 }
 
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '')
+  const num = parseInt(
+    clean.length === 3
+      ? clean
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : clean,
+    16
+  )
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255]
+}
+
+function floodFill(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  startY: number,
+  fillColor: string,
+  canvasW: number,
+  canvasH: number
+) {
+  const imageData = ctx.getImageData(0, 0, canvasW, canvasH)
+  const data = imageData.data
+
+  const px = Math.floor(startX)
+  const py = Math.floor(startY)
+  const idx = (py * canvasW + px) * 4
+
+  const targetR = data[idx]
+  const targetG = data[idx + 1]
+  const targetB = data[idx + 2]
+  const targetA = data[idx + 3]
+
+  const [fillR, fillG, fillB] = hexToRgb(fillColor)
+
+  // já é a mesma cor
+  if (targetR === fillR && targetG === fillG && targetB === fillB && targetA === 255) return
+
+  const tolerance = 32
+
+  function matchesTarget(i: number) {
+    return (
+      Math.abs(data[i] - targetR) <= tolerance &&
+      Math.abs(data[i + 1] - targetG) <= tolerance &&
+      Math.abs(data[i + 2] - targetB) <= tolerance &&
+      Math.abs(data[i + 3] - targetA) <= tolerance
+    )
+  }
+
+  const visited = new Uint8Array(canvasW * canvasH)
+  const stack: number[] = [px + py * canvasW]
+  visited[px + py * canvasW] = 1
+
+  while (stack.length > 0) {
+    const pos = stack.pop()!
+    const x = pos % canvasW
+    const y = Math.floor(pos / canvasW)
+    const i = pos * 4
+
+    data[i] = fillR
+    data[i + 1] = fillG
+    data[i + 2] = fillB
+    data[i + 3] = 255
+
+    const neighbors = [
+      x > 0 ? pos - 1 : -1,
+      x < canvasW - 1 ? pos + 1 : -1,
+      y > 0 ? pos - canvasW : -1,
+      y < canvasH - 1 ? pos + canvasW : -1,
+    ]
+
+    neighbors.forEach((n) => {
+      if (n === -1 || visited[n]) return
+      visited[n] = 1
+      if (matchesTarget(n * 4)) stack.push(n)
+    })
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+}
+
 function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const snapshotRef = useRef<ImageData | null>(null)
@@ -376,63 +462,111 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const scaleY = canvas.height / rect.height
     return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
   }
-
   const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    drawing.current = true
     const pos = getPos(e)
-    startPos.current = pos
     const canvas = canvasRef.current!
     const ctx = canvas.getContext('2d')!
+
+    if (tool === 'fill') {
+      floodFill(ctx, pos.x, pos.y, color, canvas.width, canvas.height)
+      pushHistory()
+      return
+    }
+
+    drawing.current = true
+    startPos.current = pos
+
     if (tool === 'pen' || tool === 'eraser') {
       ctx.beginPath()
       ctx.moveTo(pos.x, pos.y)
     } else {
       snapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
     }
+
+    const onWindowMove = (ev: MouseEvent) => {
+      if (!drawing.current) return
+      const canvas2 = canvasRef.current!
+      const ctx2 = canvas2.getContext('2d')!
+      const rect = canvas2.getBoundingClientRect()
+      const movePos = {
+        x: Math.max(0, Math.min(CANVAS_W, ev.clientX - rect.left)),
+        y: Math.max(0, Math.min(CANVAS_H, ev.clientY - rect.top)),
+      }
+
+      if (tool === 'pen') {
+        ctx2.lineWidth = size
+        ctx2.lineCap = 'round'
+        ctx2.lineJoin = 'round'
+        ctx2.strokeStyle = color
+        ctx2.lineTo(movePos.x, movePos.y)
+        ctx2.stroke()
+        ctx2.beginPath()
+        ctx2.moveTo(movePos.x, movePos.y)
+      } else if (tool === 'eraser') {
+        ctx2.lineWidth = size * 4
+        ctx2.lineCap = 'round'
+        ctx2.lineJoin = 'round'
+        ctx2.strokeStyle = '#fffef8'
+        ctx2.lineTo(movePos.x, movePos.y)
+        ctx2.stroke()
+        ctx2.beginPath()
+        ctx2.moveTo(movePos.x, movePos.y)
+      } else {
+        ctx2.putImageData(snapshotRef.current!, 0, 0)
+        drawShape(
+          ctx2,
+          tool,
+          startPos.current.x,
+          startPos.current.y,
+          movePos.x,
+          movePos.y,
+          color,
+          size,
+          fill
+        )
+      }
+    }
+
+    const onWindowUp = (ev: MouseEvent) => {
+      if (!drawing.current) return
+      drawing.current = false
+      if (tool !== 'pen' && tool !== 'eraser') {
+        const canvas2 = canvasRef.current!
+        const ctx2 = canvas2.getContext('2d')!
+        const rect = canvas2.getBoundingClientRect()
+        const upPos = {
+          x: Math.max(0, Math.min(CANVAS_W, ev.clientX - rect.left)),
+          y: Math.max(0, Math.min(CANVAS_H, ev.clientY - rect.top)),
+        }
+        ctx2.putImageData(snapshotRef.current!, 0, 0)
+        drawShape(
+          ctx2,
+          tool,
+          startPos.current.x,
+          startPos.current.y,
+          upPos.x,
+          upPos.y,
+          color,
+          size,
+          fill
+        )
+      }
+      pushHistory()
+      window.removeEventListener('mousemove', onWindowMove)
+      window.removeEventListener('mouseup', onWindowUp)
+    }
+
+    window.addEventListener('mousemove', onWindowMove)
+    window.addEventListener('mouseup', onWindowUp)
   }
 
   const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect()
     setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-    if (!drawing.current) return
-    const ctx = canvasRef.current!.getContext('2d')!
-    const pos = getPos(e)
-
-    if (tool === 'pen') {
-      ctx.lineWidth = size
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.strokeStyle = color
-      ctx.lineTo(pos.x, pos.y)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(pos.x, pos.y)
-    } else if (tool === 'eraser') {
-      ctx.lineWidth = size * 4
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.strokeStyle = '#fffef8'
-      ctx.lineTo(pos.x, pos.y)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(pos.x, pos.y)
-    } else {
-      const canvas = canvasRef.current!
-      ctx.putImageData(snapshotRef.current!, 0, 0)
-      drawShape(ctx, tool, startPos.current.x, startPos.current.y, pos.x, pos.y, color, size, fill)
-    }
   }
 
-  const onMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return
-    drawing.current = false
-    if (tool !== 'pen' && tool !== 'eraser') {
-      const pos = getPos(e)
-      const ctx = canvasRef.current!.getContext('2d')!
-      ctx.putImageData(snapshotRef.current!, 0, 0)
-      drawShape(ctx, tool, startPos.current.x, startPos.current.y, pos.x, pos.y, color, size, fill)
-    }
-    pushHistory()
+  const onMouseUp = () => {
+    // handled by window listener in onMouseDown
   }
 
   const handleClear = () => {
@@ -475,7 +609,18 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
           fontFamily: 'Baloo 2, sans-serif',
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#3d2408' }}>✏️ Desenho</div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            color: '#3d2408',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Brush size={16} color="#3d2408" /> Desenho
+        </div>
 
         <div style={{ display: 'flex', gap: 12 }}>
           {/* painel lateral de ferramentas */}
