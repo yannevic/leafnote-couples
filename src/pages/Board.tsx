@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
+import { useNotifications } from '../hooks/useNotifications'
 import { auth } from '../lib/firebase'
 import { updateProfile } from 'firebase/auth'
 
@@ -96,6 +97,7 @@ export default function Board() {
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
   const { myPresence, partnerPresence, partnerUid } = usePresence(uid, displayName)
+  useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '')
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
