@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { Eraser } from 'lucide-react'
 import { DrawingItem } from '../types/board'
 
 const PRESET_COLORS = [
@@ -16,7 +17,6 @@ const PRESET_COLORS = [
   '#e74c3c',
   '#f39c12',
   '#fffef8',
-  '#ffffff',
   '#000000',
 ]
 
@@ -36,7 +36,7 @@ type Tool =
 
 const TOOLS: { id: Tool; label: string }[] = [
   { id: 'pen', label: '✏️' },
-  { id: 'eraser', label: '⬜' },
+  { id: 'eraser', label: 'eraser' },
   { id: 'line', label: '╱' },
   { id: 'arrow', label: '→' },
   { id: 'rect', label: '▭' },
@@ -141,9 +141,8 @@ function drawShape(
     ctx.lineTo(x1, cy)
     ctx.closePath()
   } else if (tool === 'pentagon') {
-    const pts = 5
-    for (let i = 0; i < pts; i += 1) {
-      const a = (Math.PI * 2 * i) / pts - Math.PI / 2
+    for (let i = 0; i < 5; i += 1) {
+      const a = (Math.PI * 2 * i) / 5 - Math.PI / 2
       const px = cx + r * Math.cos(a)
       const py = cy + r * Math.sin(a)
       if (i === 0) ctx.moveTo(px, py)
@@ -151,9 +150,8 @@ function drawShape(
     }
     ctx.closePath()
   } else if (tool === 'hexagon') {
-    const pts = 6
-    for (let i = 0; i < pts; i += 1) {
-      const a = (Math.PI * 2 * i) / pts
+    for (let i = 0; i < 6; i += 1) {
+      const a = (Math.PI * 2 * i) / 6
       const px = cx + r * Math.cos(a)
       const py = cy + r * Math.sin(a)
       if (i === 0) ctx.moveTo(px, py)
@@ -173,13 +171,11 @@ function drawShape(
     }
     ctx.closePath()
   } else if (tool === 'heart') {
-    const w = rx * 2
-    const h = ry * 2
-    ctx.moveTo(cx, y2)
-    ctx.bezierCurveTo(x1 - w * 0.1, cy + h * 0.1, x1 - w * 0.1, y1, cx - w * 0.25, y1)
-    ctx.bezierCurveTo(x1 + w * 0.1, y1, cx, y1 + h * 0.15, cx, y1 + h * 0.3)
-    ctx.bezierCurveTo(cx, y1 + h * 0.15, cx + w * 0.4, y1, cx + w * 0.25, y1)
-    ctx.bezierCurveTo(x2 + w * 0.1, y1, x2 + w * 0.1, cy + h * 0.1, cx, y2)
+    // coração simétrico baseado em raio uniforme
+    const s = r
+    ctx.moveTo(cx, cy + s * 0.9)
+    ctx.bezierCurveTo(cx - s * 1.2, cy + s * 0.3, cx - s * 1.4, cy - s * 0.6, cx, cy - s * 0.2)
+    ctx.bezierCurveTo(cx + s * 1.4, cy - s * 0.6, cx + s * 1.2, cy + s * 0.3, cx, cy + s * 0.9)
     ctx.closePath()
   }
 
@@ -412,7 +408,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                 title={t.id}
                 style={toolBtnStyle(tool === t.id)}
               >
-                {t.label}
+                {t.id === 'eraser' ? <Eraser size={15} /> : t.label}
               </button>
             ))}
 
@@ -501,14 +497,15 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                 }}
               />
 
-              {/* tamanhos */}
+              {/* tamanhos — um pouco acima das cores */}
               {SIZES.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSize(s)}
+                  title={`${s}px`}
                   style={{
-                    width: s * 2 + 10,
-                    height: s * 2 + 10,
+                    width: Math.min(s + 8, 22),
+                    height: Math.min(s + 8, 22),
                     borderRadius: '50%',
                     background: color,
                     border: size === s ? '2px solid #c4845a' : '2px solid transparent',
