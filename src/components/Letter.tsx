@@ -1,5 +1,54 @@
 import { useState, useRef, useCallback } from 'react'
-import { LetterItem } from '../types/board'
+import { LetterItem, LetterColor } from '../types/board'
+
+const LETTER_COLORS: Record<
+  LetterColor,
+  { bg: string; flap: string; stroke: string; header: string; text: string }
+> = {
+  rosa: {
+    bg: '#fdf6f0',
+    flap: '#f9d0e0',
+    stroke: '#e8a0b0',
+    header: 'linear-gradient(135deg,#fda4b4 0%,#f9d0e0 100%)',
+    text: '#7a3040',
+  },
+  verde: {
+    bg: '#f4faf4',
+    flap: '#b8e0b8',
+    stroke: '#7FB87F',
+    header: 'linear-gradient(135deg,#a8d8a8 0%,#d4eed4 100%)',
+    text: '#2D4A2D',
+  },
+  azul: {
+    bg: '#f0f6fd',
+    flap: '#b8d4f0',
+    stroke: '#7aaed4',
+    header: 'linear-gradient(135deg,#90c0e8 0%,#cce0f4 100%)',
+    text: '#1a3a5c',
+  },
+  amarelo: {
+    bg: '#fffdf0',
+    flap: '#f5e8a0',
+    stroke: '#d4b840',
+    header: 'linear-gradient(135deg,#f0d060 0%,#f8f0b0 100%)',
+    text: '#5c4a00',
+  },
+  lilas: {
+    bg: '#faf0fd',
+    flap: '#ddb8f0',
+    stroke: '#b07ad4',
+    header: 'linear-gradient(135deg,#c890e8 0%,#e8c8f8 100%)',
+    text: '#4a1a6c',
+  },
+}
+
+const COLOR_LABELS: Record<LetterColor, string> = {
+  rosa: '🌸 rosa',
+  verde: '🌿 verde',
+  azul: '💙 azul',
+  amarelo: '🌼 amarelo',
+  lilas: '💜 lilás',
+}
 
 interface Props {
   item: LetterItem
@@ -32,6 +81,9 @@ export default function Letter({
   const [showModal, setShowModal] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
+
+  const color = item.color ?? 'rosa'
+  const palette = LETTER_COLORS[color]
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -68,7 +120,7 @@ export default function Letter({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (editMode || dragRef.current.moved) return
-    if (!item.opened) {
+    if (!item.opened && !isAuthor) {
       setOpening(true)
       setTimeout(() => {
         onUpdate(item.id, { opened: true, openedAt: new Date().toISOString() })
@@ -81,12 +133,15 @@ export default function Letter({
   }
 
   const isSealed = !item.opened && !opening
-
-  // envelope: 110×70 proporcional (largura × altura do corpo)
   const ENV_W = 110
   const ENV_H = 70
-  // tampa: ponto central desce até 40% quando fechada, sobe pra 15% abrindo
   const flapY = opening ? ENV_H * 0.15 : ENV_H * 0.42
+
+  const clean = (name: string) => (name.includes('@') ? name.split('@')[0] : name)
+  const fromName = clean(item.from || displayName)
+  const toName = clean(item.to || otherName)
+  const isAuthor = item.createdBy === currentUid
+  const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : ''
 
   return (
     <>
@@ -101,44 +156,39 @@ export default function Letter({
           left: item.x,
           top: item.y,
           width: ENV_W,
-          height: ENV_H + 50,
           cursor: editMode ? 'grab' : 'pointer',
           userSelect: 'none',
           zIndex,
         }}
       >
-        {/* envelope SVG — papel integrado */}
+        {/* envelope SVG */}
         <svg
           viewBox={`0 0 ${ENV_W} ${ENV_H + 50}`}
           xmlns="http://www.w3.org/2000/svg"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: ENV_W,
-            height: ENV_H + 50,
-            overflow: 'visible',
-          }}
+          style={{ display: 'block', width: ENV_W, height: ENV_H + 50, overflow: 'visible' }}
         >
-          {/* sombra */}
           <rect x="3" y="5" width="104" height="62" rx="6" fill="rgba(44,20,8,0.1)" />
-          {/* corpo */}
           <rect
             x="1"
             y="3"
             width="104"
             height="62"
             rx="6"
-            fill="#fdf6f0"
-            stroke="#e8a0b0"
+            fill={palette.bg}
+            stroke={palette.stroke}
             strokeWidth="1.5"
           />
-          {/* diagonais */}
-          <line x1="1" y1="3" x2="55" y2={ENV_H * 0.52} stroke="#f0c0d4" strokeWidth="1.2" />
-          <line x1="105" y1="3" x2="55" y2={ENV_H * 0.52} stroke="#f0c0d4" strokeWidth="1.2" />
-          <line x1="1" y1="65" x2="55" y2={ENV_H * 0.52} stroke="#f0c0d4" strokeWidth="1.2" />
-          <line x1="105" y1="65" x2="55" y2={ENV_H * 0.52} stroke="#f0c0d4" strokeWidth="1.2" />
-          {/* papel — depois do corpo e diagonais, na frente do envelope mas atrás da tampa */}
+          <line x1="1" y1="3" x2="55" y2={ENV_H * 0.52} stroke={palette.flap} strokeWidth="1.2" />
+          <line x1="105" y1="3" x2="55" y2={ENV_H * 0.52} stroke={palette.flap} strokeWidth="1.2" />
+          <line x1="1" y1="65" x2="55" y2={ENV_H * 0.52} stroke={palette.flap} strokeWidth="1.2" />
+          <line
+            x1="105"
+            y1="65"
+            x2="55"
+            y2={ENV_H * 0.52}
+            stroke={palette.flap}
+            strokeWidth="1.2"
+          />
           {(item.opened || opening) && (
             <g
               style={{ transition: 'transform 0.65s cubic-bezier(.34,1.56,.64,1)' }}
@@ -160,45 +210,66 @@ export default function Letter({
               <line x1="26" y1="46" x2="74" y2="46" stroke="#e8c0a0" strokeWidth="0.9" />
             </g>
           )}
-          {/* tampa fechada — na frente de tudo (selada) */}
           {!item.opened && !opening && (
             <path
               d={`M1 3 L55 ${flapY} L105 3`}
-              fill="#f9d0e0"
-              stroke="#e8a0b0"
+              fill={palette.flap}
+              stroke={palette.stroke}
               strokeWidth="1.5"
               strokeLinejoin="round"
             />
           )}
-          {/* lacre */}
           {isSealed && (
             <g transform={`translate(55,${ENV_H * 0.54})`}>
               <path
                 d="M0,-9 C-10,-16 -20,-9 -20,0 C-20,9 0,22 0,22 C0,22 20,9 20,0 C20,-9 10,-16 0,-9Z"
-                fill="#e8a0b0"
-                stroke="#c87090"
+                fill={palette.stroke}
+                stroke={palette.text}
                 strokeWidth="1"
                 transform="scale(0.45)"
               />
             </g>
           )}
-          {/* hint */}
           {isSealed && (
             <text
               x="55"
               y={ENV_H + 10}
               textAnchor="middle"
               fontSize="7"
-              fill="#c87090"
+              fill={palette.text}
               fontFamily="Baloo 2, sans-serif"
               opacity="0.85"
             >
               clique pra abrir 💌
             </text>
           )}
+          {/* etiqueta sobre o envelope */}
+          <text
+            x="7"
+            y={ENV_H * 0.7}
+            textAnchor="start"
+            fontSize="8"
+            fill={palette.text}
+            fontFamily="Baloo 2, sans-serif"
+            fontWeight="700"
+            opacity="0.8"
+          >
+            {`De: ${fromName}`}
+          </text>
+          <text
+            x="7"
+            y={ENV_H * 0.7 + 11}
+            textAnchor="start"
+            fontSize="8"
+            fill={palette.text}
+            fontFamily="Baloo 2, sans-serif"
+            fontWeight="700"
+            opacity="0.8"
+          >
+            {`Para: ${toName}${dateStr ? `  •  ${dateStr}` : ''}`}
+          </text>
         </svg>
 
-        {/* botões de contexto */}
         {editMode && showMenu && (
           <div
             style={{
@@ -305,15 +376,16 @@ function LetterModal({
   const [content, setContent] = useState(item.content)
   const [from, setFrom] = useState(item.from || displayName)
   const [to, setTo] = useState(item.to || otherName)
+  const [color, setColor] = useState<LetterColor>(item.color ?? 'rosa')
 
-  // apelidos: tira tudo depois de @ se houver
   const clean = (name: string) => (name.includes('@') ? name.split('@')[0] : name)
   const nameOptions = [displayName, otherName].map(clean).filter(Boolean)
   const fromClean = clean(from)
   const toClean = clean(to)
+  const palette = LETTER_COLORS[color]
 
   const handleSave = () => {
-    onUpdate(item.id, { content, from, to })
+    onUpdate(item.id, { content, from, to, color })
     setEditing(false)
   }
 
@@ -335,7 +407,7 @@ function LetterModal({
         style={{
           width: 380,
           background: '#fff8f0',
-          border: '2px solid #e8a0b0',
+          border: `2px solid ${palette.stroke}`,
           borderRadius: 14,
           boxShadow: '0 12px 40px rgba(44,20,8,0.3)',
           overflow: 'hidden',
@@ -348,9 +420,9 @@ function LetterModal({
         {/* cabeçalho */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #fda4b4 0%, #f9d0e0 100%)',
+            background: palette.header,
             padding: '16px 20px 14px',
-            borderBottom: '1.5px solid #e8a0b0',
+            borderBottom: `1.5px solid ${palette.stroke}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
@@ -358,29 +430,31 @@ function LetterModal({
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: '#7a3040', fontWeight: 700, minWidth: 26 }}>
+              <span style={{ fontSize: 11, color: palette.text, fontWeight: 700, minWidth: 26 }}>
                 de
               </span>
               <NameSelect
                 value={fromClean}
                 options={nameOptions}
-                onChange={(v) => setFrom(v)}
+                onChange={setFrom}
                 disabled={!editing}
+                palette={palette}
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: '#7a3040', fontWeight: 700, minWidth: 26 }}>
+              <span style={{ fontSize: 11, color: palette.text, fontWeight: 700, minWidth: 26 }}>
                 pra
               </span>
               <NameSelect
                 value={toClean}
                 options={nameOptions}
-                onChange={(v) => setTo(v)}
+                onChange={setTo}
                 disabled={!editing}
+                palette={palette}
               />
             </div>
             {item.openedAt && (
-              <div style={{ fontSize: 10, color: '#c87090', marginTop: 2 }}>
+              <div style={{ fontSize: 10, color: palette.text, opacity: 0.7, marginTop: 2 }}>
                 aberta em {new Date(item.openedAt).toLocaleDateString('pt-BR')}
               </div>
             )}
@@ -389,11 +463,11 @@ function LetterModal({
             onClick={onClose}
             style={{
               background: 'rgba(255,255,255,0.4)',
-              border: '1px solid #e8a0b0',
+              border: `1px solid ${palette.stroke}`,
               borderRadius: 8,
               cursor: 'pointer',
               fontSize: 14,
-              color: '#c87090',
+              color: palette.text,
               padding: '6px 12px',
               fontFamily: 'Baloo 2, sans-serif',
               fontWeight: 700,
@@ -403,7 +477,43 @@ function LetterModal({
           </button>
         </div>
 
-        {/* corpo — linhas de papel */}
+        {/* seletor de cor — só aparece editando */}
+        {editing && (
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              padding: '10px 20px 0',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span style={{ fontSize: 11, color: '#7a3040', fontWeight: 700 }}>cor:</span>
+            {(Object.keys(LETTER_COLORS) as LetterColor[]).map((c) => (
+              <button
+                key={c}
+                title={COLOR_LABELS[c]}
+                onClick={() => setColor(c)}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  background: LETTER_COLORS[c].flap,
+                  border:
+                    color === c
+                      ? `2.5px solid ${LETTER_COLORS[c].text}`
+                      : `1.5px solid ${LETTER_COLORS[c].stroke}`,
+                  cursor: 'pointer',
+                  outline: 'none',
+                  boxShadow: color === c ? '0 0 0 2px rgba(0,0,0,0.15)' : 'none',
+                  transition: 'border 0.15s',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* corpo */}
         <div style={{ position: 'relative', padding: '18px 20px 20px', minHeight: 200 }}>
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div
@@ -460,11 +570,11 @@ function LetterModal({
                   }}
                   style={{
                     background: 'none',
-                    border: '1px solid #e8a0b0',
+                    border: `1px solid ${palette.stroke}`,
                     borderRadius: 8,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: '#c87090',
+                    color: palette.text,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -474,12 +584,12 @@ function LetterModal({
                 <button
                   onClick={handleSave}
                   style={{
-                    background: 'linear-gradient(135deg, #fda4b4, #e8607a)',
+                    background: palette.header,
                     border: 'none',
                     borderRadius: 8,
                     padding: '8px 20px',
                     fontSize: 12,
-                    color: '#fff',
+                    color: palette.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
@@ -518,11 +628,11 @@ function LetterModal({
                   onClick={onClose}
                   style={{
                     background: 'none',
-                    border: '1px solid #e8a0b0',
+                    border: `1px solid ${palette.stroke}`,
                     borderRadius: 8,
                     padding: '8px 18px',
                     fontSize: 12,
-                    color: '#c87090',
+                    color: palette.text,
                     cursor: 'pointer',
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
@@ -533,12 +643,12 @@ function LetterModal({
                   <button
                     onClick={() => setEditing(true)}
                     style={{
-                      background: 'linear-gradient(135deg, #fda4b4, #e8607a)',
+                      background: palette.header,
                       border: 'none',
                       borderRadius: 8,
                       padding: '8px 20px',
                       fontSize: 12,
-                      color: '#fff',
+                      color: palette.text,
                       fontWeight: 700,
                       cursor: 'pointer',
                       fontFamily: 'Baloo 2, sans-serif',
@@ -561,11 +671,13 @@ function NameSelect({
   options,
   onChange,
   disabled,
+  palette,
 }: {
   value: string
   options: string[]
   onChange: (v: string) => void
   disabled: boolean
+  palette: (typeof LETTER_COLORS)['rosa']
 }) {
   if (disabled) {
     return (
@@ -573,11 +685,11 @@ function NameSelect({
         style={{
           fontSize: 12,
           fontWeight: 700,
-          color: '#6b1030',
+          color: palette.text,
           background: 'rgba(255,255,255,0.45)',
           borderRadius: 6,
           padding: '3px 10px',
-          border: '1px solid #e8a0b0',
+          border: `1px solid ${palette.stroke}`,
         }}
       >
         {value}
@@ -591,9 +703,9 @@ function NameSelect({
       style={{
         fontSize: 12,
         fontWeight: 700,
-        color: '#6b1030',
+        color: palette.text,
         background: 'rgba(255,255,255,0.7)',
-        border: '1px solid #e8a0b0',
+        border: `1px solid ${palette.stroke}`,
         borderRadius: 6,
         padding: '3px 8px',
         fontFamily: 'Baloo 2, sans-serif',

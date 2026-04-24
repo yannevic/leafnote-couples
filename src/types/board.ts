@@ -1,6 +1,7 @@
 export type BoardItemType = 'postit' | 'checklist' | 'drawing' | 'tag' | 'letter'
 
 export type PostItColor = 'yellow' | 'green' | 'pink' | 'blue' | 'lavender' | 'peach'
+export type LetterColor = 'rosa' | 'verde' | 'azul' | 'amarelo' | 'lilas'
 
 export interface BoardItem {
   id: string
@@ -54,6 +55,7 @@ export interface LetterItem extends BoardItem {
   from: string
   to: string
   content: string
+  color?: LetterColor
   opened: boolean
   openedAt?: string
 }
