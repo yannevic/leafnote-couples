@@ -43,6 +43,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
   const [color, setColor] = useState('#2c1810')
   const [size, setSize] = useState(3)
   const [eraser, setEraser] = useState(false)
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -59,8 +60,14 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
   }, [initialData])
 
   const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current!.getBoundingClientRect()
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    const canvas = canvasRef.current!
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    }
   }
 
   const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -250,22 +257,51 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
           </button>
         </div>
 
-        <canvas
-          ref={canvasRef}
-          width={500}
-          height={340}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
-          style={{
-            borderRadius: 10,
-            border: '2px solid #c4a882',
-            cursor: eraser ? 'cell' : 'crosshair',
-            display: 'block',
-            background: '#fffef8',
-          }}
-        />
+        <div style={{ position: 'relative', width: 500, height: 340 }}>
+          <canvas
+            ref={canvasRef}
+            width={500}
+            height={340}
+            onMouseDown={onMouseDown}
+            onMouseMove={(e) => {
+              onMouseMove(e)
+              const rect = canvasRef.current!.getBoundingClientRect()
+              setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+            }}
+            onMouseUp={onMouseUp}
+            onMouseLeave={() => {
+              onMouseUp()
+              setMousePos(null)
+            }}
+            style={{
+              borderRadius: 10,
+              border: '2px solid #c4a882',
+              cursor: 'none',
+              display: 'block',
+              background: '#fffef8',
+              width: 500,
+              height: 340,
+            }}
+          />
+          {/* pontinho do cursor */}
+          {mousePos && (
+            <div
+              style={{
+                position: 'absolute',
+                left: mousePos.x,
+                top: mousePos.y,
+                width: eraser ? size * 4 : size + 4,
+                height: eraser ? size * 4 : size + 4,
+                borderRadius: '50%',
+                background: eraser ? 'transparent' : color,
+                border: eraser ? '1.5px solid #3d2408' : 'none',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                opacity: 0.85,
+              }}
+            />
+          )}
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button
