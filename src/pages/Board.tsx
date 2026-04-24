@@ -30,6 +30,7 @@ import ActivityFeed from '../components/ActivityFeed'
 import Roulette from '../components/Roulette'
 import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
+import MoodWidget from '../components/MoodWidget'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -94,7 +95,7 @@ export default function Board() {
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
-  const { myPresence, partnerPresence } = usePresence(uid, displayName)
+  const { myPresence, partnerPresence, partnerUid } = usePresence(uid, displayName)
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
@@ -550,6 +551,8 @@ export default function Board() {
       </div>
 
       <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
+
+      <MoodWidget uid={uid} partnerUid={partnerUid} />
 
       {/* Botão jardim — desativado temporariamente */}
       <div
