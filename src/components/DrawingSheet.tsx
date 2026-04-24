@@ -1,5 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Eraser } from 'lucide-react'
+import {
+  Pencil,
+  Eraser,
+  Minus,
+  ArrowRight,
+  Square,
+  Circle,
+  Triangle,
+  Undo2,
+  Redo2,
+  Trash2,
+} from 'lucide-react'
 import { DrawingItem } from '../types/board'
 
 const PRESET_COLORS = [
@@ -34,19 +45,99 @@ type Tool =
   | 'pentagon'
   | 'hexagon'
 
-const TOOLS: { id: Tool; label: string }[] = [
-  { id: 'pen', label: '✏️' },
-  { id: 'eraser', label: 'eraser' },
-  { id: 'line', label: '╱' },
-  { id: 'arrow', label: '→' },
-  { id: 'rect', label: '▭' },
-  { id: 'ellipse', label: '⬭' },
-  { id: 'triangle', label: '△' },
-  { id: 'diamond', label: '◇' },
-  { id: 'pentagon', label: '⬠' },
-  { id: 'hexagon', label: '⬡' },
-  { id: 'star', label: '☆' },
-  { id: 'heart', label: '♡' },
+const TOOLS: { id: Tool; icon: React.ReactNode }[] = [
+  { id: 'pen', icon: <Pencil size={15} /> },
+  { id: 'eraser', icon: <Eraser size={15} /> },
+  { id: 'line', icon: <Minus size={15} /> },
+  { id: 'arrow', icon: <ArrowRight size={15} /> },
+  { id: 'rect', icon: <Square size={15} /> },
+  { id: 'ellipse', icon: <Circle size={15} /> },
+  { id: 'triangle', icon: <Triangle size={15} /> },
+  {
+    id: 'diamond',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12,2 22,12 12,22 2,12" />
+      </svg>
+    ),
+  },
+  {
+    id: 'pentagon',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12,2 22,9.5 18,21 6,21 2,9.5" />
+      </svg>
+    ),
+  },
+  {
+    id: 'hexagon',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" />
+      </svg>
+    ),
+  },
+  {
+    id: 'star',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+      </svg>
+    ),
+  },
+  {
+    id: 'heart',
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    ),
+  },
 ]
 
 const SIZES = [2, 4, 8, 14]
@@ -171,12 +262,23 @@ function drawShape(
     }
     ctx.closePath()
   } else if (tool === 'heart') {
-    // coração simétrico baseado em raio uniforme
-    const s = r
-    ctx.moveTo(cx, cy + s * 0.9)
-    ctx.bezierCurveTo(cx - s * 1.2, cy + s * 0.3, cx - s * 1.4, cy - s * 0.6, cx, cy - s * 0.2)
-    ctx.bezierCurveTo(cx + s * 1.4, cy - s * 0.6, cx + s * 1.2, cy + s * 0.3, cx, cy + s * 0.9)
+    // path clássico do coração escalado para o bounding box
+    const w = Math.abs(x2 - x1)
+    const h = Math.abs(y2 - y1)
+    const lx = Math.min(x1, x2)
+    const ty = Math.min(y1, y2)
+    const scaleX = w / 24
+    const scaleY = h / 24
+    ctx.save()
+    ctx.translate(lx, ty)
+    ctx.scale(scaleX, scaleY)
+    ctx.moveTo(12, 21.593)
+    ctx.bezierCurveTo(1.5, 13.5, 1.5, 6, 6.5, 3.5)
+    ctx.bezierCurveTo(9, 2.5, 11, 3.5, 12, 5)
+    ctx.bezierCurveTo(13, 3.5, 15, 2.5, 17.5, 3.5)
+    ctx.bezierCurveTo(22.5, 6, 22.5, 13.5, 12, 21.593)
     ctx.closePath()
+    ctx.restore()
   }
 
   if (fill) ctx.fill()
@@ -392,10 +494,10 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
           >
             {/* desfazer / refazer */}
             <button onClick={handleUndo} title="desfazer (Ctrl+Z)" style={toolBtnStyle(false)}>
-              ↩
+              <Undo2 size={15} />
             </button>
             <button onClick={handleRedo} title="refazer (Ctrl+Y)" style={toolBtnStyle(false)}>
-              ↪
+              <Redo2 size={15} />
             </button>
 
             <div style={{ width: '100%', height: 1, background: '#c4a882', margin: '2px 0' }} />
@@ -408,7 +510,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                 title={t.id}
                 style={toolBtnStyle(tool === t.id)}
               >
-                {t.id === 'eraser' ? <Eraser size={15} /> : t.label}
+                {t.icon}
               </button>
             ))}
 
@@ -425,7 +527,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
 
             {/* limpar */}
             <button onClick={handleClear} title="limpar tudo" style={toolBtnStyle(false)}>
-              🗑
+              <Trash2 size={15} />
             </button>
           </div>
 
