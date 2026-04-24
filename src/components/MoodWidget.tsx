@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { ref, onValue, set } from 'firebase/database'
 import useSound from 'use-sound'
 import { db } from '../lib/firebase'
+import moodImages from '../assets/moods/index'
+import moodSound from '../assets/sounds/mood.mp3'
 
 const MOODS: { id: string; label: string }[] = [
   { id: 'apaixonada', label: 'Apaixonado' },
@@ -50,7 +52,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevPartnerMood = useRef<string | null>(null)
-  const [play] = useSound('/sounds/mood.mp3', { volume: 0.5 }) // ← som em public/sounds/mood.mp3
+  const [play] = useSound(moodSound, { volume: 0.5 })
   const dragRef = useRef({ dragging: false, sx: 0, sy: 0, px: 0, py: 0 })
   const widgetRef = useRef<HTMLDivElement>(null)
 
@@ -186,7 +188,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
       >
         {myMood ? (
           <img
-            src={`/moods/${myMood}.png`} // ← era ./src/assets/moods/
+            src={moodImages[myMood] ?? ''}
             alt={myMood}
             style={{ width: 42, height: 42, objectFit: 'contain', pointerEvents: 'none' }}
           />
@@ -206,7 +208,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
           }}
         >
           <img
-            src={`/moods/${partnerMood}.png`} // ← era ./src/assets/moods/
+            src={moodImages[partnerMood] ?? ''}
             alt={partnerMood}
             style={{ width: 28, height: 28, objectFit: 'contain', opacity: 0.85 }}
           />
