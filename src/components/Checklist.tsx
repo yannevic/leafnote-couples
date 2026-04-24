@@ -10,6 +10,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onOpenModal: (id: string) => void
 }
 
 function makeEntryId() {
@@ -25,8 +26,8 @@ export default function Checklist({
   onBringForward,
   onSendBackward,
   onFocus,
+  onOpenModal,
 }: Props) {
-  const [modalOpen, setModalOpen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
 
@@ -65,7 +66,7 @@ export default function Checklist({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (editMode || dragRef.current.moved) return
-    setModalOpen(true)
+    onOpenModal(item.id)
   }
 
   const entries = item.entries ?? []
@@ -73,130 +74,121 @@ export default function Checklist({
   const total = entries.length
 
   return (
-    <>
+    <div
+      data-item
+      onMouseDown={onMouseDown}
+      onClick={handleClick}
+      onMouseEnter={() => setShowMenu(true)}
+      onMouseLeave={() => setShowMenu(false)}
+      style={{
+        position: 'absolute',
+        left: item.x,
+        top: item.y,
+        width: item.width,
+        minHeight: item.height,
+        background: '#fef9f0',
+        border: '1.5px solid #d4aa80',
+        borderRadius: 8,
+        padding: '14px 12px 12px',
+        boxShadow: '3px 5px 14px rgba(44,20,8,0.18)',
+        cursor: editMode ? 'grab' : 'pointer',
+        userSelect: 'none',
+        fontFamily: 'Baloo 2, sans-serif',
+        zIndex,
+        overflow: 'visible',
+      }}
+    >
+      {/* fita */}
       <div
-        data-item
-        onMouseDown={onMouseDown}
-        onClick={handleClick}
-        onMouseEnter={() => setShowMenu(true)}
-        onMouseLeave={() => setShowMenu(false)}
         style={{
           position: 'absolute',
-          left: item.x,
-          top: item.y,
-          width: item.width,
-          minHeight: item.height,
-          background: '#fef9f0',
-          border: '1.5px solid #d4aa80',
-          borderRadius: 8,
-          padding: '14px 12px 12px',
-          boxShadow: '3px 5px 14px rgba(44,20,8,0.18)',
-          cursor: editMode ? 'grab' : 'pointer',
-          userSelect: 'none',
-          fontFamily: 'Baloo 2, sans-serif',
-          zIndex,
-          overflow: 'visible',
+          top: -8,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 38,
+          height: 16,
+          background: 'rgba(255,255,200,0.6)',
+          border: '1px solid rgba(200,180,0,0.25)',
+          borderRadius: 3,
         }}
-      >
-        {/* fita */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 38,
-            height: 16,
-            background: 'rgba(255,255,200,0.6)',
-            border: '1px solid rgba(200,180,0,0.25)',
-            borderRadius: 3,
-          }}
-        />
+      />
 
-        {editMode && showMenu && (
-          <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3 }}>
-            <CtxBtn
-              label="↑"
-              onClick={(e) => {
-                e.stopPropagation()
-                onBringForward(item.id)
-              }}
-            />
-            <CtxBtn
-              label="↓"
-              onClick={(e) => {
-                e.stopPropagation()
-                onSendBackward(item.id)
-              }}
-            />
-            <CtxBtn
-              label="✕"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(item.id)
-              }}
-            />
-          </div>
-        )}
-
-        {item.title && (
-          <div style={{ fontWeight: 700, fontSize: 11, color: '#8b6914', marginBottom: 5 }}>
-            {item.title}
-          </div>
-        )}
-
-        {/* todas as entradas */}
-        {(item.entries ?? []).map((entry) => (
-          <div
-            key={entry.id}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}
-          >
-            <div
-              style={{
-                width: 11,
-                height: 11,
-                borderRadius: 3,
-                border: '1.5px solid #d4aa80',
-                background: entry.done ? '#8b6914' : 'transparent',
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {entry.done && <span style={{ color: '#fff', fontSize: 7, lineHeight: 1 }}>✓</span>}
-            </div>
-            <span
-              style={{
-                fontSize: 10,
-                color: '#3d2408',
-                lineHeight: 1.4,
-                textDecoration: entry.done ? 'line-through' : 'none',
-                opacity: entry.done ? 0.5 : 1,
-              }}
-            >
-              {entry.text || '...'}
-            </span>
-          </div>
-        ))}
-
-        {null}
-
-        {total > 0 && (
-          <div style={{ fontSize: 9, color: '#8b6914', marginTop: 4, opacity: 0.7 }}>
-            {done}/{total} feitos
-          </div>
-        )}
-
-        {total === 0 && (
-          <div style={{ fontSize: 10, color: '#3d2408', opacity: 0.35 }}>clique pra adicionar</div>
-        )}
-      </div>
-
-      {modalOpen && (
-        <ChecklistModal item={item} onUpdate={onUpdate} onClose={() => setModalOpen(false)} />
+      {editMode && showMenu && (
+        <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3 }}>
+          <CtxBtn
+            label="↑"
+            onClick={(e) => {
+              e.stopPropagation()
+              onBringForward(item.id)
+            }}
+          />
+          <CtxBtn
+            label="↓"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSendBackward(item.id)
+            }}
+          />
+          <CtxBtn
+            label="✕"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(item.id)
+            }}
+          />
+        </div>
       )}
-    </>
+
+      {item.title && (
+        <div style={{ fontWeight: 700, fontSize: 11, color: '#8b6914', marginBottom: 5 }}>
+          {item.title}
+        </div>
+      )}
+
+      {(item.entries ?? []).map((entry) => (
+        <div
+          key={entry.id}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}
+        >
+          <div
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: 3,
+              border: '1.5px solid #d4aa80',
+              background: entry.done ? '#8b6914' : 'transparent',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {entry.done && <span style={{ color: '#fff', fontSize: 7, lineHeight: 1 }}>✓</span>}
+          </div>
+          <span
+            style={{
+              fontSize: 10,
+              color: '#3d2408',
+              lineHeight: 1.4,
+              textDecoration: entry.done ? 'line-through' : 'none',
+              opacity: entry.done ? 0.5 : 1,
+            }}
+          >
+            {entry.text || '...'}
+          </span>
+        </div>
+      ))}
+
+      {total > 0 && (
+        <div style={{ fontSize: 9, color: '#8b6914', marginTop: 4, opacity: 0.7 }}>
+          {done}/{total} feitos
+        </div>
+      )}
+
+      {total === 0 && (
+        <div style={{ fontSize: 10, color: '#3d2408', opacity: 0.35 }}>clique pra adicionar</div>
+      )}
+    </div>
   )
 }
 
@@ -224,7 +216,7 @@ function CtxBtn({ label, onClick }: { label: string; onClick: (e: React.MouseEve
   )
 }
 
-function ChecklistModal({
+export function ChecklistModal({
   item,
   onUpdate,
   onClose,
@@ -233,7 +225,7 @@ function ChecklistModal({
   onUpdate: (id: string, data: Partial<ChecklistItem>) => void
   onClose: () => void
 }) {
-  const isNew = item.entries.length === 0 && !item.title
+  const isNew = (item.entries ?? []).length === 0 && !item.title
   const [editing, setEditing] = useState(isNew)
   const [title, setTitle] = useState(item.title ?? '')
   const [entries, setEntries] = useState<ChecklistEntry[]>(
@@ -281,7 +273,9 @@ function ChecklistModal({
     } else {
       setTitle(item.title ?? '')
       setEntries(
-        item.entries.length > 0 ? item.entries : [{ id: makeEntryId(), text: '', done: false }]
+        (item.entries ?? []).length > 0
+          ? item.entries
+          : [{ id: makeEntryId(), text: '', done: false }]
       )
       setEditing(false)
     }
@@ -353,7 +347,6 @@ function ChecklistModal({
                 }}
               />
 
-              {/* barra de progresso */}
               <div style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span style={{ fontSize: 10, color: '#8b6914' }}>
@@ -378,7 +371,6 @@ function ChecklistModal({
                 </div>
               </div>
 
-              {/* entradas */}
               <div
                 style={{
                   maxHeight: 240,
@@ -503,7 +495,6 @@ function ChecklistModal({
                 </div>
               )}
 
-              {/* barra de progresso visualização */}
               {(item.entries ?? []).length > 0 && (
                 <div style={{ marginBottom: 12 }}>
                   <div
@@ -543,7 +534,6 @@ function ChecklistModal({
                 </div>
               )}
 
-              {/* lista só leitura — pode marcar done */}
               <div
                 style={{
                   display: 'flex',

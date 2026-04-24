@@ -28,6 +28,8 @@ import Timer, { TimerState, makeInitialTimerState } from '../components/Timer'
 import TimerBar from '../components/TimerBar'
 import ActivityFeed from '../components/ActivityFeed'
 import Roulette from '../components/Roulette'
+import { PostItModal } from '../components/PostIt'
+import { ChecklistModal } from '../components/Checklist'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -102,6 +104,8 @@ export default function Board() {
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
+  const [openModalId, setOpenModalId] = useState<string | null>(null)
+  const openModalItem = openModalId ? (items.find((i) => i.id === openModalId) ?? null) : null
 
   const handleSaveNick = async () => {
     if (!nickInput.trim() || !user) return
@@ -446,12 +450,25 @@ export default function Board() {
             onSendBackward: handleSendBackward,
             onFocus: handleFocus,
           }
-
           if (item.type === 'postit') {
-            return <PostIt key={item.id} {...commonProps} item={item as PostItItem} />
+            return (
+              <PostIt
+                key={item.id}
+                {...commonProps}
+                item={item as PostItItem}
+                onOpenModal={setOpenModalId}
+              />
+            )
           }
           if (item.type === 'checklist') {
-            return <Checklist key={item.id} {...commonProps} item={item as ChecklistItem} />
+            return (
+              <Checklist
+                key={item.id}
+                {...commonProps}
+                item={item as ChecklistItem}
+                onOpenModal={setOpenModalId}
+              />
+            )
           }
           if (item.type === 'tag') {
             return <Tag key={item.id} {...commonProps} item={item as TagItem} />
@@ -741,6 +758,22 @@ export default function Board() {
       )}
 
       <ActivityFeed />
+
+      {/* Modais renderizados na raiz — evita tela branca no Electron */}
+      {openModalItem?.type === 'postit' && (
+        <PostItModal
+          item={openModalItem as PostItItem}
+          onUpdate={handleUpdate as never}
+          onClose={() => setOpenModalId(null)}
+        />
+      )}
+      {openModalItem?.type === 'checklist' && (
+        <ChecklistModal
+          item={openModalItem as ChecklistItem}
+          onUpdate={handleUpdate as never}
+          onClose={() => setOpenModalId(null)}
+        />
+      )}
 
       {/* Toolbar */}
       <Toolbar

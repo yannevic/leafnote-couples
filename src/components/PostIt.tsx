@@ -24,6 +24,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onOpenModal: (id: string) => void
 }
 
 export default function PostIt({
@@ -35,13 +36,12 @@ export default function PostIt({
   onBringForward,
   onSendBackward,
   onFocus,
+  onOpenModal,
 }: Props) {
-  const [modalOpen, setModalOpen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
   const colors = COLOR_MAP[item.color] ?? COLOR_MAP.yellow
 
-  // altura adaptável: mínimo 120, cresce com o conteúdo
   const isExpanded = !item.compacted && !!item.content
 
   const onMouseDown = useCallback(
@@ -80,125 +80,119 @@ export default function PostIt({
     e.stopPropagation()
     if (editMode || dragRef.current.moved) return
     dragRef.current.moved = false
-    setModalOpen(true)
+    onOpenModal(item.id)
   }
 
   return (
-    <>
+    <div
+      data-item
+      onMouseDown={onMouseDown}
+      onClick={handleClick}
+      onMouseEnter={() => setShowMenu(true)}
+      onMouseLeave={() => setShowMenu(false)}
+      style={{
+        position: 'absolute',
+        left: item.x,
+        top: item.y,
+        width: isExpanded ? item.width * 1.4 : item.width,
+        minHeight: item.height,
+        height: item.compacted ? 120 : undefined,
+        background: colors.bg,
+        border: `1.5px solid ${colors.border}`,
+        borderRadius: 4,
+        padding: '16px 12px 12px',
+        boxShadow: '3px 5px 14px rgba(44,20,8,0.22)',
+        cursor: editMode ? 'grab' : 'pointer',
+        userSelect: 'none',
+        fontFamily: 'Baloo 2, sans-serif',
+        zIndex,
+        overflow: isExpanded ? 'visible' : 'hidden',
+        transition: 'width 0.2s ease, height 0.2s ease',
+      }}
+    >
+      {/* fita */}
       <div
-        data-item
-        onMouseDown={onMouseDown}
-        onClick={handleClick}
-        onMouseEnter={() => setShowMenu(true)}
-        onMouseLeave={() => setShowMenu(false)}
         style={{
           position: 'absolute',
-          left: item.x,
-          top: item.y,
-          width: isExpanded ? item.width * 1.4 : item.width,
-          minHeight: item.height,
-          height: item.compacted ? 120 : undefined,
-          background: colors.bg,
-          border: `1.5px solid ${colors.border}`,
-          borderRadius: 4,
-          padding: '16px 12px 12px',
-          boxShadow: '3px 5px 14px rgba(44,20,8,0.22)',
-          cursor: editMode ? 'grab' : 'pointer',
-          userSelect: 'none',
-          fontFamily: 'Baloo 2, sans-serif',
-          zIndex,
-          overflow: isExpanded ? 'visible' : 'hidden',
-          transition: 'width 0.2s ease, height 0.2s ease',
+          top: -8,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 38,
+          height: 16,
+          background: 'rgba(255,255,200,0.6)',
+          border: '1px solid rgba(200,180,0,0.25)',
+          borderRadius: 3,
         }}
-      >
-        {/* fita */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 38,
-            height: 16,
-            background: 'rgba(255,255,200,0.6)',
-            border: '1px solid rgba(200,180,0,0.25)',
-            borderRadius: 3,
-          }}
-        />
+      />
 
-        {/* botões de contexto em modo edição */}
-        {editMode && showMenu && (
-          <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3 }}>
-            <CtxBtn
-              label="↑"
-              title="à frente"
-              onClick={(e) => {
-                e.stopPropagation()
-                onBringForward(item.id)
-              }}
-            />
-            <CtxBtn
-              label="↓"
-              title="atrás"
-              onClick={(e) => {
-                e.stopPropagation()
-                onSendBackward(item.id)
-              }}
-            />
-            <CtxBtn
-              label={item.compacted ? '↕' : '↔'}
-              title={item.compacted ? 'expandir' : 'compactar'}
-              onClick={(e) => {
-                e.stopPropagation()
-                onUpdate(item.id, { compacted: !item.compacted })
-              }}
-            />
-            <CtxBtn
-              label="✕"
-              title="deletar"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(item.id)
-              }}
-            />
-          </div>
-        )}
-
-        {item.title && (
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 11,
-              color: colors.title,
-              marginBottom: 3,
-              lineHeight: 1.3,
+      {/* botões de contexto em modo edição */}
+      {editMode && showMenu && (
+        <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3 }}>
+          <CtxBtn
+            label="↑"
+            title="à frente"
+            onClick={(e) => {
+              e.stopPropagation()
+              onBringForward(item.id)
             }}
-          >
-            {item.title}
-          </div>
-        )}
+          />
+          <CtxBtn
+            label="↓"
+            title="atrás"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSendBackward(item.id)
+            }}
+          />
+          <CtxBtn
+            label={item.compacted ? '↕' : '↔'}
+            title={item.compacted ? 'expandir' : 'compactar'}
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdate(item.id, { compacted: !item.compacted })
+            }}
+          />
+          <CtxBtn
+            label="✕"
+            title="deletar"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(item.id)
+            }}
+          />
+        </div>
+      )}
+
+      {item.title && (
         <div
           style={{
-            fontSize: 10,
-            color: '#3d2408',
-            lineHeight: 1.5,
-            opacity: item.content ? 1 : 0.35,
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            overflow: item.compacted ? 'hidden' : 'visible',
-            display: item.compacted ? '-webkit-box' : 'block',
-            WebkitLineClamp: item.compacted ? 4 : undefined,
-            WebkitBoxOrient: item.compacted ? 'vertical' : undefined,
+            fontWeight: 700,
+            fontSize: 11,
+            color: colors.title,
+            marginBottom: 3,
+            lineHeight: 1.3,
           }}
         >
-          {item.content || 'clique pra abrir'}
+          {item.title}
         </div>
-      </div>
-
-      {modalOpen && (
-        <PostItModal item={item} onUpdate={onUpdate} onClose={() => setModalOpen(false)} />
       )}
-    </>
+      <div
+        style={{
+          fontSize: 10,
+          color: '#3d2408',
+          lineHeight: 1.5,
+          opacity: item.content ? 1 : 0.35,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          overflow: item.compacted ? 'hidden' : 'visible',
+          display: item.compacted ? '-webkit-box' : 'block',
+          WebkitLineClamp: item.compacted ? 4 : undefined,
+          WebkitBoxOrient: item.compacted ? 'vertical' : undefined,
+        }}
+      >
+        {item.content || 'clique pra abrir'}
+      </div>
+    </div>
   )
 }
 
@@ -235,7 +229,7 @@ function CtxBtn({
   )
 }
 
-function PostItModal({
+export function PostItModal({
   item,
   onUpdate,
   onClose,
