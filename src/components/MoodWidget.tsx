@@ -262,7 +262,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
               }}
             >
               <img
-                src={`/moods/${m.id}.png`} // ← era ./src/assets/moods/
+                src={moodImages[m.id] ?? ''}
                 alt={m.label}
                 style={{ width: 36, height: 36, objectFit: 'contain', pointerEvents: 'none' }}
               />
