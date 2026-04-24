@@ -177,9 +177,9 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         onMouseDown={onMouseDown}
         onClick={() => setExpanded((v) => !v)}
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
+          width: 52,
+          height: 52,
+          borderRadius: 12,
           background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
           border: '1.5px solid #e8a0b0',
           boxShadow: '0 2px 10px rgba(44,20,8,0.18)',
@@ -194,7 +194,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
           <img
             src={`./src/assets/moods/${myMood}.png`}
             alt={myMood}
-            style={{ width: 34, height: 34, objectFit: 'contain', pointerEvents: 'none' }}
+            style={{ width: 42, height: 42, objectFit: 'contain', pointerEvents: 'none' }}
           />
         ) : (
           <span style={{ fontSize: 20 }}>🙂</span>
@@ -276,7 +276,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: -22,
+                    bottom: -15,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     background: 'rgba(44,20,8,0.75)',
