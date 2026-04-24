@@ -30,6 +30,7 @@ export default function Checklist({
 }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
+  const resizeRef = useRef({ resizing: false, sx: 0, sy: 0, sw: 0, sh: 0 })
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -61,6 +62,35 @@ export default function Checklist({
       window.addEventListener('mouseup', onUp)
     },
     [editMode, item.x, item.y, item.id, onUpdate, onFocus]
+  )
+
+  const onResizeMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      e.preventDefault()
+      resizeRef.current = {
+        resizing: true,
+        sx: e.clientX,
+        sy: e.clientY,
+        sw: item.width,
+        sh: item.height,
+      }
+      const onMove = (ev: MouseEvent) => {
+        const r = resizeRef.current
+        if (!r.resizing) return
+        const newW = Math.max(100, r.sw + ev.clientX - r.sx)
+        const newH = Math.max(80, r.sh + ev.clientY - r.sy)
+        onUpdate(item.id, { width: newW, height: newH })
+      }
+      const onUp = () => {
+        resizeRef.current.resizing = false
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [item.id, item.width, item.height, onUpdate]
   )
 
   const handleClick = (e: React.MouseEvent) => {
@@ -167,7 +197,7 @@ export default function Checklist({
           </div>
           <span
             style={{
-              fontSize: 10,
+              fontSize: item.fontSize ?? 10,
               color: '#3d2408',
               lineHeight: 1.4,
               textDecoration: entry.done ? 'line-through' : 'none',
@@ -187,6 +217,93 @@ export default function Checklist({
 
       {total === 0 && (
         <div style={{ fontSize: 10, color: '#3d2408', opacity: 0.35 }}>clique pra adicionar</div>
+      )}
+
+      {editMode && (
+        <div
+          onMouseDown={onResizeMouseDown}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: 18,
+            height: 18,
+            cursor: 'nwse-resize',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path
+              d="M2 9 L9 2 M5 9 L9 5 M8 9 L9 8"
+              stroke="#8b5a2a"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+      )}
+      {editMode && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 18,
+            display: 'flex',
+            gap: 2,
+            padding: 2,
+          }}
+        >
+          <button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdate(item.id, { fontSize: Math.max(8, (item.fontSize ?? 10) - 1) })
+            }}
+            style={{
+              width: 14,
+              height: 14,
+              borderRadius: 3,
+              background: 'rgba(44,20,8,0.15)',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 9,
+              color: '#3d2408',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              lineHeight: 1,
+            }}
+          >
+            A
+          </button>
+          <button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdate(item.id, { fontSize: Math.min(22, (item.fontSize ?? 10) + 1) })
+            }}
+            style={{
+              width: 16,
+              height: 16,
+              borderRadius: 3,
+              background: 'rgba(44,20,8,0.15)',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 11,
+              color: '#3d2408',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              lineHeight: 1,
+            }}
+          >
+            A
+          </button>
+        </div>
       )}
     </div>
   )

@@ -23,6 +23,7 @@ export interface PostItItem extends BoardItem {
   content: string
   color: PostItColor
   compacted?: boolean
+  fontSize?: number
 }
 
 export interface ChecklistEntry {
@@ -36,6 +37,7 @@ export interface ChecklistItem extends BoardItem {
   title?: string
   entries: ChecklistEntry[]
   color: PostItColor
+  fontSize?: number
 }
 
 export interface DrawingItem extends BoardItem {
