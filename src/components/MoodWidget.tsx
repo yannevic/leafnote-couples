@@ -50,16 +50,14 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevPartnerMood = useRef<string | null>(null)
-  const [play] = useSound('./src/assets/sounds/mood.mp3', { volume: 0.5 })
+  const [play] = useSound('/sounds/mood.mp3', { volume: 0.5 }) // ← som em public/sounds/mood.mp3
   const dragRef = useRef({ dragging: false, sx: 0, sy: 0, px: 0, py: 0 })
   const widgetRef = useRef<HTMLDivElement>(null)
 
-  // inicializa posição centralizada
   useEffect(() => {
     setPos({ x: window.innerWidth / 2 - 30, y: 60 })
   }, [])
 
-  // escuta humor próprio
   useEffect(() => {
     const r = ref(db, `/mood/${uid}/${TODAY}`)
     return onValue(r, (snap) => {
@@ -68,7 +66,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
     })
   }, [uid])
 
-  // escuta humor do parceiro
   useEffect(() => {
     const r = ref(db, `/mood/${partnerUid}/${TODAY}`)
     return onValue(r, (snap) => {
@@ -120,7 +117,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
     [pos]
   )
 
-  // fecha ao clicar fora
   useEffect(() => {
     if (!expanded) return
     const handler = (e: MouseEvent) => {
@@ -146,7 +142,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         fontFamily: 'Baloo 2, sans-serif',
       }}
     >
-      {/* toast de notificação */}
       {toast && (
         <div
           style={{
@@ -172,7 +167,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         </div>
       )}
 
-      {/* bolinha principal */}
       <div
         onMouseDown={onMouseDown}
         onClick={() => setExpanded((v) => !v)}
@@ -192,7 +186,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
       >
         {myMood ? (
           <img
-            src={`./src/assets/moods/${myMood}.png`}
+            src={`/moods/${myMood}.png`} // ← era ./src/assets/moods/
             alt={myMood}
             style={{ width: 42, height: 42, objectFit: 'contain', pointerEvents: 'none' }}
           />
@@ -201,7 +195,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         )}
       </div>
 
-      {/* humor do parceiro — aparece abaixo da bolinha */}
       {partnerMood && (
         <div
           style={{
@@ -213,7 +206,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
           }}
         >
           <img
-            src={`./src/assets/moods/${partnerMood}.png`}
+            src={`/moods/${partnerMood}.png`} // ← era ./src/assets/moods/
             alt={partnerMood}
             style={{ width: 28, height: 28, objectFit: 'contain', opacity: 0.85 }}
           />
@@ -223,7 +216,6 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         </div>
       )}
 
-      {/* grid de seleção */}
       {expanded && (
         <div
           style={{
@@ -268,7 +260,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
               }}
             >
               <img
-                src={`./src/assets/moods/${m.id}.png`}
+                src={`/moods/${m.id}.png`} // ← era ./src/assets/moods/
                 alt={m.label}
                 style={{ width: 36, height: 36, objectFit: 'contain', pointerEvents: 'none' }}
               />
