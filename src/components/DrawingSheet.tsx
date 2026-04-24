@@ -1,8 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { DrawingItem } from '../types/board'
 
-const SIZES = [2, 5, 10]
-
 const PRESET_COLORS = [
   '#2c1810',
   '#7a3a2a',
@@ -18,7 +16,40 @@ const PRESET_COLORS = [
   '#e74c3c',
   '#f39c12',
   '#fffef8',
+  '#ffffff',
+  '#000000',
 ]
+
+type Tool =
+  | 'pen'
+  | 'eraser'
+  | 'rect'
+  | 'ellipse'
+  | 'triangle'
+  | 'line'
+  | 'arrow'
+  | 'star'
+  | 'heart'
+  | 'diamond'
+  | 'pentagon'
+  | 'hexagon'
+
+const TOOLS: { id: Tool; label: string }[] = [
+  { id: 'pen', label: '✏️' },
+  { id: 'eraser', label: '⬜' },
+  { id: 'line', label: '╱' },
+  { id: 'arrow', label: '→' },
+  { id: 'rect', label: '▭' },
+  { id: 'ellipse', label: '⬭' },
+  { id: 'triangle', label: '△' },
+  { id: 'diamond', label: '◇' },
+  { id: 'pentagon', label: '⬠' },
+  { id: 'hexagon', label: '⬡' },
+  { id: 'star', label: '☆' },
+  { id: 'heart', label: '♡' },
+]
+
+const SIZES = [2, 4, 8, 14]
 
 interface Props {
   item: DrawingItem
@@ -37,13 +68,145 @@ interface DrawingModalProps {
   onCancel: () => void
 }
 
+function drawShape(
+  ctx: CanvasRenderingContext2D,
+  tool: Tool,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  size: number,
+  fill: boolean
+) {
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = size
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+
+  const cx = (x1 + x2) / 2
+  const cy = (y1 + y2) / 2
+  const rx = Math.abs(x2 - x1) / 2
+  const ry = Math.abs(y2 - y1) / 2
+  const r = Math.min(rx, ry)
+
+  ctx.beginPath()
+
+  if (tool === 'line') {
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.stroke()
+    return
+  }
+
+  if (tool === 'arrow') {
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const angle = Math.atan2(dy, dx)
+    const headLen = Math.max(14, size * 4)
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(x2, y2)
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle - Math.PI / 6),
+      y2 - headLen * Math.sin(angle - Math.PI / 6)
+    )
+    ctx.moveTo(x2, y2)
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle + Math.PI / 6),
+      y2 - headLen * Math.sin(angle + Math.PI / 6)
+    )
+    ctx.stroke()
+    return
+  }
+
+  if (tool === 'rect') {
+    ctx.rect(x1, y1, x2 - x1, y2 - y1)
+  } else if (tool === 'ellipse') {
+    ctx.ellipse(cx, cy, rx || 1, ry || 1, 0, 0, Math.PI * 2)
+  } else if (tool === 'triangle') {
+    ctx.moveTo(cx, y1)
+    ctx.lineTo(x2, y2)
+    ctx.lineTo(x1, y2)
+    ctx.closePath()
+  } else if (tool === 'diamond') {
+    ctx.moveTo(cx, y1)
+    ctx.lineTo(x2, cy)
+    ctx.lineTo(cx, y2)
+    ctx.lineTo(x1, cy)
+    ctx.closePath()
+  } else if (tool === 'pentagon') {
+    const pts = 5
+    for (let i = 0; i < pts; i += 1) {
+      const a = (Math.PI * 2 * i) / pts - Math.PI / 2
+      const px = cx + r * Math.cos(a)
+      const py = cy + r * Math.sin(a)
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+  } else if (tool === 'hexagon') {
+    const pts = 6
+    for (let i = 0; i < pts; i += 1) {
+      const a = (Math.PI * 2 * i) / pts
+      const px = cx + r * Math.cos(a)
+      const py = cy + r * Math.sin(a)
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+  } else if (tool === 'star') {
+    const outer = r
+    const inner = r * 0.4
+    for (let i = 0; i < 10; i += 1) {
+      const a = (Math.PI * i) / 5 - Math.PI / 2
+      const rad = i % 2 === 0 ? outer : inner
+      const px = cx + rad * Math.cos(a)
+      const py = cy + rad * Math.sin(a)
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+  } else if (tool === 'heart') {
+    const w = rx * 2
+    const h = ry * 2
+    ctx.moveTo(cx, y2)
+    ctx.bezierCurveTo(x1 - w * 0.1, cy + h * 0.1, x1 - w * 0.1, y1, cx - w * 0.25, y1)
+    ctx.bezierCurveTo(x1 + w * 0.1, y1, cx, y1 + h * 0.15, cx, y1 + h * 0.3)
+    ctx.bezierCurveTo(cx, y1 + h * 0.15, cx + w * 0.4, y1, cx + w * 0.25, y1)
+    ctx.bezierCurveTo(x2 + w * 0.1, y1, x2 + w * 0.1, cy + h * 0.1, cx, y2)
+    ctx.closePath()
+  }
+
+  if (fill) ctx.fill()
+  ctx.stroke()
+}
+
 function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const snapshotRef = useRef<ImageData | null>(null)
   const drawing = useRef(false)
+  const startPos = useRef({ x: 0, y: 0 })
+  const history = useRef<string[]>([])
+  const historyIdx = useRef(-1)
+
   const [color, setColor] = useState('#2c1810')
   const [size, setSize] = useState(3)
-  const [eraser, setEraser] = useState(false)
+  const [tool, setTool] = useState<Tool>('pen')
+  const [fill, setFill] = useState(false)
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+
+  const pushHistory = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const dataUrl = canvas.toDataURL()
+    history.current = history.current.slice(0, historyIdx.current + 1)
+    history.current.push(dataUrl)
+    historyIdx.current = history.current.length - 1
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -54,46 +217,122 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     if (initialData) {
       const img = new Image()
-      img.onload = () => ctx.drawImage(img, 0, 0)
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0)
+        pushHistory()
+      }
       img.src = initialData
+    } else {
+      pushHistory()
     }
-  }, [initialData])
+  }, [initialData, pushHistory])
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (ctrl && !e.shiftKey && e.key === 'z') {
+        e.preventDefault()
+        handleUndo()
+      }
+      if (ctrl && ((e.shiftKey && e.key === 'z') || e.key === 'y')) {
+        e.preventDefault()
+        handleRedo()
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  })
+
+  const handleUndo = () => {
+    if (historyIdx.current <= 0) return
+    historyIdx.current -= 1
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
+    const img = new Image()
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+    }
+    img.src = history.current[historyIdx.current]
+  }
+
+  const handleRedo = () => {
+    if (historyIdx.current >= history.current.length - 1) return
+    historyIdx.current += 1
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
+    const img = new Image()
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+    }
+    img.src = history.current[historyIdx.current]
+  }
 
   const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
     const scaleX = canvas.width / rect.width
     const scaleY = canvas.height / rect.height
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
-    }
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
   }
 
   const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     drawing.current = true
-    const ctx = canvasRef.current!.getContext('2d')!
     const pos = getPos(e)
-    ctx.beginPath()
-    ctx.moveTo(pos.x, pos.y)
+    startPos.current = pos
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
+    if (tool === 'pen' || tool === 'eraser') {
+      ctx.beginPath()
+      ctx.moveTo(pos.x, pos.y)
+    } else {
+      snapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    }
   }
 
   const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect()
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
     if (!drawing.current) return
     const ctx = canvasRef.current!.getContext('2d')!
     const pos = getPos(e)
-    ctx.lineWidth = eraser ? size * 4 : size
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = eraser ? '#fffef8' : color
-    ctx.lineTo(pos.x, pos.y)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(pos.x, pos.y)
+
+    if (tool === 'pen') {
+      ctx.lineWidth = size
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = color
+      ctx.lineTo(pos.x, pos.y)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(pos.x, pos.y)
+    } else if (tool === 'eraser') {
+      ctx.lineWidth = size * 4
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = '#fffef8'
+      ctx.lineTo(pos.x, pos.y)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(pos.x, pos.y)
+    } else {
+      const canvas = canvasRef.current!
+      ctx.putImageData(snapshotRef.current!, 0, 0)
+      drawShape(ctx, tool, startPos.current.x, startPos.current.y, pos.x, pos.y, color, size, fill)
+    }
   }
 
-  const onMouseUp = () => {
+  const onMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!drawing.current) return
     drawing.current = false
+    if (tool !== 'pen' && tool !== 'eraser') {
+      const pos = getPos(e)
+      const ctx = canvasRef.current!.getContext('2d')!
+      ctx.putImageData(snapshotRef.current!, 0, 0)
+      drawShape(ctx, tool, startPos.current.x, startPos.current.y, pos.x, pos.y, color, size, fill)
+    }
+    pushHistory()
   }
 
   const handleClear = () => {
@@ -101,12 +340,15 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#fffef8'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+    pushHistory()
   }
 
   const handleSave = () => {
     const dataUrl = canvasRef.current!.toDataURL('image/png')
     onSave(dataUrl)
   }
+
+  const eraser = tool === 'eraser'
 
   return (
     <div
@@ -135,172 +377,190 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
       >
         <div style={{ fontSize: 14, fontWeight: 800, color: '#3d2408' }}>✏️ Desenho</div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Cores predefinidas + picker */}
+        <div style={{ display: 'flex', gap: 12 }}>
+          {/* painel lateral de ferramentas */}
           <div
             style={{
               display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              background: '#f0e8d8',
+              borderRadius: 12,
+              padding: 8,
+              border: '1px solid #c4a882',
+              width: 48,
               alignItems: 'center',
-              gap: 4,
-              flexWrap: 'wrap',
-              maxWidth: 320,
             }}
           >
-            {PRESET_COLORS.map((c) => (
+            {/* desfazer / refazer */}
+            <button onClick={handleUndo} title="desfazer (Ctrl+Z)" style={toolBtnStyle(false)}>
+              ↩
+            </button>
+            <button onClick={handleRedo} title="refazer (Ctrl+Y)" style={toolBtnStyle(false)}>
+              ↪
+            </button>
+
+            <div style={{ width: '100%', height: 1, background: '#c4a882', margin: '2px 0' }} />
+
+            {/* ferramentas */}
+            {TOOLS.map((t) => (
               <button
-                key={c}
-                onClick={() => {
-                  setColor(c)
-                  setEraser(false)
-                }}
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: c,
-                  border: color === c && !eraser ? '2.5px solid #3d2408' : '1.5px solid #c4a88288',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  flexShrink: 0,
-                  boxShadow: color === c && !eraser ? '0 0 0 1.5px #fff' : 'none',
-                }}
-              />
+                key={t.id}
+                onClick={() => setTool(t.id)}
+                title={t.id}
+                style={toolBtnStyle(tool === t.id)}
+              >
+                {t.label}
+              </button>
             ))}
-            <div style={{ position: 'relative', width: 18, height: 18 }}>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => {
-                  setColor(e.target.value)
-                  setEraser(false)
-                }}
-                style={{
-                  opacity: 0,
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
-                  cursor: 'pointer',
-                  border: 'none',
-                  padding: 0,
-                }}
-                title="mais cores"
-              />
+
+            <div style={{ width: '100%', height: 1, background: '#c4a882', margin: '2px 0' }} />
+
+            {/* preencher */}
+            <button
+              onClick={() => setFill((v) => !v)}
+              title="preencher forma"
+              style={toolBtnStyle(fill)}
+            >
+              ◼
+            </button>
+
+            {/* limpar */}
+            <button onClick={handleClear} title="limpar tudo" style={toolBtnStyle(false)}>
+              🗑
+            </button>
+          </div>
+
+          {/* canvas + cores + tamanhos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* cores */}
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 560 }}>
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => {
+                    setColor(c)
+                    setTool('pen')
+                  }}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: c,
+                    border:
+                      color === c && !eraser ? '2.5px solid #3d2408' : '1.5px solid #c4a88288',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    flexShrink: 0,
+                    boxShadow: color === c && !eraser ? '0 0 0 1.5px #fff' : 'none',
+                  }}
+                />
+              ))}
+              {/* color picker */}
+              <div style={{ position: 'relative', width: 20, height: 20 }}>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => {
+                    setColor(e.target.value)
+                    setTool('pen')
+                  }}
+                  style={{
+                    opacity: 0,
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    cursor: 'pointer',
+                    border: 'none',
+                    padding: 0,
+                  }}
+                  title="mais cores"
+                />
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
+                    border: '1.5px solid #c4a88288',
+                    pointerEvents: 'none',
+                  }}
+                />
+              </div>
+
               <div
                 style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
-                  border: '1.5px solid #c4a88288',
-                  pointerEvents: 'none',
+                  width: 1,
+                  height: 20,
+                  background: '#c4a882',
+                  opacity: 0.5,
+                  margin: '0 4px',
                 }}
               />
+
+              {/* tamanhos */}
+              {SIZES.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSize(s)}
+                  style={{
+                    width: s * 2 + 10,
+                    height: s * 2 + 10,
+                    borderRadius: '50%',
+                    background: color,
+                    border: size === s ? '2px solid #c4845a' : '2px solid transparent',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    flexShrink: 0,
+                    alignSelf: 'center',
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* canvas */}
+            <div style={{ position: 'relative', width: 560, height: 400 }}>
+              <canvas
+                ref={canvasRef}
+                width={560}
+                height={400}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={onMouseUp}
+                onMouseLeave={() => {
+                  drawing.current = false
+                  setMousePos(null)
+                }}
+                style={{
+                  borderRadius: 10,
+                  border: '2px solid #c4a882',
+                  cursor: 'none',
+                  display: 'block',
+                  background: '#fffef8',
+                  width: 560,
+                  height: 400,
+                }}
+              />
+              {mousePos && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: mousePos.x,
+                    top: mousePos.y,
+                    width: eraser ? size * 4 : size + 4,
+                    height: eraser ? size * 4 : size + 4,
+                    borderRadius: '50%',
+                    background: eraser ? 'transparent' : color,
+                    border: eraser ? '1.5px solid #3d2408' : 'none',
+                    transform: 'translate(-50%, -50%)',
+                    pointerEvents: 'none',
+                    opacity: 0.85,
+                  }}
+                />
+              )}
             </div>
           </div>
-
-          <div style={{ width: 1, height: 20, background: '#c4a882', opacity: 0.5 }} />
-
-          {/* Tamanhos */}
-          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-            {SIZES.map((s) => (
-              <button
-                key={s}
-                onClick={() => setSize(s)}
-                style={{
-                  width: s * 3 + 8,
-                  height: s * 3 + 8,
-                  borderRadius: '50%',
-                  background: '#2c1810',
-                  border: size === s ? '2px solid #c4845a' : '2px solid transparent',
-                  cursor: 'pointer',
-                  outline: 'none',
-                }}
-              />
-            ))}
-          </div>
-
-          <div style={{ width: 1, height: 20, background: '#c4a882', opacity: 0.5 }} />
-
-          <button
-            onClick={() => setEraser((v) => !v)}
-            style={{
-              padding: '2px 10px',
-              borderRadius: 8,
-              background: eraser ? '#e8a0b0' : '#f0e8d8',
-              border: eraser ? '1.5px solid #c4845a' : '1.5px solid #c4a882',
-              cursor: 'pointer',
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#3d2408',
-              fontFamily: 'Baloo 2, sans-serif',
-            }}
-          >
-            borracha
-          </button>
-
-          <button
-            onClick={handleClear}
-            style={{
-              padding: '2px 10px',
-              borderRadius: 8,
-              background: '#f0e8d8',
-              border: '1.5px solid #c4a882',
-              cursor: 'pointer',
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#3d2408',
-              fontFamily: 'Baloo 2, sans-serif',
-            }}
-          >
-            limpar
-          </button>
-        </div>
-
-        <div style={{ position: 'relative', width: 500, height: 340 }}>
-          <canvas
-            ref={canvasRef}
-            width={500}
-            height={340}
-            onMouseDown={onMouseDown}
-            onMouseMove={(e) => {
-              onMouseMove(e)
-              const rect = canvasRef.current!.getBoundingClientRect()
-              setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-            }}
-            onMouseUp={onMouseUp}
-            onMouseLeave={() => {
-              onMouseUp()
-              setMousePos(null)
-            }}
-            style={{
-              borderRadius: 10,
-              border: '2px solid #c4a882',
-              cursor: 'none',
-              display: 'block',
-              background: '#fffef8',
-              width: 500,
-              height: 340,
-            }}
-          />
-          {/* pontinho do cursor */}
-          {mousePos && (
-            <div
-              style={{
-                position: 'absolute',
-                left: mousePos.x,
-                top: mousePos.y,
-                width: eraser ? size * 4 : size + 4,
-                height: eraser ? size * 4 : size + 4,
-                borderRadius: '50%',
-                background: eraser ? 'transparent' : color,
-                border: eraser ? '1.5px solid #3d2408' : 'none',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                opacity: 0.85,
-              }}
-            />
-          )}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -342,6 +602,25 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
   )
 }
 
+function toolBtnStyle(active: boolean): React.CSSProperties {
+  return {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    background: active ? '#c4845a' : '#fdf6f0',
+    border: active ? '2px solid #8b5a2a' : '1.5px solid #c4a882',
+    cursor: 'pointer',
+    fontSize: 14,
+    color: active ? '#fff' : '#3d2408',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 700,
+    padding: 0,
+    flexShrink: 0,
+  }
+}
+
 export default function DrawingSheet({
   item,
   editMode,
@@ -359,8 +638,8 @@ export default function DrawingSheet({
   const rotateRef = useRef({ rotating: false, startAngle: 0, currentRotation: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const w = item.width || 500
-  const h = item.height || 340
+  const w = item.width || 560
+  const h = item.height || 400
   const rotation = item.rotation ?? 0
 
   const onMouseDown = useCallback(
@@ -399,21 +678,11 @@ export default function DrawingSheet({
     (e: React.MouseEvent) => {
       e.stopPropagation()
       e.preventDefault()
-
-      // centro do item na tela
       const rect = containerRef.current!.getBoundingClientRect()
       const cx = rect.left + rect.width / 2
       const cy = rect.top + rect.height / 2
-
-      // ângulo inicial entre o centro e o mouse
       const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI)
-
-      rotateRef.current = {
-        rotating: true,
-        startAngle,
-        currentRotation: rotation,
-      }
-
+      rotateRef.current = { rotating: true, startAngle, currentRotation: rotation }
       const onMove = (ev: MouseEvent) => {
         const r = rotateRef.current
         if (!r.rotating) return
@@ -425,13 +694,11 @@ export default function DrawingSheet({
         const newRotation = (r.currentRotation + delta + 360) % 360
         onUpdate(item.id, { rotation: newRotation })
       }
-
       const onUp = () => {
         rotateRef.current.rotating = false
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
       }
-
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     },
@@ -442,13 +709,13 @@ export default function DrawingSheet({
     (e: React.MouseEvent) => {
       e.stopPropagation()
       e.preventDefault()
-      const ratio = (item.width || 500) / (item.height || 340)
+      const ratio = (item.width || 560) / (item.height || 400)
       resizeRef.current = {
         resizing: true,
         sx: e.clientX,
         sy: e.clientY,
-        sw: item.width || 500,
-        sh: item.height || 340,
+        sw: item.width || 560,
+        sh: item.height || 400,
       }
       const onMove = (ev: MouseEvent) => {
         const r = resizeRef.current
@@ -475,8 +742,8 @@ export default function DrawingSheet({
     (dataUrl: string) => {
       onUpdate(item.id, {
         drawingData: dataUrl,
-        width: item.width || 500,
-        height: item.height || 340,
+        width: item.width || 560,
+        height: item.height || 400,
       })
       setModalOpen(false)
     },
@@ -495,7 +762,6 @@ export default function DrawingSheet({
       )}
 
       {item.drawingData && (
-        // wrapper externo só pra posicionar — sem overflow hidden
         <div
           style={{
             position: 'absolute',
@@ -510,7 +776,6 @@ export default function DrawingSheet({
           onMouseEnter={() => setShowMenu(true)}
           onMouseLeave={() => setShowMenu(false)}
         >
-          {/* item visual com overflow hidden */}
           <div
             data-item
             ref={containerRef}
@@ -532,7 +797,6 @@ export default function DrawingSheet({
             />
           </div>
 
-          {/* Alça de rotação — bolinha no topo central */}
           {editMode && (
             <div
               onMouseDown={onRotateMouseDown}
@@ -552,8 +816,6 @@ export default function DrawingSheet({
               }}
             />
           )}
-
-          {/* Linha da alça de rotação */}
           {editMode && (
             <div
               style={{
@@ -569,7 +831,6 @@ export default function DrawingSheet({
             />
           )}
 
-          {/* Botões de contexto */}
           {editMode && showMenu && (
             <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 3 }}>
               <CtxBtn
@@ -603,7 +864,6 @@ export default function DrawingSheet({
             </div>
           )}
 
-          {/* Alça de redimensionar — canto inferior direito */}
           {editMode && (
             <div
               onMouseDown={onResizeMouseDown}
