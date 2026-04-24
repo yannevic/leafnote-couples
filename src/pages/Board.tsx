@@ -104,8 +104,15 @@ export default function Board() {
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
-  const [openModalId, setOpenModalId] = useState<string | null>(null)
-  const openModalItem = openModalId ? (items.find((i) => i.id === openModalId) ?? null) : null
+  const [openModalItem, setOpenModalItem] = useState<AnyBoardItem | null>(null)
+
+  const handleOpenModal = useCallback(
+    (id: string) => {
+      const found = items.find((i) => i.id === id) ?? null
+      setOpenModalItem(found)
+    },
+    [items]
+  )
 
   const handleSaveNick = async () => {
     if (!nickInput.trim() || !user) return
@@ -456,7 +463,7 @@ export default function Board() {
                 key={item.id}
                 {...commonProps}
                 item={item as PostItItem}
-                onOpenModal={setOpenModalId}
+                onOpenModal={handleOpenModal}
               />
             )
           }
@@ -466,7 +473,7 @@ export default function Board() {
                 key={item.id}
                 {...commonProps}
                 item={item as ChecklistItem}
-                onOpenModal={setOpenModalId}
+                onOpenModal={handleOpenModal}
               />
             )
           }
@@ -764,14 +771,14 @@ export default function Board() {
         <PostItModal
           item={openModalItem as PostItItem}
           onUpdate={handleUpdate as never}
-          onClose={() => setOpenModalId(null)}
+          onClose={() => setOpenModalItem(null)}
         />
       )}
       {openModalItem?.type === 'checklist' && (
         <ChecklistModal
           item={openModalItem as ChecklistItem}
           onUpdate={handleUpdate as never}
-          onClose={() => setOpenModalId(null)}
+          onClose={() => setOpenModalItem(null)}
         />
       )}
 

@@ -37,7 +37,11 @@ export function useBoard(
   const saveItem = useCallback((item: AnyBoardItem) => {
     localIds.current.add(item.id)
     const itemRef = ref(db, `${BOARD_PATH}/${item.id}`)
-    set(itemRef, item).catch((err: unknown) => {
+
+    // Firebase não aceita undefined — remove todas as chaves undefined
+    const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
+
+    set(itemRef, clean).catch((err: unknown) => {
       const msg =
         err instanceof Error
           ? err.message
