@@ -72,6 +72,8 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
 export default function Board() {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
+  const [trashedItems, setTrashedItems] = useState<AnyBoardItem[]>([])
+  const [trashOpen, setTrashOpen] = useState(false)
   const [selectedTool, setSelectedTool] = useState<BoardItemType | null>(null)
   const [editMode, setEditMode] = useState(false)
   const { saveItem, deleteItem } = useBoard(items, setItems)
@@ -244,10 +246,45 @@ export default function Board() {
     [uid, saveItem]
   )
 
-  const handleDelete = useCallback(
+  const handleDelete = useCallback((id: string) => {
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === id)
+      if (item) {
+        setTrashedItems((t) => {
+          if (t.some((x) => x.id === id)) return t
+          return [...t, item]
+        })
+      }
+      return prev.filter((i) => i.id !== id)
+    })
+  }, [])
+
+  const handleRestore = useCallback(
     (id: string) => {
-      setItems((prev) => prev.filter((item) => item.id !== id))
-      deleteItem(id)
+      setTrashedItems((prev) => {
+        const item = prev.find((i) => i.id === id)
+        if (item) saveItem(item)
+        return prev.filter((i) => i.id !== id)
+      })
+    },
+    [saveItem]
+  )
+
+  const handleTrashClose = useCallback(() => {
+    setTrashedItems((prev) => {
+      prev.forEach((item) => deleteItem(item.id))
+      return []
+    })
+    setTrashOpen(false)
+  }, [deleteItem])
+
+  const handleDeleteForever = useCallback(
+    (id: string) => {
+      setTrashedItems((prev) => {
+        const item = prev.find((i) => i.id === id)
+        if (item) deleteItem(item.id)
+        return prev.filter((i) => i.id !== id)
+      })
     },
     [deleteItem]
   )
@@ -792,11 +829,183 @@ export default function Board() {
         selected={selectedTool}
         editMode={editMode}
         onSelect={setSelectedTool}
-        onToggleEdit={() => setEditMode((e) => !e)}
+        onToggleEdit={() => setEditMode((v) => !v)}
+        onOpenTrash={() => setTrashOpen(true)}
+        trashCount={trashedItems.length}
       />
       <StreakCounter />
       {showCalendar && (
         <WeekCalendar displayName={displayName} onClose={() => setShowCalendar(false)} />
+      )}
+      {trashOpen && (
+        <div
+          onClick={handleTrashClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(44,20,8,0.45)',
+            zIndex: 200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 360,
+              background: '#fdf6f0',
+              border: '2px solid #d4aa80',
+              borderRadius: 14,
+              boxShadow: '0 12px 40px rgba(44,20,8,0.3)',
+              fontFamily: 'Baloo 2, sans-serif',
+              overflow: 'hidden',
+            }}
+          >
+            {/* cabeçalho */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #d4956a 0%, #c4845a 100%)',
+                padding: '14px 20px',
+                borderBottom: '1.5px solid #d4aa80',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#3d2408' }}>🗑️ lixeira</span>
+              <button
+                onClick={handleTrashClose}
+                style={{
+                  background: 'rgba(255,255,255,0.4)',
+                  border: '1px solid #d4aa80',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  color: '#3d2408',
+                  padding: '5px 12px',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                }}
+              >
+                esvaziar e fechar
+              </button>
+            </div>
+
+            {/* lista */}
+            <div style={{ padding: '12px 16px', maxHeight: 360, overflowY: 'auto' }}>
+              {trashedItems.length === 0 && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: '#8b6914',
+                    opacity: 0.6,
+                    textAlign: 'center',
+                    padding: '24px 0',
+                  }}
+                >
+                  lixeira vazia 🌸
+                </div>
+              )}
+              {trashedItems.map((item) => {
+                const ICONS: Record<string, string> = {
+                  postit: '🗒️',
+                  checklist: '✅',
+                  drawing: '✏️',
+                  tag: '🏷️',
+                  letter: '💌',
+                }
+                const NAMES: Record<string, string> = {
+                  postit: 'Post-it',
+                  checklist: 'Checklist',
+                  drawing: 'Desenho',
+                  tag: 'Tag',
+                  letter: 'Cartinha',
+                }
+                const label =
+                  item.type === 'postit'
+                    ? (item as PostItItem).title ||
+                      (item as PostItItem).content?.slice(0, 28) ||
+                      'sem conteúdo'
+                    : item.type === 'checklist'
+                      ? (item as ChecklistItem).title || 'checklist'
+                      : item.type === 'letter'
+                        ? `de: ${(item as LetterItem).from || '?'}`
+                        : item.type === 'tag'
+                          ? (item as TagItem).label
+                          : 'desenho'
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      background: 'rgba(212,170,128,0.12)',
+                      border: '1px solid #d4aa8044',
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{ICONS[item.type]}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#3d2408' }}>
+                        {NAMES[item.type]}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: '#8b6914',
+                          opacity: 0.8,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRestore(item.id)}
+                      style={{
+                        background: 'linear-gradient(135deg, #7FB87F, #4A7A4A)',
+                        border: 'none',
+                        borderRadius: 7,
+                        padding: '5px 10px',
+                        fontSize: 10,
+                        color: '#fff',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: 'Baloo 2, sans-serif',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      restaurar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteForever(item.id)}
+                      style={{
+                        background: 'none',
+                        border: '1px solid #e8607a',
+                        borderRadius: 7,
+                        padding: '5px 10px',
+                        fontSize: 10,
+                        color: '#e8607a',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: 'Baloo 2, sans-serif',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      apagar
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

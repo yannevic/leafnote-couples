@@ -20,9 +20,18 @@ interface Props {
   editMode: boolean
   onSelect: (tool: BoardItemType | null) => void
   onToggleEdit: () => void
+  onOpenTrash: () => void
+  trashCount: number
 }
 
-export default function Toolbar({ selected, editMode, onSelect, onToggleEdit }: Props) {
+export default function Toolbar({
+  selected,
+  editMode,
+  onSelect,
+  onToggleEdit,
+  onOpenTrash,
+  trashCount,
+}: Props) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ x: 20, y: -1 })
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -205,6 +214,78 @@ export default function Toolbar({ selected, editMode, onSelect, onToggleEdit }: 
             </div>
           )
         })}
+        {/* Botão lixeira */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenTrash()
+            setOpen(false)
+          }}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            border: '2px solid #8b5a2a',
+            background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+            boxShadow: '0 3px 10px #8b5a2a44, inset 0 1px 0 #e8b07844',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 19,
+            position: 'relative',
+            transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
+            transitionDelay: open ? `${(TOOLS.length + 1) * 0.04}s` : '0s',
+            transform: open ? 'scale(1)' : 'translateY(20px) scale(0.7)',
+            opacity: open ? 1 : 0,
+            pointerEvents: open ? 'auto' : 'none',
+          }}
+        >
+          🗑️
+          {trashCount > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                width: 15,
+                height: 15,
+                borderRadius: '50%',
+                background: '#e8607a',
+                border: '2px solid #fff',
+                fontSize: 8,
+                fontWeight: 700,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'Baloo 2, sans-serif',
+              }}
+            >
+              {trashCount}
+            </div>
+          )}
+          <span
+            style={{
+              position: 'absolute',
+              left: 50,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: '#3d2408ee',
+              color: '#fdf0e0',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '3px 9px',
+              borderRadius: 7,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              letterSpacing: '0.04em',
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
+            lixeira {trashCount > 0 ? `(${trashCount})` : ''}
+          </span>
+        </div>
 
         {/* Botão mover itens */}
         <div
