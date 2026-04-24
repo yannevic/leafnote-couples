@@ -50,6 +50,8 @@ const TOOLS: { id: Tool; label: string }[] = [
 ]
 
 const SIZES = [2, 4, 8, 14]
+const CANVAS_W = 780
+const CANVAS_H = 520
 
 interface Props {
   item: DrawingItem
@@ -214,7 +216,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.fillStyle = '#fffef8'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
     if (initialData) {
       const img = new Image()
       img.onload = () => {
@@ -250,7 +252,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const ctx = canvas.getContext('2d')!
     const img = new Image()
     img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
       ctx.drawImage(img, 0, 0)
     }
     img.src = history.current[historyIdx.current]
@@ -263,7 +265,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const ctx = canvas.getContext('2d')!
     const img = new Image()
     img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
       ctx.drawImage(img, 0, 0)
     }
     img.src = history.current[historyIdx.current]
@@ -339,7 +341,7 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
     const canvas = canvasRef.current!
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#fffef8'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
     pushHistory()
   }
 
@@ -520,11 +522,11 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
             </div>
 
             {/* canvas */}
-            <div style={{ position: 'relative', width: 560, height: 400 }}>
+            <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H }}>
               <canvas
                 ref={canvasRef}
-                width={560}
-                height={400}
+                width={CANVAS_W}
+                height={CANVAS_H}
                 onMouseDown={onMouseDown}
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
@@ -538,8 +540,8 @@ function DrawingModal({ initialData, onSave, onCancel }: DrawingModalProps) {
                   cursor: 'none',
                   display: 'block',
                   background: '#fffef8',
-                  width: 560,
-                  height: 400,
+                  width: CANVAS_W,
+                  height: CANVAS_H,
                 }}
               />
               {mousePos && (
@@ -638,8 +640,8 @@ export default function DrawingSheet({
   const rotateRef = useRef({ rotating: false, startAngle: 0, currentRotation: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const w = item.width || 560
-  const h = item.height || 400
+  const w = item.width || CANVAS_W
+  const h = item.height || CANVAS_H
   const rotation = item.rotation ?? 0
 
   const onMouseDown = useCallback(
@@ -742,8 +744,8 @@ export default function DrawingSheet({
     (dataUrl: string) => {
       onUpdate(item.id, {
         drawingData: dataUrl,
-        width: item.width || 560,
-        height: item.height || 400,
+        width: item.width || CANVAS_W,
+        height: item.height || CANVAS_H,
       })
       setModalOpen(false)
     },
