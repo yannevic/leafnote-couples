@@ -54,15 +54,15 @@
       "dist-electron/**/*"
     ],
     "mac": {
-      "icon": "assets/icon.png",
+      "icon": "resources/icon.icns",
       "target": "dmg"
     },
     "win": {
-      "icon": "assets/icon.png",
+      "icon": "resources/icon.ico",
       "target": "nsis"
     },
     "linux": {
-      "icon": "assets/icon.png",
+      "icon": "resources/icon.png",
       "target": "AppImage"
     },
     "publish": {
