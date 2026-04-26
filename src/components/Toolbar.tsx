@@ -1,19 +1,79 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import {
+  StickyNote,
+  CheckSquare,
+  Pencil,
+  Tag as TagIcon,
+  Mail,
+  Trash2,
+  Hand,
+  Plus,
+} from 'lucide-react'
 import { BoardItemType } from '../types/board'
 
 interface Tool {
   type: BoardItemType
-  icon: string
+  icon: React.ReactNode
   label: string
+  color: string
+  shadow: string
 }
 
 const TOOLS: Tool[] = [
-  { type: 'postit', icon: '🗒️', label: 'Post-it' },
-  { type: 'checklist', icon: '✅', label: 'Checklist' },
-  { type: 'drawing', icon: '✏️', label: 'Desenho' },
-  { type: 'tag', icon: '🏷️', label: 'Tag' },
-  { type: 'letter', icon: '💌', label: 'Cartinha' },
+  {
+    type: 'postit',
+    icon: <StickyNote size={18} strokeWidth={2} />,
+    label: 'Post-it',
+    color: 'linear-gradient(145deg, #fef9c3, #d4a84b)',
+    shadow: '0 3px 10px #d4a84b33',
+  },
+  {
+    type: 'checklist',
+    icon: <CheckSquare size={18} strokeWidth={2} />,
+    label: 'Checklist',
+    color: 'linear-gradient(145deg, #d1fae5, #5a9e80)',
+    shadow: '0 3px 10px #5a9e8033',
+  },
+  {
+    type: 'drawing',
+    icon: <Pencil size={18} strokeWidth={2} />,
+    label: 'Desenho',
+    color: 'linear-gradient(145deg, #ede9fe, #8b72c8)',
+    shadow: '0 3px 10px #8b72c833',
+  },
+  {
+    type: 'tag',
+    icon: <TagIcon size={18} strokeWidth={2} />,
+    label: 'Tag',
+    color: 'linear-gradient(145deg, #dbeafe, #6494c4)',
+    shadow: '0 3px 10px #6494c433',
+  },
+  {
+    type: 'letter',
+    icon: <Mail size={18} strokeWidth={2} />,
+    label: 'Cartinha',
+    color: 'linear-gradient(145deg, #fce8ee, #d4809a)',
+    shadow: '0 3px 10px #d4809a33',
+  },
 ]
+
+const LABEL_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  left: 50,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  background: '#1e1208cc',
+  color: '#fdf0e0',
+  fontSize: 10,
+  fontWeight: 700,
+  padding: '3px 9px',
+  borderRadius: 7,
+  whiteSpace: 'nowrap',
+  pointerEvents: 'none',
+  letterSpacing: '0.04em',
+  fontFamily: 'Baloo 2, sans-serif',
+  backdropFilter: 'blur(4px)',
+}
 
 interface Props {
   selected: BoardItemType | null
@@ -40,9 +100,6 @@ export default function Toolbar({
   useEffect(() => {
     setPos((p) => ({ ...p, y: window.innerHeight / 2 - 27 }))
   }, [])
-
-  const currentTool = TOOLS.find((t) => t.type === selected) ?? null
-  const mainIcon = editMode ? '🖐️' : (currentTool?.icon ?? '❤️')
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -97,7 +154,6 @@ export default function Toolbar({
   const handleBoardClick = useCallback(() => {
     setOpen(false)
   }, [])
-
   useEffect(() => {
     window.addEventListener('click', handleBoardClick)
     return () => window.removeEventListener('click', handleBoardClick)
@@ -107,7 +163,7 @@ export default function Toolbar({
 
   return (
     <>
-      {/* Badge modo mover — topo centralizado */}
+      {/* Badge modo mover */}
       <div
         style={{
           position: 'fixed',
@@ -124,7 +180,7 @@ export default function Toolbar({
         {editMode && (
           <div
             style={{
-              background: 'rgba(44,20,8,0.72)',
+              background: 'rgba(30,18,8,0.78)',
               color: '#fdf0e0',
               fontSize: 11,
               fontWeight: 700,
@@ -133,9 +189,13 @@ export default function Toolbar({
               fontFamily: 'Baloo 2, sans-serif',
               letterSpacing: '0.04em',
               boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
             }}
           >
-            🖐️ modo mover — clique nos itens pra arrastar
+            <Hand size={12} />
+            modo mover — clique nos itens pra arrastar
           </div>
         )}
       </div>
@@ -157,7 +217,7 @@ export default function Toolbar({
           userSelect: 'none',
         }}
       >
-        {/* Botões filhos — aparecem ACIMA do principal */}
+        {/* Ferramentas */}
         {TOOLS.map((tool, i) => {
           const isSelected = tool.type === selected
           return (
@@ -168,53 +228,32 @@ export default function Toolbar({
                 width: 42,
                 height: 42,
                 borderRadius: '50%',
-                border:
-                  isSelected && open && selected !== null
-                    ? '2.5px solid rgba(255,255,255,0.8)'
-                    : '2px solid #8b5a2a',
-                background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+                border: isSelected && open ? '2.5px solid rgba(255,255,255,0.9)' : 'none',
+                background: tool.color,
                 boxShadow:
                   isSelected && open
-                    ? '0 0 0 3px rgba(255,255,255,0.35), 0 3px 10px #8b5a2a44'
-                    : '0 3px 10px #8b5a2a44, inset 0 1px 0 #e8b07844',
+                    ? `0 0 0 3px rgba(255,255,255,0.3), ${tool.shadow}`
+                    : tool.shadow,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 19,
+                color: '#fff',
                 position: 'relative',
                 transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
                 transitionDelay: open ? `${i * 0.04}s` : '0s',
-                transform: open ? `scale(${isSelected ? 1.1 : 1})` : 'translateY(20px) scale(0.7)',
+                transform: open ? `scale(${isSelected ? 1.15 : 1})` : 'translateY(20px) scale(0.7)',
                 opacity: open ? 1 : 0,
                 pointerEvents: open ? 'auto' : 'none',
               }}
             >
               {tool.icon}
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 50,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: '#3d2408ee',
-                  color: '#fdf0e0',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  padding: '3px 9px',
-                  borderRadius: 7,
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                  letterSpacing: '0.04em',
-                  fontFamily: 'Baloo 2, sans-serif',
-                }}
-              >
-                {tool.label}
-              </span>
+              <span style={LABEL_STYLE}>{tool.label}</span>
             </div>
           )
         })}
-        {/* Botão lixeira */}
+
+        {/* Lixeira */}
         <div
           onClick={(e) => {
             e.stopPropagation()
@@ -225,14 +264,14 @@ export default function Toolbar({
             width: 42,
             height: 42,
             borderRadius: '50%',
-            border: '2px solid #8b5a2a',
-            background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
-            boxShadow: '0 3px 10px #8b5a2a44, inset 0 1px 0 #e8b07844',
+            border: 'none',
+            background: 'linear-gradient(145deg, #fee2e2, #c47a7a)',
+            boxShadow: '0 3px 10px #c47a7a33',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 19,
+            color: '#fff',
             position: 'relative',
             transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
             transitionDelay: open ? `${(TOOLS.length + 1) * 0.04}s` : '0s',
@@ -241,7 +280,7 @@ export default function Toolbar({
             pointerEvents: open ? 'auto' : 'none',
           }}
         >
-          🗑️
+          <Trash2 size={18} strokeWidth={2} />
           {trashCount > 0 && (
             <div
               style={{
@@ -251,7 +290,7 @@ export default function Toolbar({
                 width: 15,
                 height: 15,
                 borderRadius: '50%',
-                background: '#e8607a',
+                background: '#1e1208',
                 border: '2px solid #fff',
                 fontSize: 8,
                 fontWeight: 700,
@@ -265,29 +304,10 @@ export default function Toolbar({
               {trashCount}
             </div>
           )}
-          <span
-            style={{
-              position: 'absolute',
-              left: 50,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: '#3d2408ee',
-              color: '#fdf0e0',
-              fontSize: 10,
-              fontWeight: 700,
-              padding: '3px 9px',
-              borderRadius: 7,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-              letterSpacing: '0.04em',
-              fontFamily: 'Baloo 2, sans-serif',
-            }}
-          >
-            lixeira {trashCount > 0 ? `(${trashCount})` : ''}
-          </span>
+          <span style={LABEL_STYLE}>lixeira {trashCount > 0 ? `(${trashCount})` : ''}</span>
         </div>
 
-        {/* Botão mover itens */}
+        {/* Mover itens */}
         <div
           onClick={(e) => {
             e.stopPropagation()
@@ -297,18 +317,18 @@ export default function Toolbar({
             width: 42,
             height: 42,
             borderRadius: '50%',
-            border: editMode ? '2.5px solid rgba(255,255,255,0.8)' : '2px solid #8b5a2a',
+            border: editMode ? '2.5px solid rgba(255,255,255,0.9)' : 'none',
             background: editMode
-              ? 'linear-gradient(180deg, #7FB87F 0%, #4A7A4A 100%)'
-              : 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+              ? 'linear-gradient(145deg, #ccfbf1, #4a9e8a)'
+              : 'linear-gradient(145deg, #d4f5ee, #7abfb0)',
             boxShadow: editMode
-              ? '0 0 0 3px rgba(255,255,255,0.3), 0 3px 10px #2D4A2D55'
-              : '0 3px 10px #8b5a2a44, inset 0 1px 0 #e8b07844',
+              ? '0 0 0 3px rgba(255,255,255,0.25), 0 3px 12px #4a9e8a33'
+              : '0 3px 10px #7abfb033',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 19,
+            color: '#fff',
             position: 'relative',
             transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s',
             transitionDelay: open ? `${TOOLS.length * 0.04}s` : '0s',
@@ -317,27 +337,8 @@ export default function Toolbar({
             pointerEvents: open ? 'auto' : 'none',
           }}
         >
-          🖐️
-          <span
-            style={{
-              position: 'absolute',
-              left: 50,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: '#3d2408ee',
-              color: '#fdf0e0',
-              fontSize: 10,
-              fontWeight: 700,
-              padding: '3px 9px',
-              borderRadius: 7,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-              letterSpacing: '0.04em',
-              fontFamily: 'Baloo 2, sans-serif',
-            }}
-          >
-            {editMode ? 'modo mover ativo' : 'mover itens'}
-          </span>
+          <Hand size={18} strokeWidth={2} />
+          <span style={LABEL_STYLE}>{editMode ? 'modo mover ativo' : 'mover itens'}</span>
         </div>
 
         {/* Botão principal */}
@@ -347,54 +348,36 @@ export default function Toolbar({
             width: 54,
             height: 54,
             borderRadius: '50%',
-            border: '2.5px solid #8b5a2a',
-            background: 'linear-gradient(180deg, #d4956a 0%, #c4845a 40%, #b8744e 100%)',
+            border: 'none',
+            background: open
+              ? 'linear-gradient(145deg, #e0d7f8, #7c6ab8)'
+              : 'linear-gradient(145deg, #ede9fe, #9b8ac4)',
             boxShadow: open
-              ? '0 6px 18px #8b5a2a66, inset 0 1px 0 #e8b07844'
-              : '0 4px 14px #8b5a2a55, inset 0 1px 0 #e8b07844',
+              ? '0 6px 20px #7c6ab833, 0 0 0 4px rgba(180,160,240,0.2)'
+              : '0 4px 14px #9b8ac433',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 26,
+            color: '#fff',
             position: 'relative',
             zIndex: 2,
             flexShrink: 0,
-            transition: 'transform 0.2s, box-shadow 0.2s',
+            transition: 'transform 0.2s, box-shadow 0.2s, background 0.2s',
             transform: open ? 'scale(1.08)' : 'scale(1)',
           }}
         >
-          <span style={{ position: 'relative', zIndex: 2, lineHeight: 1, marginTop: 6 }}>
-            {mainIcon}
-          </span>
-          <svg
-            aria-hidden="true"
+          <div
             style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              overflow: 'hidden',
+              transition: 'transform 0.25s cubic-bezier(.34,1.56,.64,1)',
+              transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-            viewBox="0 0 54 54"
-            xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M6 32 Q16 24 28 30 Q38 35 48 27"
-              stroke="#5a2e0e"
-              strokeWidth="1.2"
-              fill="none"
-              opacity="0.5"
-            />
-            <path
-              d="M5 40 Q18 34 30 38 Q40 42 50 36"
-              stroke="#5a2e0e"
-              strokeWidth="1"
-              fill="none"
-              opacity="0.4"
-            />
-          </svg>
+            {editMode ? <Hand size={24} strokeWidth={2} /> : <Plus size={24} strokeWidth={2.5} />}
+          </div>
         </div>
       </div>
     </>

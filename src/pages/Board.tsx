@@ -32,6 +32,7 @@ import Roulette from '../components/Roulette'
 import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
+import { CalendarDays, LayoutGrid, Sprout } from 'lucide-react'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -80,23 +81,6 @@ export default function Board() {
   const [editMode, setEditMode] = useState(false)
   const { saveItem, deleteItem } = useBoard(items, setItems)
   const boardRef = useRef<HTMLDivElement>(null)
-  const [now, setNow] = useState(new Date())
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const weekDay = now.toLocaleDateString('pt-BR', { weekday: 'long' })
-  const dateStr = now.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-  const timeStr = now.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
@@ -561,36 +545,6 @@ export default function Board() {
         </div>
       )}
 
-      {/* Data e hora */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 14,
-          right: 14,
-          zIndex: 48,
-          background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
-          border: '1.5px solid #e8a0b0',
-          borderRadius: 14,
-          padding: '6px 14px',
-          fontFamily: 'Baloo 2, sans-serif',
-          boxShadow: '0 2px 12px rgba(44,20,8,0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          userSelect: 'none',
-          lineHeight: 1.3,
-        }}
-      >
-        <span
-          style={{ fontSize: 9, fontWeight: 700, color: '#c87090', textTransform: 'capitalize' }}
-        >
-          🕰️ {weekDay}
-        </span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#7a3040' }}>
-          {timeStr} · {dateStr}
-        </span>
-      </div>
-
       <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
 
       <MoodWidget uid={uid} partnerUid={partnerUid} />
@@ -600,25 +554,25 @@ export default function Board() {
         style={{
           position: 'fixed',
           bottom: 24,
-          right: 24,
+          right: 20,
           zIndex: 48,
-          background: 'linear-gradient(180deg, #c8c8c8 0%, #a0a0a0 100%)',
-          border: '2px solid #888',
+          background: 'linear-gradient(145deg, #e8f5e8 0%, #a0c8a0 100%)',
+          border: '2px solid #7FB87F',
           borderRadius: '50%',
-          width: 54,
-          height: 54,
+          width: 48,
+          height: 48,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 26,
+          color: '#2d4a2d',
           cursor: 'not-allowed',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+          boxShadow: '0 3px 10px rgba(79,160,79,0.2)',
           userSelect: 'none',
-          opacity: 0.5,
+          opacity: 0.45,
         }}
         title="jardim em breve 🌱"
       >
-        🌱
+        <Sprout size={22} strokeWidth={2} />
       </div>
 
       {/* Botão widgets */}
@@ -627,25 +581,25 @@ export default function Board() {
         style={{
           position: 'fixed',
           bottom: 152,
-          right: 24,
+          right: 20,
           zIndex: 48,
-          background: 'linear-gradient(180deg, #f5ecd7 0%, #c4956a 100%)',
-          border: '2px solid #8b6914',
+          background: 'linear-gradient(145deg, #f5ecd7 0%, #c4956a 100%)',
+          border: '2px solid #a07840',
           borderRadius: '50%',
-          width: 54,
-          height: 54,
+          width: 48,
+          height: 48,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 26,
+          color: '#5a3010',
           cursor: 'pointer',
-          boxShadow: '0 4px 14px rgba(139,105,20,0.4)',
-          transition: 'transform 0.2s',
+          boxShadow: '0 3px 10px rgba(139,105,20,0.3)',
+          transition: 'transform 0.15s',
           userSelect: 'none',
         }}
         title="abrir widgets"
       >
-        🎮
+        <LayoutGrid size={22} strokeWidth={2} />
       </div>
 
       {/* Botão calendário */}
@@ -654,25 +608,25 @@ export default function Board() {
         style={{
           position: 'fixed',
           bottom: 88,
-          right: 24,
+          right: 20,
           zIndex: 48,
-          background: 'linear-gradient(180deg, #f5d5dc 0%, #e8a0b0 100%)',
-          border: '2px solid #c87090',
+          background: 'linear-gradient(145deg, #fce8ee 0%, #e8a0b0 100%)',
+          border: '2px solid #d4809a',
           borderRadius: '50%',
-          width: 54,
-          height: 54,
+          width: 48,
+          height: 48,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 26,
+          color: '#7a3040',
           cursor: 'pointer',
-          boxShadow: '0 4px 14px rgba(200,112,144,0.4)',
-          transition: 'transform 0.2s',
+          boxShadow: '0 3px 10px rgba(200,112,144,0.35)',
+          transition: 'transform 0.15s',
           userSelect: 'none',
         }}
         title="abrir calendário"
       >
-        📅
+        <CalendarDays size={22} strokeWidth={2} />
       </div>
 
       {/* Painel de widgets */}

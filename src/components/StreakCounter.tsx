@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStreak } from '../hooks/useStreak'
+import { Bird } from 'lucide-react'
 
 const MILESTONES = [
   {
@@ -76,7 +77,7 @@ export default function StreakCounter() {
         }}
         style={{
           position: 'fixed',
-          top: 14,
+          top: 48,
           left: 14,
           zIndex: 48,
           background: 'linear-gradient(180deg, #fdf6f0 0%, #fce8ee 100%)',
@@ -93,7 +94,7 @@ export default function StreakCounter() {
           transition: 'transform 0.15s',
         }}
       >
-        <span style={{ fontSize: 18 }}>🕊️</span>
+        <Bird size={18} strokeWidth={2} color="#c87090" />
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>
             {streak?.startDate ? `${days} dia${days !== 1 ? 's' : ''}` : 'definir data'}
@@ -107,7 +108,7 @@ export default function StreakCounter() {
         <div
           style={{
             position: 'fixed',
-            top: 62,
+            top: 96,
             left: 14,
             zIndex: 48,
             width: 280,
@@ -129,7 +130,18 @@ export default function StreakCounter() {
             }}
           >
             <div style={{ fontSize: 13, fontWeight: 800, color: '#5a1028' }}>
-              🕊️ dias sem brigar
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: '#5a1028',
+                }}
+              >
+                <Bird size={14} strokeWidth={2} /> dias sem brigar
+              </div>
             </div>
             <div
               style={{
