@@ -10,4 +10,8 @@ contextBridge.exposeInMainWorld('api', {
   invoke: (channel: string, data?: unknown) => {
     return ipcRenderer.invoke(channel, data)
   },
+  winMinimize: () => ipcRenderer.send('win-minimize'),
+  winMaximize: () => ipcRenderer.send('win-maximize'),
+  winClose: () => ipcRenderer.send('win-close'),
+  getVersion: () => ipcRenderer.invoke('get-version'),
 })
