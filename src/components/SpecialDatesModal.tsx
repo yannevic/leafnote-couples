@@ -4,71 +4,81 @@ import type { SpecialDates } from '../lib/specialDates'
 
 interface Props {
   initial: SpecialDates
+  myUid: string
   myNick: string
   partnerNick: string
   onSave: (dates: SpecialDates) => void
   onClose: () => void
 }
 
-const FIELDS: {
-  key: keyof SpecialDates
-  labelFn: (my: string, partner: string) => string
-  placeholder: string
-  withYear: boolean
-}[] = [
-  {
-    key: 'birthdayMe',
-    labelFn: (my) => `Aniversário de ${my}`,
-    placeholder: 'DD-MM',
-    withYear: false,
-  },
-  {
-    key: 'birthdayPartner',
-    labelFn: (_, partner) => `Aniversário de ${partner}`,
-    placeholder: 'DD-MM',
-    withYear: false,
-  },
-  {
-    key: 'metDate',
-    labelFn: () => 'Dia que se conheceram',
-    placeholder: 'DD-MM-AAAA',
-    withYear: true,
-  },
-  {
-    key: 'anniversary',
-    labelFn: () => 'Aniversário do casal',
-    placeholder: 'DD-MM-AAAA',
-    withYear: true,
-  },
-  {
-    key: 'datingDate',
-    labelFn: () => 'Início do namoro (opcional)',
-    placeholder: 'DD-MM-AAAA',
-    withYear: true,
-  },
-]
-
 export default function SpecialDatesModal({
   initial,
-  myNick: rawMy,
+  myUid,
+  myNick,
   partnerNick: rawPartner,
   onSave,
   onClose,
 }: Props) {
-  const myNick = !rawMy || rawMy === '...' ? 'você' : rawMy
   const partnerNick = !rawPartner || rawPartner === '...' ? 'parceiro(a)' : rawPartner
-  const [form, setForm] = useState<SpecialDates>(initial)
 
-  function handleChange(key: keyof SpecialDates, value: string) {
-    // permite só números e hífen
-    const clean = value.replace(/[^\d-]/g, '')
-    setForm((prev) => ({ ...prev, [key]: clean }))
+  const [birthdayMe, setBirthdayMe] = useState(initial.birthdayOf?.[myUid] ?? '')
+  const [anniversary, setAnniversary] = useState(initial.anniversary ?? '')
+  const [metDate, setMetDate] = useState(initial.metDate ?? '')
+  const [datingDate, setDatingDate] = useState(initial.datingDate ?? '')
+
+  function clean(v: string) {
+    return v.replace(/[^\d-]/g, '')
   }
 
   function handleSave() {
-    onSave(form)
+    const next: SpecialDates = {
+      birthdayOf: { ...(initial.birthdayOf ?? {}), [myUid]: birthdayMe },
+      anniversary,
+      metDate,
+      datingDate,
+    }
+    onSave(next)
     onClose()
   }
+
+  const fields = [
+    {
+      label: `Aniversário de ${myNick}`,
+      value: birthdayMe,
+      set: setBirthdayMe,
+      placeholder: 'DD-MM',
+      max: 5,
+    },
+    {
+      label: `Aniversário de ${partnerNick}`,
+      value: '',
+      set: () => {},
+      placeholder: 'preenchido pelo parceiro',
+      max: 5,
+      disabled: true,
+    },
+    {
+      label: 'Aniversário do casal',
+      value: anniversary,
+      set: setAnniversary,
+      placeholder: 'DD-MM-AAAA',
+      max: 10,
+    },
+    {
+      label: 'Dia que se conheceram',
+      value: metDate,
+      set: setMetDate,
+      placeholder: 'DD-MM-AAAA',
+      max: 10,
+    },
+    {
+      label: 'Início do namoro (opcional)',
+      value: datingDate,
+      set: setDatingDate,
+      placeholder: 'DD-MM-AAAA',
+      max: 10,
+    },
+  ]
 
   return (
     <div
@@ -115,8 +125,8 @@ export default function SpecialDatesModal({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {FIELDS.map((f) => (
-            <div key={f.key}>
+          {fields.map((f) => (
+            <div key={f.label}>
               <label
                 style={{
                   fontFamily: "'Baloo 2', cursive",
@@ -126,28 +136,35 @@ export default function SpecialDatesModal({
                   marginBottom: 4,
                 }}
               >
-                {f.labelFn(myNick, partnerNick)}
+                {f.label}
               </label>
               <input
                 type="text"
-                value={form[f.key]}
-                onChange={(e) => handleChange(f.key, e.target.value)}
+                value={f.value}
+                onChange={(e) => f.set(clean(e.target.value))}
                 placeholder={f.placeholder}
-                maxLength={f.withYear ? 10 : 5}
+                maxLength={f.max}
+                disabled={f.disabled}
                 style={{
                   width: '100%',
                   borderRadius: 10,
                   border: '1.5px solid #e8d5b0',
-                  background: '#fffaf4',
+                  background: f.disabled ? '#f0ece4' : '#fffaf4',
                   padding: '8px 14px',
                   fontFamily: "'Baloo 2', cursive",
                   fontSize: 14,
-                  color: '#5a2a2a',
+                  color: f.disabled ? '#b0a090' : '#5a2a2a',
                   outline: 'none',
                   boxSizing: 'border-box',
                   letterSpacing: '0.05em',
+                  cursor: f.disabled ? 'not-allowed' : 'text',
                 }}
               />
+              {f.disabled && (
+                <span style={{ fontSize: 10, color: '#c4a080', fontFamily: "'Baloo 2', cursive" }}>
+                  só {partnerNick} pode preencher o próprio aniversário 🌸
+                </span>
+              )}
             </div>
           ))}
         </div>

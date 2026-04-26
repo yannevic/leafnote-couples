@@ -2,24 +2,20 @@ import { ref, set, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 
 export interface SpecialDates {
-  birthdayMe: string
-  birthdayPartner: string
+  birthdayOf: Record<string, string> // { [uid]: 'DD-MM' }
   anniversary: string
   metDate: string
   datingDate: string
 }
 
 export const EMPTY_SPECIAL_DATES: SpecialDates = {
-  birthdayMe: '',
-  birthdayPartner: '',
+  birthdayOf: {},
   anniversary: '',
   metDate: '',
   datingDate: '',
 }
 
 export const DATE_LABELS: Record<string, string> = {
-  birthdayMe: 'Meu aniversário',
-  birthdayPartner: 'Aniversário da pessoa amada',
   anniversary: 'Aniversário do casal',
   metDate: 'Dia que se conheceram',
   datingDate: 'Início do namoro',
@@ -27,15 +23,13 @@ export const DATE_LABELS: Record<string, string> = {
   valentines: 'Dia dos Namorados',
 }
 
-// Datas fixas que não precisam de cadastro
 export const FIXED_DATES: Record<string, string> = {
   christmas: '25-12',
   valentines: '12-06',
 }
 
 export function saveSpecialDates(dates: SpecialDates) {
-  const r = ref(db, 'specialDates')
-  return set(r, dates)
+  return set(ref(db, 'specialDates'), dates)
 }
 
 export function subscribeSpecialDates(cb: (dates: SpecialDates) => void) {
@@ -47,24 +41,45 @@ export function subscribeSpecialDates(cb: (dates: SpecialDates) => void) {
   return () => off(r)
 }
 
-// Retorna todas as datas disponíveis (fixas + cadastradas) como { key, label, mmdd }
-export function getAvailableDates(dates: SpecialDates) {
+export function getAvailableDates(
+  dates: SpecialDates,
+  myUid: string,
+  partnerUid: string,
+  myNick: string,
+  partnerNick: string
+) {
   const result: { key: string; label: string; mmdd: string }[] = []
 
   Object.entries(FIXED_DATES).forEach(([key, mmdd]) => {
     result.push({ key, label: DATE_LABELS[key], mmdd })
   })
 
-  Object.entries(dates).forEach(([key, value]) => {
-    if (value && value.length >= 5) {
-      result.push({ key, label: DATE_LABELS[key] ?? key, mmdd: value })
-    }
-  })
+  const birthdayOf = dates.birthdayOf ?? {}
+  if (birthdayOf[myUid]) {
+    result.push({
+      key: `birthday-${myUid}`,
+      label: `Aniversário de ${myNick}`,
+      mmdd: birthdayOf[myUid],
+    })
+  }
+  if (birthdayOf[partnerUid]) {
+    result.push({
+      key: `birthday-${partnerUid}`,
+      label: `Aniversário de ${partnerNick}`,
+      mmdd: birthdayOf[partnerUid],
+    })
+  }
+
+  if (dates.anniversary?.length >= 5)
+    result.push({ key: 'anniversary', label: DATE_LABELS.anniversary, mmdd: dates.anniversary })
+  if (dates.metDate?.length >= 5)
+    result.push({ key: 'metDate', label: DATE_LABELS.metDate, mmdd: dates.metDate })
+  if (dates.datingDate?.length >= 5)
+    result.push({ key: 'datingDate', label: DATE_LABELS.datingDate, mmdd: dates.datingDate })
 
   return result
 }
 
-// Verifica se hoje é a data (DD-MM ou DD-MM-AAAA)
 export function isToday(ddmm: string) {
   if (!ddmm || ddmm.length < 5) return false
   const parts = ddmm.split('-')
@@ -77,7 +92,6 @@ export function isToday(ddmm: string) {
   return dd === todayDd && mm === todayMm
 }
 
-// Formata DD-MM ou DD-MM-AAAA pra exibição
 export function formatMmdd(ddmm: string) {
   if (!ddmm || ddmm.length < 5) return ''
   const parts = ddmm.split('-')

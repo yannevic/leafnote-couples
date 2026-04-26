@@ -40,7 +40,7 @@ export default function SpecialLetterModal({
 }: Props) {
   const [selectedModel, setSelectedModel] = useState(CARD_MODELS[0].id)
   const [message, setMessage] = useState('')
-  const availableDates = getAvailableDates(specialDates)
+  const availableDates = getAvailableDates(specialDates, myUid, partnerUid, myNick, partnerNick)
   const [selectedDateKey, setSelectedDateKey] = useState(availableDates[0]?.key ?? '')
   const [showDatesModal, setShowDatesModal] = useState(false)
 
@@ -255,6 +255,7 @@ export default function SpecialLetterModal({
           {showDatesModal && (
             <SpecialDatesModal
               initial={specialDates}
+              myUid={myUid}
               myNick={myNick}
               partnerNick={partnerNick}
               onSave={(d) => {
