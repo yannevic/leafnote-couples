@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useBoard } from '../hooks/useBoard'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useNotifications } from '../hooks/useNotifications'
@@ -32,7 +32,8 @@ import Roulette from '../components/Roulette'
 import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
-import { CalendarDays, LayoutGrid, Sprout } from 'lucide-react'
+import MovieList from '../components/MovieList'
+import { CalendarDays, LayoutGrid, Sprout, Film } from 'lucide-react'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -91,6 +92,7 @@ export default function Board() {
   const [nickInput, setNickInput] = useState('')
   const [nickLoading, setNickLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showMovies, setShowMovies] = useState(false)
   const [showWidgets, setShowWidgets] = useState(false)
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
@@ -629,6 +631,34 @@ export default function Board() {
         <CalendarDays size={22} strokeWidth={2} />
       </div>
 
+      {/* Botão filmes */}
+      <div
+        onClick={() => setShowMovies(true)}
+        style={{
+          position: 'fixed',
+          bottom: 216,
+          right: 20,
+          zIndex: 48,
+          background: 'linear-gradient(145deg, #dbeafe 0%, #6494c4 100%)',
+          border: '2px solid #4a74a4',
+          color: '#1e3a5f',
+          boxShadow: '0 3px 10px rgba(100,148,196,0.35)',
+          borderRadius: '50%',
+          width: 48,
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+
+          transition: 'transform 0.15s',
+          userSelect: 'none',
+        }}
+        title="filmes & séries"
+      >
+        <Film size={22} strokeWidth={2} />
+      </div>
+
       {/* Painel de widgets */}
 
       {showWidgets && (
@@ -777,6 +807,16 @@ export default function Board() {
           item={openModalItem as ChecklistItem}
           onUpdate={handleUpdate as never}
           onClose={() => setOpenModalItem(null)}
+        />
+      )}
+
+      {showMovies && (
+        <MovieList
+          uid={uid}
+          partnerUid={partnerUid ?? ''}
+          displayName={displayName}
+          partnerName={otherName}
+          onClose={() => setShowMovies(false)}
         />
       )}
 
