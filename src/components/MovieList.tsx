@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
+  RotateCcw,
   Calendar,
   Plus,
   GripVertical,
@@ -18,8 +19,9 @@ import {
   LayoutList,
 } from 'lucide-react'
 import useMovies from '../hooks/useMovies'
-import { Movie, MovieStatus, addMovie } from '../lib/movies'
+import { Movie, MovieStatus, addMovie, subscribeTrashedMovies } from '../lib/movies'
 import { useEffect, useRef, useState } from 'react'
+import type React from 'react'
 
 type TabType = 'watched' | 'watching' | 'wishlist'
 type FilterType = 'todos' | 'filme' | 'série' | 'desenho'
@@ -699,8 +701,6 @@ function WatchedCard({
 // ── Movie Card — Watching ─────────────────────────────────────────────────────
 function WatchingCard({
   movie,
-  uid,
-  displayName,
   onSaveProgress,
   onDelete,
   onChangeStatus,
@@ -1039,6 +1039,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     changeDate,
     saveProgress,
     removeMovie,
+    restoreMovieById,
+    deleteMovieForever,
     reorderWishlistMovies,
   } = useMovies(uid, displayName)
   const [tab, setTab] = useState<TabType>('watched')
@@ -1046,8 +1048,18 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
   const [sort, setSort] = useState<SortType>('data')
   const [adding, setAdding] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [duplicate, setDuplicate] = useState<{ title: string; status: MovieStatus } | null>(null)
+  const [duplicate, setDuplicate] = useState<{
+    title: string
+    status: MovieStatus
+    kind: 'same' | 'other'
+  } | null>(null)
   const [search, setSearch] = useState('')
+  const [showTrash, setShowTrash] = useState(false)
+  const [trashed, setTrashed] = useState<Movie[]>([])
+
+  useEffect(() => {
+    return subscribeTrashedMovies(setTrashed)
+  }, [])
 
   // Drag state para wishlist
   const dragItem = useRef<number | null>(null)
@@ -1079,18 +1091,12 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     )
 
   const watching = movies.filter(
-    (m) =>
-      m.status === 'watching' &&
-      (filter === 'todos' || m.type === filter) &&
-      (!search || m.title.toLowerCase().includes(searchLower))
+    (m) => m.status === 'watching' && (!search || m.title.toLowerCase().includes(searchLower))
   )
 
   const wishlist = movies
     .filter(
-      (m) =>
-        m.status === 'wishlist' &&
-        (filter === 'todos' || m.type === filter) &&
-        (!search || m.title.toLowerCase().includes(searchLower))
+      (m) => m.status === 'wishlist' && (!search || m.title.toLowerCase().includes(searchLower))
     )
     .sort((a, b) => (a.wishlistOrder ?? 0) - (b.wishlistOrder ?? 0))
 
@@ -1190,12 +1196,35 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
             <LayoutList size={16} color="#c4956a" />
             <span style={{ fontSize: 14, fontWeight: 800, color: '#fdf0e0' }}>filmes & séries</span>
           </div>
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c4956a' }}
-          >
-            <X size={17} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => setShowTrash(true)}
+              title="lixeira"
+              style={{
+                background: trashed.length > 0 ? 'rgba(232,96,122,0.1)' : 'none',
+                border: trashed.length > 0 ? '1px solid rgba(232,96,122,0.3)' : 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                color: '#e8607a',
+                opacity: trashed.length > 0 ? 1 : 0.35,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '3px 7px',
+              }}
+            >
+              <Trash2 size={13} />
+              {trashed.length > 0 && (
+                <span style={{ fontSize: 9, fontWeight: 800 }}>{trashed.length}</span>
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c4956a' }}
+            >
+              <X size={17} />
+            </button>
+          </div>
         </div>
 
         {/* Abas */}
@@ -1371,11 +1400,14 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                 setLoading(true)
                 try {
                   const result = await addNewMovie(title, type, poster, status)
-                  if (result === 'duplicate') {
+                  if (result === 'duplicate_same' || result === 'duplicate_other') {
                     const found = movies.find((m) => m.title.toLowerCase() === title.toLowerCase())
                     if (found) {
-                      console.log('setando duplicate com status:', found.status)
-                      setDuplicate({ title: found.title, status: found.status })
+                      setDuplicate({
+                        title: found.title,
+                        status: found.status,
+                        kind: result === 'duplicate_same' ? 'same' : 'other',
+                      })
                     }
                   } else {
                     setAdding(false)
@@ -1414,6 +1446,197 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
           )}
         </div>
 
+        {/* Modal lixeira */}
+        {showTrash && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 70,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(26,18,8,0.6)',
+            }}
+            onClick={() => setShowTrash(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: 400,
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'linear-gradient(160deg, #2d1a0e 0%, #3d2408 100%)',
+                border: '1.5px solid #8b5a2a',
+                borderRadius: 20,
+                boxShadow: '0 12px 48px rgba(26,18,8,0.6)',
+              }}
+            >
+              <div
+                style={{
+                  padding: '14px 16px 10px',
+                  borderBottom: '1px solid rgba(139,90,42,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Trash2 size={15} color="#e8607a" />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#fdf0e0' }}>lixeira</span>
+                  {trashed.length > 0 && (
+                    <span style={{ fontSize: 10, color: '#e8607a', opacity: 0.7 }}>
+                      {trashed.length} item{trashed.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowTrash(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#c4956a',
+                  }}
+                >
+                  <X size={17} />
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px 14px' }}>
+                {trashed.length === 0 ? (
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      color: '#c4956a',
+                      opacity: 0.4,
+                      fontSize: 12,
+                      padding: '40px 0',
+                    }}
+                  >
+                    lixeira vazia
+                  </div>
+                ) : (
+                  trashed.map((m) => {
+                    const deletedAgo = m.trashedAt
+                      ? Math.floor((Date.now() - m.trashedAt) / 60000)
+                      : null
+                    const agoLabel =
+                      deletedAgo === null
+                        ? ''
+                        : deletedAgo < 1
+                          ? 'agora mesmo'
+                          : deletedAgo < 60
+                            ? `há ${deletedAgo} min`
+                            : deletedAgo < 1440
+                              ? `há ${Math.floor(deletedAgo / 60)}h`
+                              : `há ${Math.floor(deletedAgo / 1440)}d`
+
+                    return (
+                      <div
+                        key={m.id}
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.07)',
+                          borderRadius: 12,
+                          marginBottom: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '8px 10px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 32,
+                            height: 46,
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                            background: 'rgba(255,255,255,0.07)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {m.poster ? (
+                            <img
+                              src={m.poster}
+                              alt={m.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <span style={{ color: '#c4956a', opacity: 0.5 }}>
+                              {TYPE_ICON[m.type]}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: '#fdf0e0',
+                              opacity: 0.6,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {m.title}
+                          </div>
+                          <div
+                            style={{ fontSize: 9, color: '#e8607a', opacity: 0.6, marginTop: 2 }}
+                          >
+                            excluído {agoLabel}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => restoreMovieById(m.id)}
+                          title="restaurar"
+                          style={{
+                            background: 'rgba(127,184,127,0.12)',
+                            border: '1px solid rgba(127,184,127,0.3)',
+                            borderRadius: 7,
+                            padding: '4px 8px',
+                            fontSize: 10,
+                            color: '#7FB87F',
+                            cursor: 'pointer',
+                            fontFamily: 'Baloo 2, sans-serif',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <RotateCcw size={10} /> restaurar
+                        </button>
+                        <button
+                          onClick={() => deleteMovieForever(m.id)}
+                          title="excluir permanentemente"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#e8607a',
+                            opacity: 0.5,
+                            padding: 2,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal duplicata */}
         {duplicate && (
           <div
@@ -1440,18 +1663,30 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 800, color: '#fdf0e0', marginBottom: 6 }}>
-                título já adicionado
+                {duplicate.kind === 'same' ? 'já está nessa lista' : 'título já adicionado'}
               </div>
               <div style={{ fontSize: 11, color: '#c4956a', marginBottom: 16, lineHeight: 1.5 }}>
-                <strong style={{ color: '#fdf0e0' }}>{duplicate.title}</strong> já está como{' '}
-                <strong style={{ color: '#f59e0b' }}>
-                  {duplicate.status === 'watched'
-                    ? 'assistido'
-                    : duplicate.status === 'watching'
-                      ? 'assistindo'
-                      : 'quero ver'}
-                </strong>
-                . deseja adicionar de novo?
+                {duplicate.kind === 'same' ? (
+                  <>
+                    <strong style={{ color: '#fdf0e0' }}>{duplicate.title}</strong> já está em{' '}
+                    <strong style={{ color: '#f59e0b' }}>
+                      {duplicate.status === 'watching' ? 'assistindo' : 'quero ver'}
+                    </strong>
+                    . só pode ter um por vez nessa lista.
+                  </>
+                ) : (
+                  <>
+                    <strong style={{ color: '#fdf0e0' }}>{duplicate.title}</strong> já está como{' '}
+                    <strong style={{ color: '#f59e0b' }}>
+                      {duplicate.status === 'watched'
+                        ? 'assistido'
+                        : duplicate.status === 'watching'
+                          ? 'assistindo'
+                          : 'quero ver'}
+                    </strong>
+                    . deseja adicionar de novo?
+                  </>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                 <button
@@ -1468,56 +1703,69 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                     fontFamily: 'Baloo 2, sans-serif',
                   }}
                 >
-                  cancelar
+                  {duplicate.kind === 'same' ? 'ok, entendi' : 'cancelar'}
                 </button>
-                <button
-                  onClick={async () => {
-                    const found = movies.find((m) => m.title === duplicate.title)
-                    if (!found) return
-                    setDuplicate(null)
-                    setLoading(true)
-                    try {
-                      const newStatus = statusForTab[tab]
-                      const wishlistCount = movies.filter((m) => m.status === 'wishlist').length
-                      const now = new Date()
-                      const allWithTitle = movies.filter(
-                        (m) => m.title.toLowerCase() === found.title.toLowerCase()
-                      )
-                      const maxCount = Math.max(...allWithTitle.map((m) => m.watchCount ?? 0))
-                      const newMovie: Omit<Movie, 'id'> = {
-                        title: found.title,
-                        poster: found.poster ?? null,
-                        type: found.type,
-                        status: newStatus,
-                        watchedAt: now.toISOString().split('T')[0],
-                        watchedAtMs: newStatus === 'watched' ? now.getTime() : 0,
-                        createdAt: now.toISOString(),
-                        ratings: {},
-                        watchCount: newStatus === 'watched' ? maxCount + 1 : 0,
+                {duplicate.kind === 'other' && (
+                  <button
+                    onClick={async () => {
+                      const found = movies.find((m) => m.title === duplicate.title)
+                      if (!found) return
+                      if (statusForTab[tab] !== 'watched') {
+                        setDuplicate(null)
+                        return
                       }
-                      if (newStatus === 'wishlist') newMovie.wishlistOrder = wishlistCount
-                      await addMovie(newMovie)
-                      setAdding(false)
-                    } catch (err) {
-                      console.error('Erro ao duplicar filme:', err)
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  style={{
-                    background: '#c4956a',
-                    border: 'none',
-                    borderRadius: 9,
-                    padding: '6px 16px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  adicionar mesmo assim
-                </button>
+                      setDuplicate(null)
+                      setLoading(true)
+                      try {
+                        const newStatus =
+                          tab === 'watched'
+                            ? 'watched'
+                            : tab === 'watching'
+                              ? 'watching'
+                              : ('wishlist' as MovieStatus)
+                        const wishlistCount = movies.filter((m) => m.status === 'wishlist').length
+                        const now = new Date()
+                        const allWithTitle = movies.filter(
+                          (m) => m.title.toLowerCase() === found.title.toLowerCase()
+                        )
+                        const maxCount = Math.max(...allWithTitle.map((m) => m.watchCount ?? 0))
+                        const isWatched = newStatus === 'watched'
+                        const isWishlist = newStatus === 'wishlist'
+                        const newMovie: Omit<Movie, 'id'> = {
+                          title: found.title,
+                          poster: found.poster ?? null,
+                          type: found.type,
+                          status: newStatus,
+                          watchedAt: now.toISOString().split('T')[0],
+                          watchedAtMs: isWatched ? now.getTime() : 0,
+                          createdAt: now.toISOString(),
+                          ratings: {},
+                          watchCount: isWatched ? maxCount + 1 : 0,
+                          ...(isWishlist ? { wishlistOrder: wishlistCount } : {}),
+                        }
+                        await addMovie(newMovie)
+                        setAdding(false)
+                      } catch (err) {
+                        console.error('Erro ao duplicar filme:', err)
+                      } finally {
+                        setLoading(false)
+                      }
+                    }}
+                    style={{
+                      background: '#c4956a',
+                      border: 'none',
+                      borderRadius: 9,
+                      padding: '6px 16px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontFamily: 'Baloo 2, sans-serif',
+                    }}
+                  >
+                    adicionar mesmo assim
+                  </button>
+                )}
               </div>
             </div>
           </div>

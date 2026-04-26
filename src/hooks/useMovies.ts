@@ -8,7 +8,9 @@ import {
   addMovie,
   updateMovieField,
   updateMovieRating,
-  deleteMovie,
+  trashMovie,
+  restoreMovie,
+  deleteMoviePermanently,
   reorderWishlist,
 } from '../lib/movies'
 import { addCalendarEvent, toDateKey } from '../lib/calendar'
@@ -26,11 +28,15 @@ export default function useMovies(uid: string, displayName: string) {
       type: Movie['type'],
       poster: string | null,
       status: MovieStatus
-    ): Promise<'duplicate' | 'ok'> => {
+    ): Promise<'duplicate_same' | 'duplicate_other' | 'ok'> => {
       const existing = movies.find((m) => m.title.toLowerCase() === title.toLowerCase())
       if (existing) {
-        console.log('duplicata encontrada:', existing.title, existing.status)
-        return 'duplicate'
+        if (status !== 'watched') {
+          return existing.status === status ? 'duplicate_same' : 'duplicate_other'
+        }
+        if (existing.status !== 'watched') {
+          return 'duplicate_other'
+        }
       }
 
       const today = new Date().toISOString().split('T')[0]
@@ -107,7 +113,15 @@ export default function useMovies(uid: string, displayName: string) {
   }, [])
 
   const removeMovie = useCallback(async (movieId: string) => {
-    await deleteMovie(movieId)
+    await trashMovie(movieId)
+  }, [])
+
+  const restoreMovieById = useCallback(async (movieId: string) => {
+    await restoreMovie(movieId)
+  }, [])
+
+  const deleteMovieForever = useCallback(async (movieId: string) => {
+    await deleteMoviePermanently(movieId)
   }, [])
 
   const reorderWishlistMovies = useCallback(async (ordered: Movie[]) => {
@@ -122,6 +136,8 @@ export default function useMovies(uid: string, displayName: string) {
     changeDate,
     saveProgress,
     removeMovie,
+    restoreMovieById,
+    deleteMovieForever,
     reorderWishlistMovies,
   }
 }

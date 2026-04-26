@@ -1,4 +1,4 @@
-import { ref, push, set, onValue, off, remove, get } from 'firebase/database'
+import { ref, push, set, onValue, off, remove } from 'firebase/database'
 import { db } from './firebase'
 
 export type MovieStatus = 'watched' | 'watching' | 'wishlist'
@@ -26,10 +26,11 @@ export interface Movie {
   progress?: MovieProgress
   wishlistOrder?: number
   watchCount?: number
+  trashed?: boolean
+  trashedAt?: number
 }
 
 const PATH = 'movies'
-const TMDB_KEY = '26818979413c5eb5bd1bb9e703c239a5'
 
 export async function addMovie(movie: Omit<Movie, 'id'>): Promise<void> {
   const result = await push(ref(db, PATH), movie)
@@ -63,6 +64,35 @@ export async function reorderWishlist(movies: Movie[]): Promise<void> {
   await Promise.all(updates)
 }
 
+export async function trashMovie(movieId: string): Promise<void> {
+  await set(ref(db, `${PATH}/${movieId}/trashedAt`), Date.now())
+  await set(ref(db, `${PATH}/${movieId}/trashed`), true)
+}
+
+export async function restoreMovie(movieId: string): Promise<void> {
+  await set(ref(db, `${PATH}/${movieId}/trashed`), false)
+  await set(ref(db, `${PATH}/${movieId}/trashedAt`), null)
+}
+
+export async function deleteMoviePermanently(movieId: string): Promise<void> {
+  await remove(ref(db, `${PATH}/${movieId}`))
+}
+
+export function subscribeTrashedMovies(callback: (movies: Movie[]) => void): () => void {
+  const r = ref(db, PATH)
+  onValue(r, (snap) => {
+    const val = snap.val() as Record<string, Omit<Movie, 'id'>> | null
+    if (!val) return callback([])
+    const list = Object.entries(val).map(([id, m]) => {
+      const movie = { ...m, id }
+      if (!movie.status) movie.status = 'watched' as MovieStatus
+      return movie
+    })
+    callback(list.filter((m) => m.trashed).sort((a, b) => (b.trashedAt ?? 0) - (a.trashedAt ?? 0)))
+  })
+  return () => off(r, 'value')
+}
+
 export function subscribeMovies(callback: (movies: Movie[]) => void): () => void {
   const r = ref(db, PATH)
   onValue(r, (snap) => {
@@ -73,7 +103,7 @@ export function subscribeMovies(callback: (movies: Movie[]) => void): () => void
       if (!movie.status) movie.status = 'watched' as MovieStatus
       return movie
     })
-    callback(list)
+    callback(list.filter((m) => !m.trashed))
   })
   return () => off(r, 'value')
 }
