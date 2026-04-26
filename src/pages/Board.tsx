@@ -45,12 +45,13 @@ function bringForward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
   const sorted = [...items].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0))
   const idx = sorted.findIndex((i) => i.id === id)
   if (idx === sorted.length - 1) return items
-  const next = sorted[idx + 1]
   const cur = sorted[idx]
-  const tmp = cur.zOrder ?? idx
+  const next = sorted[idx + 1]
+  const curZ = cur.zOrder ?? idx
+  const nextZ = next.zOrder ?? idx + 1
   return items.map((item) => {
-    if (item.id === cur.id) return { ...item, zOrder: next.zOrder ?? idx + 1 }
-    if (item.id === next.id) return { ...item, zOrder: tmp }
+    if (item.id === cur.id) return { ...item, zOrder: nextZ + 1 }
+    if (item.id === next.id) return { ...item, zOrder: curZ }
     return item
   })
 }
@@ -59,12 +60,13 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
   const sorted = [...items].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0))
   const idx = sorted.findIndex((i) => i.id === id)
   if (idx === 0) return items
-  const prev = sorted[idx - 1]
   const cur = sorted[idx]
-  const tmp = cur.zOrder ?? idx
+  const prev = sorted[idx - 1]
+  const curZ = cur.zOrder ?? idx
+  const prevZ = prev.zOrder ?? idx - 1
   return items.map((item) => {
-    if (item.id === cur.id) return { ...item, zOrder: prev.zOrder ?? idx - 1 }
-    if (item.id === prev.id) return { ...item, zOrder: tmp }
+    if (item.id === cur.id) return { ...item, zOrder: prevZ - 1 }
+    if (item.id === prev.id) return { ...item, zOrder: curZ }
     return item
   })
 }
