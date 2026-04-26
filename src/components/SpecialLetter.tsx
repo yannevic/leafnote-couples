@@ -1,0 +1,595 @@
+import { useState, useRef, useCallback } from 'react'
+import type { SpecialLetterItem } from '../types/board'
+import { CARD_MODELS } from '../assets/letters/index'
+
+const LAYOUT_TEXT_AREA = {
+  A: { top: '30%', bottom: '22%', left: '20%', right: '10%' },
+  B: { top: '28%', bottom: '18%', left: '20%', right: '10%' },
+  C: { top: '30%', bottom: '24%', left: '20%', right: '10%' },
+}
+
+const LAYOUT_SIZE = {
+  A: { width: 220, height: 350 },
+  B: { width: 220, height: 283 },
+  C: { width: 220, height: 352 },
+}
+
+interface Props {
+  item: SpecialLetterItem
+  isOwner: boolean
+  editMode: boolean
+  zIndex: number
+  onOpen: (id: string) => void
+  onUpdate: (id: string, data: Partial<SpecialLetterItem>) => void
+  onDelete: (id: string) => void
+  onBringForward: (id: string) => void
+  onSendBackward: (id: string) => void
+  onFocus: (id: string) => void
+}
+
+export default function SpecialLetter({
+  item,
+  isOwner,
+  editMode,
+  zIndex,
+  onOpen,
+  onUpdate,
+  onDelete,
+  onBringForward,
+  onSendBackward,
+  onFocus,
+}: Props) {
+  const [animating, setAnimating] = useState(false)
+  const [showCard, setShowCard] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
+
+  const model = CARD_MODELS.find((m) => m.id === item.cardModel)
+  const size = LAYOUT_SIZE[item.layout]
+
+  const ENV_W = 110
+  const ENV_H = 70
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!editMode) return
+      onFocus(item.id)
+      dragRef.current = {
+        dragging: true,
+        moved: false,
+        sx: e.clientX,
+        sy: e.clientY,
+        px: item.x,
+        py: item.y,
+      }
+      e.preventDefault()
+      const onMove = (ev: MouseEvent) => {
+        const d = dragRef.current
+        if (!d.dragging) return
+        const dx = ev.clientX - d.sx
+        const dy = ev.clientY - d.sy
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true
+        onUpdate(item.id, { x: d.px + dx, y: d.py + dy })
+      }
+      const onUp = () => {
+        dragRef.current.dragging = false
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [editMode, item.x, item.y, item.id, onUpdate, onFocus]
+  )
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (editMode || dragRef.current.moved) return
+
+    if (showCard) {
+      setShowModal(true)
+      return
+    }
+
+    setAnimating(true)
+    setTimeout(() => {
+      setAnimating(false)
+      setShowCard(true)
+      if (!item.opened && !isOwner) {
+        onOpen(item.id)
+      }
+    }, 600)
+  }
+
+  return (
+    <>
+      <div
+        data-item
+        onMouseDown={onMouseDown}
+        onClick={handleClick}
+        onMouseEnter={() => setShowMenu(true)}
+        onMouseLeave={() => setShowMenu(false)}
+        style={{
+          position: 'absolute',
+          left: item.x,
+          top: item.y,
+          width: ENV_W,
+          cursor: editMode ? 'grab' : 'pointer',
+          userSelect: 'none',
+          zIndex,
+        }}
+      >
+        <style>{`
+          @keyframes goldShimmer {
+            0% { stop-color: #f5d060; }
+            50% { stop-color: #ffe99a; }
+            100% { stop-color: #f5d060; }
+          }
+          @keyframes starPulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+          }
+        `}</style>
+
+        {/* Envelope SVG dourado especial */}
+        <svg
+          viewBox={`0 0 ${ENV_W} ${ENV_H + 30}`}
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            display: 'block',
+            width: ENV_W,
+            height: ENV_H + 30,
+            overflow: 'visible',
+            filter: animating
+              ? 'drop-shadow(0 0 8px #f5d06099)'
+              : 'drop-shadow(0 2px 6px #b8860b55)',
+            transition: 'filter 0.3s',
+          }}
+        >
+          <defs>
+            <linearGradient id="goldBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fffbe8" />
+              <stop offset="50%" stopColor="#fdf3c0" />
+              <stop offset="100%" stopColor="#f5e8a0" />
+            </linearGradient>
+            <linearGradient id="goldFlap" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffe680" />
+              <stop offset="100%" stopColor="#c8960c" />
+            </linearGradient>
+            <linearGradient id="goldStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f5d060" />
+              <stop offset="50%" stopColor="#b8860b" />
+              <stop offset="100%" stopColor="#f5d060" />
+            </linearGradient>
+            <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffe680" />
+              <stop offset="40%" stopColor="#f5c800" />
+              <stop offset="100%" stopColor="#b8860b" />
+            </linearGradient>
+          </defs>
+
+          {/* sombra */}
+          <rect x="4" y="6" width="104" height="62" rx="7" fill="rgba(44,20,8,0.15)" />
+
+          {/* corpo */}
+          <rect
+            x="1"
+            y="3"
+            width="104"
+            height="62"
+            rx="7"
+            fill="url(#goldBody)"
+            stroke="url(#goldStroke)"
+            strokeWidth="1.8"
+          />
+
+          {/* detalhe de borda interna */}
+          <rect
+            x="5"
+            y="7"
+            width="96"
+            height="54"
+            rx="5"
+            fill="none"
+            stroke="#f5d060"
+            strokeWidth="0.6"
+            opacity="0.5"
+          />
+
+          {/* vincos laterais */}
+          <line
+            x1="1"
+            y1="3"
+            x2="55"
+            y2={ENV_H * 0.52}
+            stroke="#f5d060"
+            strokeWidth="1"
+            opacity="0.7"
+          />
+          <line
+            x1="105"
+            y1="3"
+            x2="55"
+            y2={ENV_H * 0.52}
+            stroke="#f5d060"
+            strokeWidth="1"
+            opacity="0.7"
+          />
+          <line
+            x1="1"
+            y1="65"
+            x2="55"
+            y2={ENV_H * 0.52}
+            stroke="#f5d060"
+            strokeWidth="1"
+            opacity="0.7"
+          />
+          <line
+            x1="105"
+            y1="65"
+            x2="55"
+            y2={ENV_H * 0.52}
+            stroke="#f5d060"
+            strokeWidth="1"
+            opacity="0.7"
+          />
+
+          {/* aba superior — vem DEPOIS da folha no SVG pra ficar na frente */}
+          <path
+            d={`M1 3 L55 ${animating || showCard ? ENV_H * 0.08 : ENV_H * 0.42} L105 3`}
+            fill="url(#goldFlap)"
+            stroke="url(#goldStroke)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+            style={{ transition: 'd 0.5s ease' }}
+          />
+
+          {/* lacre especial */}
+          {!showCard && !animating && (
+            <g transform={`translate(55, ${ENV_H * 0.54})`}>
+              <circle r="8" fill="url(#sealGold)" stroke="#c8a020" strokeWidth="1" />
+              <circle r="6" fill="none" stroke="#ffe680" strokeWidth="0.8" opacity="0.6" />
+              <path
+                d="M0,-5 L1.2,-1.7 L4.8,-1.5 L2.2,0.8 L3,4.5 L0,2.5 L-3,4.5 L-2.2,0.8 L-4.8,-1.5 L-1.2,-1.7Z"
+                fill="#fffbe8"
+                strokeWidth="0"
+              />
+            </g>
+          )}
+
+          {/* estrelinhas — sem stroke preto */}
+          {!showCard && (
+            <>
+              <text
+                x="8"
+                y="14"
+                fontSize="7"
+                fill="#f5d060"
+                opacity="0.9"
+                style={{ animation: 'starPulse 2s ease-in-out infinite' }}
+              >
+                ✦
+              </text>
+              <text
+                x="91"
+                y="14"
+                fontSize="7"
+                fill="#f5d060"
+                opacity="0.9"
+                style={{ animation: 'starPulse 2s ease-in-out infinite 0.5s' }}
+              >
+                ✦
+              </text>
+              <text
+                x="8"
+                y="62"
+                fontSize="6"
+                fill="#f5d060"
+                opacity="0.8"
+                style={{ animation: 'starPulse 2s ease-in-out infinite 1s' }}
+              >
+                ✦
+              </text>
+              <text
+                x="91"
+                y="62"
+                fontSize="6"
+                fill="#f5d060"
+                opacity="0.8"
+                style={{ animation: 'starPulse 2s ease-in-out infinite 1.5s' }}
+              >
+                ✦
+              </text>
+            </>
+          )}
+
+          {/* hint abertura */}
+          {!item.opened && !isOwner && !showCard && (
+            <text
+              x="55"
+              y={ENV_H + 16}
+              textAnchor="middle"
+              fontSize="7"
+              fill="#b8860b"
+              fontFamily="Baloo 2, sans-serif"
+              opacity="0.9"
+            >
+              clique pra abrir 💌
+            </text>
+          )}
+
+          {/* etiqueta de/para + data — igual ao Letter */}
+          <text
+            x="7"
+            y={ENV_H * 0.7}
+            textAnchor="start"
+            fontSize="7.5"
+            fill="#7a5a00"
+            fontFamily="Baloo 2, sans-serif"
+            fontWeight="700"
+            opacity="0.85"
+          >
+            {`De: ${item.from}`}
+          </text>
+          <text
+            x="7"
+            y={ENV_H * 0.7 + 11}
+            textAnchor="start"
+            fontSize="7.5"
+            fill="#7a5a00"
+            fontFamily="Baloo 2, sans-serif"
+            fontWeight="700"
+            opacity="0.85"
+          >
+            {`Para: ${item.to}${item.createdAt ? `  •  ${new Date(item.createdAt).toLocaleDateString('pt-BR')}` : ''}`}
+          </text>
+        </svg>
+
+        {/* Folhinha — fora do SVG pra ficar por cima da borda */}
+        {showCard && (
+          <div
+            style={{
+              position: 'absolute',
+              top: -28,
+              left: 18,
+              width: 74,
+              zIndex: zIndex + 1,
+              pointerEvents: 'none',
+            }}
+          >
+            <svg viewBox="0 0 74 60" width="74" height="60">
+              <rect
+                x="0"
+                y="0"
+                width="74"
+                height="60"
+                rx="4"
+                fill="#fffdf5"
+                stroke="#f5d060"
+                strokeWidth="1"
+              />
+              <line x1="8" y1="12" x2="66" y2="12" stroke="#f0e0a0" strokeWidth="0.9" />
+              <line x1="8" y1="20" x2="62" y2="20" stroke="#f0e0a0" strokeWidth="0.9" />
+              <line x1="8" y1="28" x2="64" y2="28" stroke="#f0e0a0" strokeWidth="0.9" />
+              <line x1="8" y1="36" x2="56" y2="36" stroke="#f0e0a0" strokeWidth="0.9" />
+            </svg>
+          </div>
+        )}
+
+        {/* Abinha de edição */}
+        {editMode && showMenu && (
+          <div
+            style={{
+              position: 'absolute',
+              top: -4,
+              right: -4,
+              display: 'flex',
+              gap: 3,
+              zIndex: 10,
+            }}
+          >
+            <CtxBtn
+              label="↑"
+              title="à frente"
+              onClick={(e) => {
+                e.stopPropagation()
+                onBringForward(item.id)
+              }}
+            />
+            <CtxBtn
+              label="↓"
+              title="atrás"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSendBackward(item.id)
+              }}
+            />
+            <CtxBtn
+              label="✕"
+              title="deletar"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(item.id)
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Modal com PNG da carta */}
+      {showModal && model && (
+        <SpecialLetterModal
+          item={item}
+          model={model}
+          size={size}
+          area={LAYOUT_TEXT_AREA[item.layout]}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
+  )
+}
+
+function CtxBtn({
+  label,
+  title,
+  onClick,
+}: {
+  label: string
+  title: string
+  onClick: (e: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: '50%',
+        background: 'rgba(255,240,180,0.9)',
+        border: '1px solid #c8a020',
+        cursor: 'pointer',
+        fontSize: 10,
+        color: '#7a5a00',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function SpecialLetterModal({
+  item,
+  model,
+  size,
+  area,
+  onClose,
+}: {
+  item: SpecialLetterItem
+  model: { image: string; label: string }
+  size: { width: number; height: number }
+  area: { top: string; bottom: string; left: string; right: string }
+  onClose: () => void
+}) {
+  // escala para caber bem na tela mantendo proporção
+  const scale = Math.min(480 / size.width, 600 / size.height)
+  const displayW = Math.round(size.width * scale)
+  const displayH = Math.round(size.height * scale)
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: 'rgba(26,20,8,0.65)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          width: displayW,
+          height: displayH,
+          animation: 'specialLetterPop 0.4s cubic-bezier(.34,1.56,.64,1)',
+        }}
+      >
+        <style>{`
+          @keyframes specialLetterPop {
+            from { transform: scale(0.8) translateY(30px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+          }
+        `}</style>
+        {/* PNG da carta */}
+        <img
+          src={model.image}
+          alt={model.label}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'fill',
+            display: 'block',
+            borderRadius: 12,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.4), 0 0 0 2px #f5d06055',
+          }}
+          draggable={false}
+        />
+        {/* Texto sobre o PNG */}
+        <div
+          style={{
+            position: 'absolute',
+            top: area.top,
+            bottom: area.bottom,
+            left: area.left,
+            right: area.right,
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 13,
+              color: item.cardModel === 'lua-noite' ? '#ffffff' : '#2a1010',
+              lineHeight: 1.7,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              margin: 0,
+            }}
+          >
+            {item.message}
+          </p>
+          <p
+            style={{
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 11,
+              color: item.cardModel === 'lua-noite' ? '#ffffffcc' : '#5a2a2a',
+              marginTop: 10,
+              textAlign: 'right',
+              fontWeight: 700,
+            }}
+          >
+            {item.from} → {item.to}
+          </p>
+        </div>
+        {/* botão fechar */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: -14,
+            right: -14,
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #ffe680, #c8960c)',
+            border: '2px solid #b8860b',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#5a3a00',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}

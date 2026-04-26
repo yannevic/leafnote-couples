@@ -34,6 +34,10 @@ import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
 import { CalendarDays, LayoutGrid, Sprout, Film } from 'lucide-react'
+import SpecialLetterModal from '../components/SpecialLetterModal'
+import SpecialLetter from '../components/SpecialLetter'
+import type { SpecialLetterItem } from '../types/board'
+import { Mail } from 'lucide-react'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -98,6 +102,7 @@ export default function Board() {
   const [sharedDice, setSharedDice] = useState(false)
   const [timerState, setTimerState] = useState<TimerState>(makeInitialTimerState)
   const [openModalItem, setOpenModalItem] = useState<AnyBoardItem | null>(null)
+  const [showSpecialLetter, setShowSpecialLetter] = useState(false)
 
   const handleOpenModal = useCallback(
     (id: string) => {
@@ -523,6 +528,23 @@ export default function Board() {
           if (item.type === 'drawing') {
             return <DrawingSheet key={item.id} {...commonProps} item={item as DrawingItem} />
           }
+          if (item.type === 'special-letter') {
+            return (
+              <SpecialLetter
+                key={item.id}
+                item={item as SpecialLetterItem}
+                isOwner={item.createdBy === uid}
+                editMode={editMode}
+                zIndex={z}
+                onOpen={(id) => handleUpdate(id, { opened: true })}
+                onUpdate={handleUpdate as never}
+                onDelete={handleDelete}
+                onBringForward={handleBringForward}
+                onSendBackward={handleSendBackward}
+                onFocus={handleFocus}
+              />
+            )
+          }
           return null
         })}
       </div>
@@ -657,6 +679,33 @@ export default function Board() {
         title="filmes & séries"
       >
         <Film size={22} strokeWidth={2} />
+      </div>
+
+      {/* Botão carta especial */}
+      <div
+        onClick={() => setShowSpecialLetter(true)}
+        style={{
+          position: 'fixed',
+          bottom: 280,
+          right: 20,
+          zIndex: 48,
+          background: 'linear-gradient(145deg, #fce8f5 0%, #e8a0c8 100%)',
+          border: '2px solid #c478a8',
+          color: '#5a1a3a',
+          boxShadow: '0 3px 10px rgba(196,120,168,0.35)',
+          borderRadius: '50%',
+          width: 48,
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'transform 0.15s',
+          userSelect: 'none',
+        }}
+        title="carta especial 💌"
+      >
+        <Mail size={22} strokeWidth={2} />
       </div>
 
       {/* Painel de widgets */}
@@ -817,6 +866,36 @@ export default function Board() {
           displayName={displayName}
           partnerName={otherName}
           onClose={() => setShowMovies(false)}
+        />
+      )}
+
+      {showSpecialLetter && (
+        <SpecialLetterModal
+          myNick={displayName}
+          partnerNick={otherName}
+          myUid={uid}
+          partnerUid={partnerUid ?? ''}
+          onSend={(data) => {
+            const item: SpecialLetterItem = {
+              id: makeId(),
+              type: 'special-letter',
+              x: 200,
+              y: 150,
+              z: nextZOrder(),
+              zOrder: nextZOrder(),
+              width: 272,
+              height: 432,
+              createdBy: uid,
+              updatedBy: uid,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              opened: false,
+              ...data,
+            }
+            setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+            saveItem(item as unknown as AnyBoardItem)
+          }}
+          onClose={() => setShowSpecialLetter(false)}
         />
       )}
 

@@ -1,4 +1,4 @@
-export type BoardItemType = 'postit' | 'checklist' | 'drawing' | 'tag' | 'letter'
+export type BoardItemType = 'postit' | 'checklist' | 'drawing' | 'tag' | 'letter' | 'special-letter'
 
 export type PostItColor = 'yellow' | 'green' | 'pink' | 'blue' | 'lavender' | 'peach'
 export type LetterColor = 'rosa' | 'verde' | 'azul' | 'amarelo' | 'lilas'
@@ -62,4 +62,26 @@ export interface LetterItem extends BoardItem {
   openedAt?: string
 }
 
-export type AnyBoardItem = PostItItem | ChecklistItem | DrawingItem | TagItem | LetterItem
+export type AnyBoardItem =
+  | PostItItem
+  | ChecklistItem
+  | DrawingItem
+  | TagItem
+  | LetterItem
+  | SpecialLetterItem
+
+export type SpecialLetterLayout = 'A' | 'B' | 'C'
+
+export interface SpecialLetterItem extends BoardItem {
+  type: 'special-letter'
+  z: number
+  from: string
+  to: string
+  fromUid: string
+  toUid: string
+  message: string
+  cardModel: string
+  layout: SpecialLetterLayout
+  opened: boolean
+  specialDate?: string
+}
