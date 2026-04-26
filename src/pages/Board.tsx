@@ -84,7 +84,12 @@ export default function Board() {
   const [trashOpen, setTrashOpen] = useState(false)
   const [selectedTool, setSelectedTool] = useState<BoardItemType | null>(null)
   const [editMode, setEditMode] = useState(false)
-  const { saveItem, deleteItem } = useBoard(items, setItems)
+  const {
+    saveItem,
+    deleteItem,
+    trashItem,
+    restoreItem: restoreFromDeleted,
+  } = useBoard(items, setItems)
   const boardRef = useRef<HTMLDivElement>(null)
 
   const uid = user?.uid ?? 'anon'
@@ -239,28 +244,32 @@ export default function Board() {
     [uid, saveItem]
   )
 
-  const handleDelete = useCallback((id: string) => {
-    setItems((prev) => {
-      const item = prev.find((i) => i.id === id)
-      if (item) {
-        setTrashedItems((t) => {
-          if (t.some((x) => x.id === id)) return t
-          return [...t, item]
-        })
-      }
-      return prev.filter((i) => i.id !== id)
-    })
-  }, [])
-
+  const handleDelete = useCallback(
+    (id: string) => {
+      trashItem(id)
+      setItems((prev) => {
+        const item = prev.find((i) => i.id === id)
+        if (item) {
+          setTrashedItems((t) => {
+            if (t.some((x) => x.id === id)) return t
+            return [...t, item]
+          })
+        }
+        return prev.filter((i) => i.id !== id)
+      })
+    },
+    [trashItem]
+  )
   const handleRestore = useCallback(
     (id: string) => {
+      restoreFromDeleted(id)
       setTrashedItems((prev) => {
         const item = prev.find((i) => i.id === id)
         if (item) saveItem(item)
         return prev.filter((i) => i.id !== id)
       })
     },
-    [saveItem]
+    [saveItem, restoreFromDeleted]
   )
 
   const handleTrashClose = useCallback(() => {

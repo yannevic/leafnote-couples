@@ -85,7 +85,11 @@ export default function SpecialLetter({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (editMode || dragRef.current.moved) return
+    if (editMode) return
+    if (dragRef.current.moved) {
+      dragRef.current.moved = false
+      return
+    }
 
     if (showCard) {
       setShowModal(true)

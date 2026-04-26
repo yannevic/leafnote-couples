@@ -11,8 +11,8 @@ export function useBoard(
 ) {
   const loaded = useRef(false)
   const localIds = useRef<Set<string>>(new Set())
+  const deletedIds = useRef<Set<string>>(new Set())
 
-  // Escuta mudanças do Firebase e atualiza o estado local
   useEffect(() => {
     const boardRef = ref(db, BOARD_PATH)
 
@@ -25,7 +25,7 @@ export function useBoard(
         return
       }
 
-      const remoteItems = Object.values(data)
+      const remoteItems = Object.values(data).filter((item) => !deletedIds.current.has(item.id))
       loaded.current = true
       setItems(remoteItems)
     })
@@ -33,14 +33,10 @@ export function useBoard(
     return () => off(boardRef, 'value', unsubscribe)
   }, [setItems])
 
-  // Salva um item no Firebase
   const saveItem = useCallback((item: AnyBoardItem) => {
     localIds.current.add(item.id)
     const itemRef = ref(db, `${BOARD_PATH}/${item.id}`)
-
-    // Firebase não aceita undefined — remove todas as chaves undefined
     const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
-
     set(itemRef, clean).catch((err: unknown) => {
       const msg =
         err instanceof Error
@@ -52,8 +48,8 @@ export function useBoard(
     })
   }, [])
 
-  // Remove um item do Firebase
   const deleteItem = useCallback((id: string) => {
+    deletedIds.current.add(id)
     const itemRef = ref(db, `${BOARD_PATH}/${id}`)
     remove(itemRef).catch((err: unknown) => {
       const msg =
@@ -66,5 +62,13 @@ export function useBoard(
     })
   }, [])
 
-  return { loaded: loaded.current, saveItem, deleteItem }
+  const trashItem = useCallback((id: string) => {
+    deletedIds.current.add(id)
+  }, [])
+
+  const restoreItem = useCallback((id: string) => {
+    deletedIds.current.delete(id)
+  }, [])
+
+  return { loaded: loaded.current, saveItem, deleteItem, trashItem, restoreItem }
 }
