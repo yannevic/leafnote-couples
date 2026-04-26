@@ -83,5 +83,7 @@ export interface SpecialLetterItem extends BoardItem {
   cardModel: string
   layout: SpecialLetterLayout
   opened: boolean
-  specialDate?: string
+  specialDate: string
+  specialDateMmdd: string
+  specialDateLabel: string
 }

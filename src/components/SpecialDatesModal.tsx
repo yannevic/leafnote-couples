@@ -1,33 +1,68 @@
 import { useState } from 'react'
 import { X, Save } from 'lucide-react'
-
-export interface SpecialDates {
-  birthdayMe: string // 'MM-DD'
-  birthdayPartner: string
-  anniversary: string // aniversário do casal
-  metDate: string // dia que se conheceram
-  datingDate: string // namoro (pode ficar vazio)
-}
+import type { SpecialDates } from '../lib/specialDates'
 
 interface Props {
   initial: SpecialDates
+  myNick: string
+  partnerNick: string
   onSave: (dates: SpecialDates) => void
   onClose: () => void
 }
 
-const FIELDS: { key: keyof SpecialDates; label: string; placeholder: string }[] = [
-  { key: 'birthdayMe', label: 'Meu aniversário', placeholder: 'MM-DD' },
-  { key: 'birthdayPartner', label: 'Aniversário da pessoa amada', placeholder: 'MM-DD' },
-  { key: 'anniversary', label: 'Aniversário do casal', placeholder: 'MM-DD' },
-  { key: 'metDate', label: 'Dia que se conheceram', placeholder: 'MM-DD' },
-  { key: 'datingDate', label: 'Início do namoro', placeholder: 'MM-DD (opcional)' },
+const FIELDS: {
+  key: keyof SpecialDates
+  labelFn: (my: string, partner: string) => string
+  placeholder: string
+  withYear: boolean
+}[] = [
+  {
+    key: 'birthdayMe',
+    labelFn: (my) => `Aniversário de ${my}`,
+    placeholder: 'DD-MM',
+    withYear: false,
+  },
+  {
+    key: 'birthdayPartner',
+    labelFn: (_, partner) => `Aniversário de ${partner}`,
+    placeholder: 'DD-MM',
+    withYear: false,
+  },
+  {
+    key: 'metDate',
+    labelFn: () => 'Dia que se conheceram',
+    placeholder: 'DD-MM-AAAA',
+    withYear: true,
+  },
+  {
+    key: 'anniversary',
+    labelFn: () => 'Aniversário do casal',
+    placeholder: 'DD-MM-AAAA',
+    withYear: true,
+  },
+  {
+    key: 'datingDate',
+    labelFn: () => 'Início do namoro (opcional)',
+    placeholder: 'DD-MM-AAAA',
+    withYear: true,
+  },
 ]
 
-export default function SpecialDatesModal({ initial, onSave, onClose }: Props) {
+export default function SpecialDatesModal({
+  initial,
+  myNick: rawMy,
+  partnerNick: rawPartner,
+  onSave,
+  onClose,
+}: Props) {
+  const myNick = !rawMy || rawMy === '...' ? 'você' : rawMy
+  const partnerNick = !rawPartner || rawPartner === '...' ? 'parceiro(a)' : rawPartner
   const [form, setForm] = useState<SpecialDates>(initial)
 
   function handleChange(key: keyof SpecialDates, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    // permite só números e hífen
+    const clean = value.replace(/[^\d-]/g, '')
+    setForm((prev) => ({ ...prev, [key]: clean }))
   }
 
   function handleSave() {
@@ -55,7 +90,6 @@ export default function SpecialDatesModal({ initial, onSave, onClose }: Props) {
           padding: '28px 32px',
           width: 420,
           boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
-          position: 'relative',
           border: '2px solid #e8d5b0',
         }}
       >
@@ -92,14 +126,14 @@ export default function SpecialDatesModal({ initial, onSave, onClose }: Props) {
                   marginBottom: 4,
                 }}
               >
-                {f.label}
+                {f.labelFn(myNick, partnerNick)}
               </label>
               <input
                 type="text"
                 value={form[f.key]}
                 onChange={(e) => handleChange(f.key, e.target.value)}
                 placeholder={f.placeholder}
-                maxLength={5}
+                maxLength={f.withYear ? 10 : 5}
                 style={{
                   width: '100%',
                   borderRadius: 10,
@@ -111,6 +145,7 @@ export default function SpecialDatesModal({ initial, onSave, onClose }: Props) {
                   color: '#5a2a2a',
                   outline: 'none',
                   boxSizing: 'border-box',
+                  letterSpacing: '0.05em',
                 }}
               />
             </div>

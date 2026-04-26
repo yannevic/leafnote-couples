@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import type { SpecialLetterItem } from '../types/board'
 import { CARD_MODELS } from '../assets/letters/index'
+import { isToday, formatMmdd } from '../lib/specialDates'
 
 const LAYOUT_TEXT_AREA = {
   A: { top: '30%', bottom: '22%', left: '20%', right: '10%' },
@@ -43,13 +44,19 @@ export default function SpecialLetter({
   const [showCard, setShowCard] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [showBlocked, setShowBlocked] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
 
   const model = CARD_MODELS.find((m) => m.id === item.cardModel)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const area = LAYOUT_TEXT_AREA[item.layout]
   const size = LAYOUT_SIZE[item.layout]
 
   const ENV_W = 110
   const ENV_H = 70
+
+  const canOpen = isToday(item.specialDateMmdd)
+  const isReceiver = !isOwner
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -91,19 +98,29 @@ export default function SpecialLetter({
       return
     }
 
+    // receptor bloqueado fora da data
+    if (isReceiver && !canOpen) {
+      setShowBlocked(true)
+      setTimeout(() => setShowBlocked(false), 3000)
+      return
+    }
+
     if (showCard) {
       setShowModal(true)
       return
     }
 
-    setAnimating(true)
-    setTimeout(() => {
-      setAnimating(false)
-      setShowCard(true)
-      if (!item.opened && !isOwner) {
+    // animação só pra quem recebe e só na primeira abertura
+    if (isReceiver && !item.opened) {
+      setAnimating(true)
+      setTimeout(() => {
+        setAnimating(false)
+        setShowCard(true)
         onOpen(item.id)
-      }
-    }, 600)
+      }, 600)
+    } else {
+      setShowCard(true)
+    }
   }
 
   return (
@@ -346,9 +363,33 @@ export default function SpecialLetter({
             fontWeight="700"
             opacity="0.85"
           >
-            {`Para: ${item.to}${item.createdAt ? `  •  ${new Date(item.createdAt).toLocaleDateString('pt-BR')}` : ''}`}
+            {`Para: ${item.to}  •  ${item.specialDateLabel ?? ''}`}
           </text>
         </svg>
+
+        {/* aviso data bloqueada */}
+        {showBlocked && (
+          <div
+            style={{
+              position: 'absolute',
+              top: -38,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#3a1a08',
+              color: '#f5d060',
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '6px 12px',
+              borderRadius: 10,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              zIndex: 99,
+            }}
+          >
+            abre em {formatMmdd(item.specialDateMmdd)} 💌
+          </div>
+        )}
 
         {/* Folhinha — fora do SVG pra ficar por cima da borda */}
         {showCard && (

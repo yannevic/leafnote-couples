@@ -1,13 +1,17 @@
 import { useState } from 'react'
-import { X, Send } from 'lucide-react'
+import { X, Send, CalendarHeart } from 'lucide-react'
 import { CARD_MODELS } from '../assets/letters/index'
 import type { SpecialLetterLayout } from '../types/board'
+import { getAvailableDates, formatMmdd } from '../lib/specialDates'
+import type { SpecialDates } from '../lib/specialDates'
+import SpecialDatesModal from './SpecialDatesModal'
 
 interface Props {
   myNick: string
   partnerNick: string
   myUid: string
   partnerUid: string
+  specialDates: SpecialDates
   onSend: (data: {
     message: string
     cardModel: string
@@ -16,8 +20,12 @@ interface Props {
     to: string
     fromUid: string
     toUid: string
+    specialDate: string
+    specialDateMmdd: string
+    specialDateLabel: string
   }) => void
   onClose: () => void
+  onSaveDates: (dates: SpecialDates) => void
 }
 
 export default function SpecialLetterModal({
@@ -25,16 +33,22 @@ export default function SpecialLetterModal({
   partnerNick,
   myUid,
   partnerUid,
+  specialDates,
   onSend,
   onClose,
+  onSaveDates,
 }: Props) {
   const [selectedModel, setSelectedModel] = useState(CARD_MODELS[0].id)
   const [message, setMessage] = useState('')
+  const availableDates = getAvailableDates(specialDates)
+  const [selectedDateKey, setSelectedDateKey] = useState(availableDates[0]?.key ?? '')
+  const [showDatesModal, setShowDatesModal] = useState(false)
 
   const model = CARD_MODELS.find((m) => m.id === selectedModel)!
+  const selectedDateObj = availableDates.find((d) => d.key === selectedDateKey)
 
   function handleSend() {
-    if (!message.trim()) return
+    if (!message.trim() || !selectedDateObj) return
     onSend({
       message: message.trim(),
       cardModel: selectedModel,
@@ -43,6 +57,9 @@ export default function SpecialLetterModal({
       to: partnerNick,
       fromUid: myUid,
       toUid: partnerUid,
+      specialDate: selectedDateKey,
+      specialDateMmdd: selectedDateObj.mmdd,
+      specialDateLabel: selectedDateObj.label,
     })
     onClose()
   }
@@ -87,13 +104,85 @@ export default function SpecialLetterModal({
           >
             💌 Carta especial para {partnerNick}
           </h2>
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a06060' }}
-          >
-            <X size={22} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => setShowDatesModal(true)}
+              style={{
+                background: 'linear-gradient(145deg, #fce8f5 0%, #e8a0c8 100%)',
+                border: '2px solid #c478a8',
+                borderRadius: '50%',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#7a3060',
+                boxShadow: '0 2px 6px rgba(196,120,168,0.3)',
+              }}
+              title="editar datas especiais"
+            >
+              <CalendarHeart size={16} strokeWidth={2} />
+            </button>
+            <button
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a06060' }}
+            >
+              <X size={22} />
+            </button>
+          </div>
         </div>
+
+        {/* seletor de data */}
+        <p
+          style={{
+            fontFamily: "'Baloo 2', cursive",
+            fontSize: 13,
+            color: '#a06060',
+            marginBottom: 8,
+          }}
+        >
+          Para qual data especial é essa carta?
+        </p>
+        {availableDates.length === 0 ? (
+          <div
+            style={{
+              background: '#fff4e0',
+              border: '1.5px solid #e8d5b0',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 20,
+              fontFamily: "'Baloo 2', cursive",
+              fontSize: 13,
+              color: '#a06060',
+            }}
+          >
+            Nenhuma data especial cadastrada ainda. Cadastre no calendário primeiro! 🌸
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            {availableDates.map((d) => (
+              <button
+                key={d.key}
+                onClick={() => setSelectedDateKey(d.key)}
+                style={{
+                  fontFamily: "'Baloo 2', cursive",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  cursor: 'pointer',
+                  border: selectedDateKey === d.key ? '2px solid #e8a0b0' : '1.5px solid #e8d5b0',
+                  background: selectedDateKey === d.key ? '#fce8f0' : '#fffaf4',
+                  color: selectedDateKey === d.key ? '#7a3040' : '#a06060',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {d.label} · {formatMmdd(d.mmdd)}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* escolha do modelo */}
         <p
@@ -150,7 +239,6 @@ export default function SpecialLetterModal({
 
         {/* preview + escrita */}
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-          {/* preview da carta */}
           <div style={{ flexShrink: 0 }}>
             <img
               src={model.image}
@@ -164,7 +252,19 @@ export default function SpecialLetterModal({
             />
           </div>
 
-          {/* textarea */}
+          {showDatesModal && (
+            <SpecialDatesModal
+              initial={specialDates}
+              myNick={myNick}
+              partnerNick={partnerNick}
+              onSave={(d) => {
+                onSaveDates(d)
+                setShowDatesModal(false)
+              }}
+              onClose={() => setShowDatesModal(false)}
+            />
+          )}
+
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <textarea
               value={message}
@@ -193,20 +293,20 @@ export default function SpecialLetterModal({
               </span>
               <button
                 onClick={handleSend}
-                disabled={!message.trim()}
+                disabled={!message.trim() || !selectedDateObj}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
-                  background: message.trim() ? '#e8a0b0' : '#e8d5b0',
-                  color: message.trim() ? '#5a2a2a' : '#a09080',
+                  background: message.trim() && selectedDateObj ? '#e8a0b0' : '#e8d5b0',
+                  color: message.trim() && selectedDateObj ? '#5a2a2a' : '#a09080',
                   border: 'none',
                   borderRadius: 12,
                   padding: '10px 24px',
                   fontFamily: "'Baloo 2', cursive",
                   fontSize: 14,
                   fontWeight: 700,
-                  cursor: message.trim() ? 'pointer' : 'not-allowed',
+                  cursor: message.trim() && selectedDateObj ? 'pointer' : 'not-allowed',
                   transition: 'background 0.2s',
                 }}
               >

@@ -1,25 +1,16 @@
-import { useState, useEffect } from 'react'
-import { StreakData, subscribeStreak, setStreakStart, resetStreak, calcDays } from '../lib/streak'
+import { useEffect, useState } from 'react'
+import { subscribeStreak, calcDays } from '../lib/streak'
 
 export function useStreak() {
-  const [streak, setStreak] = useState<StreakData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [streak, setStreak] = useState(0)
 
   useEffect(() => {
     const unsub = subscribeStreak((data) => {
-      setStreak(data)
-      setLoading(false)
+      if (data?.startDate) setStreak(calcDays(data.startDate))
+      else setStreak(0)
     })
     return unsub
   }, [])
 
-  const days = streak?.startDate ? calcDays(streak.startDate) : 0
-
-  return {
-    streak,
-    loading,
-    days,
-    setStart: setStreakStart,
-    reset: resetStreak,
-  }
+  return { streak }
 }
