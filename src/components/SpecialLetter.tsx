@@ -48,8 +48,6 @@ export default function SpecialLetter({
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
 
   const model = CARD_MODELS.find((m) => m.id === item.cardModel)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const area = LAYOUT_TEXT_AREA[item.layout]
   const size = LAYOUT_SIZE[item.layout]
 
   const ENV_W = 110
