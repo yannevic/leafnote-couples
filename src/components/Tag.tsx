@@ -19,6 +19,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export default function Tag({
@@ -30,6 +31,7 @@ export default function Tag({
   onBringForward,
   onSendBackward,
   onFocus,
+  onContextMenu,
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [label, setLabel] = useState(item.label)
@@ -80,6 +82,7 @@ export default function Tag({
     <div
       data-item
       onMouseDown={onMouseDown}
+      onContextMenu={onContextMenu}
       onDoubleClick={() => {
         if (!editMode) setEditing(true)
       }}

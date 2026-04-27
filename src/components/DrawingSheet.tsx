@@ -157,6 +157,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 interface DrawingModalProps {
@@ -876,6 +877,7 @@ export default function DrawingSheet({
   onBringForward,
   onSendBackward,
   onFocus,
+  onContextMenu,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(!item.drawingData)
   const [showMenu, setShowMenu] = useState(false)
@@ -1026,6 +1028,7 @@ export default function DrawingSheet({
             data-item
             ref={containerRef}
             onMouseDown={onMouseDown}
+            onContextMenu={onContextMenu}
             style={{
               width: '100%',
               height: '100%',

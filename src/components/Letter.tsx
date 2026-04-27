@@ -62,6 +62,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export default function Letter({
@@ -76,6 +77,7 @@ export default function Letter({
   onBringForward,
   onSendBackward,
   onFocus,
+  onContextMenu,
 }: Props) {
   const [opening, setOpening] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -149,6 +151,7 @@ export default function Letter({
         data-item
         onMouseDown={onMouseDown}
         onClick={handleClick}
+        onContextMenu={onContextMenu}
         onMouseEnter={() => setShowMenu(true)}
         onMouseLeave={() => setShowMenu(false)}
         style={{

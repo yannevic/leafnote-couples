@@ -33,13 +33,14 @@ import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
-import { CalendarDays, LayoutGrid, Sprout, Film } from 'lucide-react'
+import { CalendarDays, LayoutGrid, Sprout, Film, ArrowRightLeft, Layers } from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
 import { Mail } from 'lucide-react'
 import { useSpecialDates } from '../hooks/useSpecialDates'
-import { DEFAULT_BOARD_ID } from '../lib/boards'
+import { DEFAULT_BOARD_ID, moveItemToBoard, moveItemsByTypeToBoard, BoardMeta } from '../lib/boards'
+import { useBoards } from '../hooks/useBoards'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -111,6 +112,45 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [openModalItem, setOpenModalItem] = useState<AnyBoardItem | null>(null)
   const [showSpecialLetter, setShowSpecialLetter] = useState(false)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
+  const { extraBoards } = useBoards(uid)
+  const otherBoards = extraBoards.filter((b: BoardMeta) => b.id !== activeBoardId)
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    item: AnyBoardItem
+  } | null>(null)
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, item: AnyBoardItem) => {
+      if (otherBoards.length === 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      setContextMenu({ x: e.clientX, y: e.clientY, item })
+    },
+    [otherBoards]
+  )
+
+  const handleMoveItem = useCallback(
+    async (item: AnyBoardItem, toBoardId: string) => {
+      setContextMenu(null)
+      setItems((prev) => prev.filter((i) => i.id !== item.id))
+      await moveItemToBoard(item, activeBoardId, toBoardId)
+    },
+    [activeBoardId, setItems]
+  )
+
+  const handleMoveByType = useCallback(
+    async (type: string, toBoardId: string) => {
+      setContextMenu(null)
+      setItems((prev) => {
+        const toMove = prev.filter((i) => i.type === type)
+        moveItemsByTypeToBoard(toMove, type, activeBoardId, toBoardId)
+        return prev.filter((i) => i.type !== type)
+      })
+    },
+    [activeBoardId, setItems]
+  )
 
   const handleOpenModal = useCallback(
     (id: string) => {
@@ -502,11 +542,15 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             onSendBackward: handleSendBackward,
             onFocus: handleFocus,
           }
+          const withContext = (item: AnyBoardItem) => ({
+            onContextMenu: (e: React.MouseEvent) => handleContextMenu(e, item),
+          })
           if (item.type === 'postit') {
             return (
               <PostIt
                 key={item.id}
                 {...commonProps}
+                {...withContext(item)}
                 item={item as PostItItem}
                 onOpenModal={handleOpenModal}
               />
@@ -517,19 +561,23 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
               <Checklist
                 key={item.id}
                 {...commonProps}
+                {...withContext(item)}
                 item={item as ChecklistItem}
                 onOpenModal={handleOpenModal}
               />
             )
           }
           if (item.type === 'tag') {
-            return <Tag key={item.id} {...commonProps} item={item as TagItem} />
+            return (
+              <Tag key={item.id} {...commonProps} {...withContext(item)} item={item as TagItem} />
+            )
           }
           if (item.type === 'letter') {
             return (
               <Letter
                 key={item.id}
                 {...commonProps}
+                {...withContext(item)}
                 item={item as LetterItem}
                 currentUid={uid}
                 displayName={displayName}
@@ -538,13 +586,21 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             )
           }
           if (item.type === 'drawing') {
-            return <DrawingSheet key={item.id} {...commonProps} item={item as DrawingItem} />
+            return (
+              <DrawingSheet
+                key={item.id}
+                {...commonProps}
+                {...withContext(item)}
+                item={item as DrawingItem}
+              />
+            )
           }
           if (item.type === 'special-letter') {
             return (
               <SpecialLetter
                 key={item.id}
                 item={item as SpecialLetterItem}
+                {...withContext(item)}
                 isOwner={item.createdBy === uid}
                 editMode={editMode}
                 zIndex={z}
@@ -922,6 +978,135 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           onClose={() => setShowSpecialLetter(false)}
           onSaveDates={saveSpecialDates}
         />
+      )}
+
+      {contextMenu && (
+        <div
+          onClick={() => setContextMenu(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              left: contextMenu.x,
+              top: contextMenu.y,
+              zIndex: 9001,
+              background: '#fdf6f0',
+              border: '1.5px solid #d4aa80',
+              borderRadius: 12,
+              boxShadow: '0 6px 24px rgba(44,20,8,0.25)',
+              fontFamily: 'Baloo 2, sans-serif',
+              minWidth: 220,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Mover este item */}
+            <div
+              style={{
+                padding: '8px 12px 4px',
+                fontSize: 10,
+                fontWeight: 800,
+                color: '#8b6914',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
+              mover este item para...
+            </div>
+            {otherBoards.map((board: BoardMeta) => (
+              <button
+                key={board.id}
+                type="button"
+                onClick={() => handleMoveItem(contextMenu.item, board.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '7px 16px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 13,
+                  color: '#3d2408',
+                  cursor: 'pointer',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = '#f5ecd7'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'none'
+                }}
+              >
+                <ArrowRightLeft size={13} style={{ flexShrink: 0 }} />{' '}
+                {board.id === 'default' ? 'mural principal' : board.name}
+              </button>
+            ))}
+
+            {/* Divisor */}
+            <div style={{ height: 1, background: '#d4aa8066', margin: '4px 0' }} />
+
+            {/* Mover todos do tipo */}
+            <div
+              style={{
+                padding: '4px 12px 4px',
+                fontSize: 10,
+                fontWeight: 800,
+                color: '#8b6914',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
+              mover todos{' '}
+              {contextMenu.item.type === 'postit'
+                ? 'os post-its'
+                : contextMenu.item.type === 'checklist'
+                  ? 'as checklists'
+                  : contextMenu.item.type === 'letter'
+                    ? 'as cartinhas'
+                    : contextMenu.item.type === 'drawing'
+                      ? 'os desenhos'
+                      : contextMenu.item.type === 'tag'
+                        ? 'as tags'
+                        : 'as cartas especiais'}{' '}
+              para...
+            </div>
+            {otherBoards.map((board: BoardMeta) => (
+              <button
+                key={board.id}
+                type="button"
+                onClick={() => handleMoveByType(contextMenu.item.type, board.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '7px 16px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 13,
+                  color: '#3d2408',
+                  cursor: 'pointer',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = '#f5ecd7'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.background = 'none'
+                }}
+              >
+                <Layers size={13} style={{ flexShrink: 0 }} />{' '}
+                {board.id === 'default' ? 'mural principal' : board.name}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Toolbar */}

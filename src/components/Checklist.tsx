@@ -11,6 +11,7 @@ interface Props {
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
   onOpenModal: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 function makeEntryId() {
@@ -27,6 +28,7 @@ export default function Checklist({
   onSendBackward,
   onFocus,
   onOpenModal,
+  onContextMenu,
 }: Props) {
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
@@ -108,6 +110,7 @@ export default function Checklist({
       data-item
       onMouseDown={onMouseDown}
       onClick={handleClick}
+      onContextMenu={onContextMenu}
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
       style={{

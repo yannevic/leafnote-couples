@@ -26,6 +26,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export default function SpecialLetter({
@@ -39,6 +40,7 @@ export default function SpecialLetter({
   onBringForward,
   onSendBackward,
   onFocus,
+  onContextMenu,
 }: Props) {
   const [animating, setAnimating] = useState(false)
   const [showCard, setShowCard] = useState(false)
@@ -127,6 +129,7 @@ export default function SpecialLetter({
         data-item
         onMouseDown={onMouseDown}
         onClick={handleClick}
+        onContextMenu={onContextMenu}
         onMouseEnter={() => setShowMenu(true)}
         onMouseLeave={() => setShowMenu(false)}
         style={{

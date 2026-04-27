@@ -1,5 +1,6 @@
 import { ref, push, set, remove, onValue, off } from 'firebase/database'
 import { db } from './firebase'
+import type { AnyBoardItem } from '../types/board'
 
 export interface BoardMeta {
   id: string
@@ -50,4 +51,32 @@ export async function deleteBoard(boardId: string): Promise<void> {
 export async function renameBoard(boardId: string, name: string): Promise<void> {
   if (boardId === DEFAULT_BOARD_ID) return
   await set(ref(db, `boards/_meta/${boardId}/name`), name.trim())
+}
+
+export async function moveItemToBoard(
+  item: AnyBoardItem,
+  fromBoardId: string,
+  toBoardId: string
+): Promise<void> {
+  const toPath = boardItemsPath(toBoardId)
+  const fromPath = boardItemsPath(fromBoardId)
+  await set(ref(db, `${toPath}/${item.id}`), JSON.parse(JSON.stringify(item)))
+  await remove(ref(db, `${fromPath}/${item.id}`))
+}
+
+export async function moveItemsByTypeToBoard(
+  items: AnyBoardItem[],
+  type: string,
+  fromBoardId: string,
+  toBoardId: string
+): Promise<void> {
+  const toPath = boardItemsPath(toBoardId)
+  const fromPath = boardItemsPath(fromBoardId)
+  const filtered = items.filter((i) => i.type === type)
+  await Promise.all(
+    filtered.map(async (item) => {
+      await set(ref(db, `${toPath}/${item.id}`), JSON.parse(JSON.stringify(item)))
+      await remove(ref(db, `${fromPath}/${item.id}`))
+    })
+  )
 }
