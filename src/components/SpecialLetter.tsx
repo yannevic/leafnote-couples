@@ -98,20 +98,24 @@ export default function SpecialLetter({
       return
     }
 
+    // dono não pode abrir nunca
+    if (isOwner) return
+
     // receptor bloqueado fora da data
-    if (isReceiver && !canOpen) {
+    if (!canOpen) {
       setShowBlocked(true)
       setTimeout(() => setShowBlocked(false), 3000)
       return
     }
 
+    // carta já aberta — abre modal direto
     if (showCard) {
       setShowModal(true)
       return
     }
 
-    // animação só pra quem recebe e só na primeira abertura
-    if (isReceiver && !item.opened) {
+    // primeira abertura — animação
+    if (!item.opened) {
       setAnimating(true)
       setTimeout(() => {
         setAnimating(false)
@@ -344,7 +348,20 @@ export default function SpecialLetter({
           {/* etiqueta de/para + data — igual ao Letter */}
           <text
             x="7"
-            y={ENV_H * 0.7}
+            y={ENV_H * 0.7 - 10}
+            textAnchor="start"
+            fontSize="7"
+            fill="#b8860b"
+            fontFamily="Baloo 2, sans-serif"
+            fontWeight="700"
+            opacity="0.9"
+            fontStyle="italic"
+          >
+            {item.specialDateLabel ?? ''}
+          </text>
+          <text
+            x="7"
+            y={ENV_H * 0.7 + 1}
             textAnchor="start"
             fontSize="7.5"
             fill="#7a5a00"
@@ -356,7 +373,7 @@ export default function SpecialLetter({
           </text>
           <text
             x="7"
-            y={ENV_H * 0.7 + 11}
+            y={ENV_H * 0.7 + 10}
             textAnchor="start"
             fontSize="7.5"
             fill="#7a5a00"
@@ -364,7 +381,7 @@ export default function SpecialLetter({
             fontWeight="700"
             opacity="0.85"
           >
-            {`Para: ${item.to}  •  ${item.specialDateLabel ?? ''}`}
+            {`Para: ${item.to}`}
           </text>
         </svg>
 
