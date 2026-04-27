@@ -56,7 +56,6 @@ export default function SpecialLetter({
   const ENV_H = 70
 
   const canOpen = isToday(item.specialDateMmdd)
-  const isReceiver = !isOwner
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
