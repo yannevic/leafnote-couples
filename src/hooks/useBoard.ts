@@ -2,19 +2,28 @@ import { useEffect, useCallback, useRef } from 'react'
 import { ref, onValue, set, remove, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { AnyBoardItem } from '../types/board'
-
-const BOARD_PATH = 'board/items'
+import { boardItemsPath } from '../lib/boards'
 
 export function useBoard(
   _items: AnyBoardItem[],
-  setItems: React.Dispatch<React.SetStateAction<AnyBoardItem[]>>
+  setItems: React.Dispatch<React.SetStateAction<AnyBoardItem[]>>,
+  boardId: string
 ) {
   const loaded = useRef(false)
   const localIds = useRef<Set<string>>(new Set())
   const deletedIds = useRef<Set<string>>(new Set())
 
+  // Reseta estado interno quando muda de mural
   useEffect(() => {
-    const boardRef = ref(db, BOARD_PATH)
+    loaded.current = false
+    localIds.current = new Set()
+    deletedIds.current = new Set()
+    setItems([])
+  }, [boardId, setItems])
+
+  useEffect(() => {
+    const path = boardItemsPath(boardId)
+    const boardRef = ref(db, path)
 
     const unsubscribe = onValue(boardRef, (snapshot) => {
       const data = snapshot.val() as Record<string, AnyBoardItem> | null
@@ -31,36 +40,44 @@ export function useBoard(
     })
 
     return () => off(boardRef, 'value', unsubscribe)
-  }, [setItems])
+  }, [boardId, setItems])
 
-  const saveItem = useCallback((item: AnyBoardItem) => {
-    localIds.current.add(item.id)
-    const itemRef = ref(db, `${BOARD_PATH}/${item.id}`)
-    const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
-    set(itemRef, clean).catch((err: unknown) => {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'message' in err
-            ? String((err as { message: unknown }).message)
-            : String(err)
-      console.error('useBoard/saveItem:', msg)
-    })
-  }, [])
+  const saveItem = useCallback(
+    (item: AnyBoardItem) => {
+      localIds.current.add(item.id)
+      const path = boardItemsPath(boardId)
+      const itemRef = ref(db, `${path}/${item.id}`)
+      const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
+      set(itemRef, clean).catch((err: unknown) => {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : typeof err === 'object' && err !== null && 'message' in err
+              ? String((err as { message: unknown }).message)
+              : String(err)
+        console.error('useBoard/saveItem:', msg)
+      })
+    },
+    [boardId]
+  )
 
-  const deleteItem = useCallback((id: string) => {
-    deletedIds.current.add(id)
-    const itemRef = ref(db, `${BOARD_PATH}/${id}`)
-    remove(itemRef).catch((err: unknown) => {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'message' in err
-            ? String((err as { message: unknown }).message)
-            : String(err)
-      console.error('useBoard/deleteItem:', msg)
-    })
-  }, [])
+  const deleteItem = useCallback(
+    (id: string) => {
+      deletedIds.current.add(id)
+      const path = boardItemsPath(boardId)
+      const itemRef = ref(db, `${path}/${id}`)
+      remove(itemRef).catch((err: unknown) => {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : typeof err === 'object' && err !== null && 'message' in err
+              ? String((err as { message: unknown }).message)
+              : String(err)
+        console.error('useBoard/deleteItem:', msg)
+      })
+    },
+    [boardId]
+  )
 
   const trashItem = useCallback((id: string) => {
     deletedIds.current.add(id)

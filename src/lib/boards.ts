@@ -1,0 +1,53 @@
+import { ref, push, set, remove, onValue, off } from 'firebase/database'
+import { db } from './firebase'
+
+export interface BoardMeta {
+  id: string
+  name: string
+  createdAt: number
+  createdBy: string
+}
+
+export const DEFAULT_BOARD_ID = 'default'
+
+export function boardItemsPath(boardId: string): string {
+  if (boardId === DEFAULT_BOARD_ID) return 'board/items'
+  return `boards/${boardId}/items`
+}
+
+export function subscribeBoards(callback: (boards: BoardMeta[]) => void): () => void {
+  const boardsRef = ref(db, 'boards/_meta')
+  const handler = onValue(boardsRef, (snap) => {
+    const val = snap.val() ?? {}
+    const list: BoardMeta[] = Object.values(val as Record<string, BoardMeta>).sort(
+      (a, b) => a.createdAt - b.createdAt
+    )
+    callback(list)
+  })
+  return () => off(boardsRef, 'value', handler)
+}
+
+export async function createBoard(name: string, createdBy: string): Promise<string> {
+  const metaRef = ref(db, 'boards/_meta')
+  const newRef = push(metaRef)
+  const id = newRef.key!
+  const meta: BoardMeta = {
+    id,
+    name: name.trim(),
+    createdAt: Date.now(),
+    createdBy,
+  }
+  await set(newRef, meta)
+  return id
+}
+
+export async function deleteBoard(boardId: string): Promise<void> {
+  if (boardId === DEFAULT_BOARD_ID) return
+  await remove(ref(db, `boards/_meta/${boardId}`))
+  await remove(ref(db, `boards/${boardId}`))
+}
+
+export async function renameBoard(boardId: string, name: string): Promise<void> {
+  if (boardId === DEFAULT_BOARD_ID) return
+  await set(ref(db, `boards/_meta/${boardId}/name`), name.trim())
+}

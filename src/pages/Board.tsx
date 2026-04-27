@@ -39,6 +39,7 @@ import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
 import { Mail } from 'lucide-react'
 import { useSpecialDates } from '../hooks/useSpecialDates'
+import { DEFAULT_BOARD_ID } from '../lib/boards'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -78,7 +79,7 @@ function sendBackward(items: AnyBoardItem[], id: string): AnyBoardItem[] {
   })
 }
 
-export default function Board() {
+export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [trashedItems, setTrashedItems] = useState<AnyBoardItem[]>([])
@@ -90,7 +91,7 @@ export default function Board() {
     deleteItem,
     trashItem,
     restoreItem: restoreFromDeleted,
-  } = useBoard(items, setItems)
+  } = useBoard(items, setItems, activeBoardId)
   const boardRef = useRef<HTMLDivElement>(null)
 
   const uid = user?.uid ?? 'anon'
@@ -575,7 +576,9 @@ export default function Board() {
               letterSpacing: '0.02em',
             }}
           >
-            clique no mural pra adicionar algo 🌿
+            {activeBoardId === DEFAULT_BOARD_ID
+              ? 'clique no mural pra adicionar algo 🌿'
+              : 'mural vazio — clique pra adicionar algo 🌿'}
           </p>
         </div>
       )}

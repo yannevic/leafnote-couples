@@ -1,7 +1,24 @@
 import { useState, useEffect } from 'react'
+import BoardSwitcher from './BoardSwitcher'
+import type { BoardMeta } from '../lib/boards'
+
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
-export default function TitleBar() {
+interface TitleBarProps {
+  extraBoards: BoardMeta[]
+  activeBoardId: string
+  onSwitchBoard: (id: string) => void
+  onAddBoard: (name: string) => void
+  onRemoveBoard: (id: string) => void
+}
+
+export default function TitleBar({
+  extraBoards,
+  activeBoardId,
+  onSwitchBoard,
+  onAddBoard,
+  onRemoveBoard,
+}: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
   const [now, setNow] = useState(new Date())
@@ -47,8 +64,8 @@ export default function TitleBar() {
         } as React.CSSProperties
       }
     >
-      {/* Esquerda — logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 110 }}>
+      {/* Esquerda — logo + switcher */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 110 }}>
         <img
           src={icon}
           alt="leafnote"
@@ -77,6 +94,18 @@ export default function TitleBar() {
             v{version}
           </span>
         )}
+
+        {/* Separador */}
+        <span style={{ color: 'rgba(196,149,106,0.3)', fontSize: 12, marginLeft: 2 }}>|</span>
+
+        {/* Board switcher */}
+        <BoardSwitcher
+          extraBoards={extraBoards}
+          activeBoardId={activeBoardId}
+          onSwitch={onSwitchBoard}
+          onAdd={onAddBoard}
+          onRemove={onRemoveBoard}
+        />
       </div>
 
       {/* Centro — data e hora */}

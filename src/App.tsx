@@ -5,6 +5,34 @@ import { auth } from './lib/firebase'
 import Board from './pages/Board'
 import Login from './pages/Login'
 import TitleBar from './components/TitleBar'
+import { useBoards } from './hooks/useBoards'
+
+function AppInner({ user }: { user: User }) {
+  const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
+    user.uid
+  )
+
+  return (
+    <div className="fixed inset-0 flex flex-col">
+      <TitleBar
+        extraBoards={extraBoards}
+        activeBoardId={activeBoardId}
+        onSwitchBoard={setActiveBoardId}
+        onAddBoard={addBoard}
+        onRemoveBoard={removeBoard}
+      />
+      <div className="flex-1 overflow-hidden">
+        <HashRouter>
+          <Routes>
+            <Route path="/login" element={<Navigate to="/board" replace />} />
+            <Route path="/board" element={<Board activeBoardId={activeBoardId} />} />
+            <Route path="*" element={<Navigate to="/board" replace />} />
+          </Routes>
+        </HashRouter>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -21,7 +49,13 @@ function App() {
   if (authLoading) {
     return (
       <div className="fixed inset-0 flex flex-col" style={{ background: '#fdf6f0' }}>
-        <TitleBar />
+        <TitleBar
+          extraBoards={[]}
+          activeBoardId="default"
+          onSwitchBoard={() => {}}
+          onAddBoard={() => {}}
+          onRemoveBoard={() => {}}
+        />
         <div className="flex-1 flex items-center justify-center">
           <span className="text-3xl animate-spin">🌸</span>
         </div>
@@ -29,29 +63,29 @@ function App() {
     )
   }
 
-  return (
-    <div className="fixed inset-0 flex flex-col">
-      <TitleBar />
-      <div className="flex-1 overflow-hidden">
-        <HashRouter>
-          <Routes>
-            <Route
-              path="/login"
-              element={user !== null ? <Navigate to="/board" replace /> : <Login />}
-            />
-            <Route
-              path="/board"
-              element={user !== null ? <Board /> : <Navigate to="/login" replace />}
-            />
-            <Route
-              path="*"
-              element={<Navigate to={user !== null ? '/board' : '/login'} replace />}
-            />
-          </Routes>
-        </HashRouter>
+  if (user === null) {
+    return (
+      <div className="fixed inset-0 flex flex-col">
+        <TitleBar
+          extraBoards={[]}
+          activeBoardId="default"
+          onSwitchBoard={() => {}}
+          onAddBoard={() => {}}
+          onRemoveBoard={() => {}}
+        />
+        <div className="flex-1 overflow-hidden">
+          <HashRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </HashRouter>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return <AppInner user={user} />
 }
 
 export default App
