@@ -62,6 +62,7 @@ interface Props {
   onBringForward: (id: string) => void
   onSendBackward: (id: string) => void
   onFocus: (id: string) => void
+  onOpenModal: (item: LetterItem) => void
   onContextMenu?: (e: React.MouseEvent) => void
 }
 
@@ -77,10 +78,10 @@ export default function Letter({
   onBringForward,
   onSendBackward,
   onFocus,
+  onOpenModal,
   onContextMenu,
 }: Props) {
   const [opening, setOpening] = useState(false)
-  const [showModal, setShowModal] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
 
@@ -127,10 +128,10 @@ export default function Letter({
       setTimeout(() => {
         onUpdate(item.id, { opened: true, openedAt: new Date().toISOString() })
         setOpening(false)
-        setShowModal(true)
+        onOpenModal(item)
       }, 900)
     } else {
-      setShowModal(true)
+      onOpenModal(item)
     }
   }
 
@@ -311,17 +312,6 @@ export default function Letter({
           </div>
         )}
       </div>
-
-      {showModal && (
-        <LetterModal
-          item={item}
-          currentUid={currentUid}
-          displayName={displayName}
-          otherName={otherName}
-          onUpdate={onUpdate}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </>
   )
 }
@@ -359,7 +349,7 @@ function CtxBtn({
   )
 }
 
-function LetterModal({
+export function LetterModal({
   item,
   currentUid,
   displayName,
@@ -399,7 +389,7 @@ function LetterModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(44,20,8,0.45)',
-        zIndex: 200,
+        zIndex: 999999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

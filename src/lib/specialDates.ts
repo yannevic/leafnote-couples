@@ -48,7 +48,7 @@ export function getAvailableDates(
   myNick: string,
   partnerNick: string
 ) {
-  const result: { key: string; label: string; mmdd: string }[] = []
+  const result: { key: string; label: string; mmdd: string; dayOnly?: boolean }[] = []
 
   Object.entries(FIXED_DATES).forEach(([key, mmdd]) => {
     result.push({ key, label: DATE_LABELS[key], mmdd })
@@ -71,11 +71,21 @@ export function getAvailableDates(
   }
 
   if (dates.anniversary?.length >= 5)
-    result.push({ key: 'anniversary', label: DATE_LABELS.anniversary, mmdd: dates.anniversary })
+    result.push({
+      key: 'anniversary',
+      label: DATE_LABELS.anniversary,
+      mmdd: dates.anniversary,
+      dayOnly: true,
+    })
   if (dates.metDate?.length >= 5)
-    result.push({ key: 'metDate', label: DATE_LABELS.metDate, mmdd: dates.metDate })
+    result.push({ key: 'metDate', label: DATE_LABELS.metDate, mmdd: dates.metDate, dayOnly: true })
   if (dates.datingDate?.length >= 5)
-    result.push({ key: 'datingDate', label: DATE_LABELS.datingDate, mmdd: dates.datingDate })
+    result.push({
+      key: 'datingDate',
+      label: DATE_LABELS.datingDate,
+      mmdd: dates.datingDate,
+      dayOnly: true,
+    })
 
   return result
 }
@@ -90,6 +100,13 @@ export function isToday(ddmm: string) {
   const todayMm = String(now.getMonth() + 1).padStart(2, '0')
   const todayDd = String(now.getDate()).padStart(2, '0')
   return dd === todayDd && mm === todayMm
+}
+
+export function isTodayDay(ddmmaaaa: string) {
+  if (!ddmmaaaa) return false
+  const dd = ddmmaaaa.split('-')[0]
+  const todayDd = String(new Date().getDate()).padStart(2, '0')
+  return dd === todayDd
 }
 
 export function formatMmdd(ddmm: string) {

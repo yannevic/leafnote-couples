@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import type { SpecialLetterItem } from '../types/board'
 import { CARD_MODELS } from '../assets/letters/index'
-import { isToday, formatMmdd } from '../lib/specialDates'
+import { isToday, formatMmdd, isTodayDay } from '../lib/specialDates'
 
 const LAYOUT_TEXT_AREA = {
   A: { top: '30%', bottom: '22%', left: '20%', right: '10%' },
@@ -21,6 +21,7 @@ interface Props {
   editMode: boolean
   zIndex: number
   onOpen: (id: string) => void
+  onOpenModal: (item: SpecialLetterItem) => void
   onUpdate: (id: string, data: Partial<SpecialLetterItem>) => void
   onDelete: (id: string) => void
   onBringForward: (id: string) => void
@@ -35,6 +36,7 @@ export default function SpecialLetter({
   editMode,
   zIndex,
   onOpen,
+  onOpenModal,
   onUpdate,
   onDelete,
   onBringForward,
@@ -44,7 +46,6 @@ export default function SpecialLetter({
 }: Props) {
   const [animating, setAnimating] = useState(false)
   const [showCard, setShowCard] = useState(false)
-  const [showModal, setShowModal] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showBlocked, setShowBlocked] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
@@ -55,7 +56,7 @@ export default function SpecialLetter({
   const ENV_W = 110
   const ENV_H = 70
 
-  const canOpen = isToday(item.specialDateMmdd)
+  const canOpen = item.dayOnly ? isTodayDay(item.specialDateMmdd) : isToday(item.specialDateMmdd)
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -109,7 +110,7 @@ export default function SpecialLetter({
 
     // carta já aberta — abre modal direto
     if (showCard) {
-      setShowModal(true)
+      onOpenModal(item)
       return
     }
 
@@ -478,17 +479,6 @@ export default function SpecialLetter({
           </div>
         )}
       </div>
-
-      {/* Modal com PNG da carta */}
-      {showModal && model && (
-        <SpecialLetterModal
-          item={item}
-          model={model}
-          size={size}
-          area={LAYOUT_TEXT_AREA[item.layout]}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </>
   )
 }

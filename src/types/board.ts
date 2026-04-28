@@ -86,4 +86,5 @@ export interface SpecialLetterItem extends BoardItem {
   specialDate: string
   specialDateMmdd: string
   specialDateLabel: string
+  dayOnly?: boolean
 }
