@@ -13,15 +13,11 @@ export function useBoard(
   const localIds = useRef<Set<string>>(new Set())
   const deletedIds = useRef<Set<string>>(new Set())
 
-  // Reseta estado interno quando muda de mural
   useEffect(() => {
     loaded.current = false
     localIds.current = new Set()
     deletedIds.current = new Set()
-    setItems([])
-  }, [boardId, setItems])
 
-  useEffect(() => {
     const path = boardItemsPath(boardId)
     const boardRef = ref(db, path)
 
@@ -29,7 +25,7 @@ export function useBoard(
       const data = snapshot.val() as Record<string, AnyBoardItem> | null
 
       if (!data) {
-        if (loaded.current) setItems([])
+        setItems([])
         loaded.current = true
         return
       }
@@ -87,5 +83,9 @@ export function useBoard(
     deletedIds.current.delete(id)
   }, [])
 
-  return { loaded: loaded.current, saveItem, deleteItem, trashItem, restoreItem }
+  const markMoving = useCallback((id: string) => {
+    deletedIds.current.add(id)
+  }, [])
+
+  return { loaded: loaded.current, saveItem, deleteItem, trashItem, restoreItem, markMoving }
 }

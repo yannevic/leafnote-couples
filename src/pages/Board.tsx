@@ -104,6 +104,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     deleteItem,
     trashItem,
     restoreItem: restoreFromDeleted,
+    markMoving,
   } = useBoard(items, setItems, activeBoardId)
   const boardRef = useRef<HTMLDivElement>(null)
 
@@ -128,7 +129,15 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [showSpecialLetter, setShowSpecialLetter] = useState(false)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
-  const otherBoards = extraBoards.filter((b: BoardMeta) => b.id !== activeBoardId)
+  const defaultBoard: BoardMeta = {
+    id: DEFAULT_BOARD_ID,
+    name: 'mural principal',
+    createdAt: 0,
+    createdBy: '',
+  }
+  const allBoards =
+    activeBoardId === DEFAULT_BOARD_ID ? extraBoards : [defaultBoard, ...extraBoards]
+  const otherBoards = allBoards.filter((b: BoardMeta) => b.id !== activeBoardId)
 
   const [contextMenu, setContextMenu] = useState<{
     x: number
@@ -150,9 +159,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     async (item: AnyBoardItem, toBoardId: string) => {
       setContextMenu(null)
       setItems((prev) => prev.filter((i) => i.id !== item.id))
+      markMoving(item.id)
       await moveItemToBoard(item, activeBoardId, toBoardId)
     },
-    [activeBoardId, setItems]
+    [activeBoardId, markMoving]
   )
 
   const handleMoveByType = useCallback(
