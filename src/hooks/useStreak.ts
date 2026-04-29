@@ -1,5 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
-import { subscribeStreak, setStreakStart, resetStreak, calcDays } from '../lib/streak'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import {
+  subscribeStreak,
+  setStreakStart,
+  resetStreak,
+  calcDays,
+  checkSpecialSeedReward,
+  claimSpecialSeedReward,
+} from '../lib/streak'
 import type { StreakData } from '../lib/streak'
 
 export function useStreak() {
@@ -15,6 +22,18 @@ export function useStreak() {
   }, [])
 
   const days = streakData?.startDate ? calcDays(streakData.startDate) : 0
+  const checkedRef = useRef(false)
+
+  useEffect(() => {
+    if (checkedRef.current || days < 30) return
+    checkedRef.current = true
+    checkSpecialSeedReward(days).then(async (eligible) => {
+      if (!eligible) return
+      const { addSeed } = await import('../lib/garden')
+      await addSeed('especial')
+      await claimSpecialSeedReward()
+    })
+  }, [days])
 
   const setStart = useCallback(async (iso: string) => {
     await setStreakStart(iso)

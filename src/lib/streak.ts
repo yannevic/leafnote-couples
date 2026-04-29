@@ -30,6 +30,7 @@ export async function resetStreak(): Promise<void> {
     startDate: now,
     resetAt: now,
   })
+  await set(ref(db, 'garden/specialSeedGiven'), false)
 }
 
 export function calcDays(startDate: string): number {
@@ -37,4 +38,17 @@ export function calcDays(startDate: string): number {
   const now = new Date()
   const diff = now.getTime() - start.getTime()
   return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+const SPECIAL_SEED_GIVEN_PATH = 'garden/specialSeedGiven'
+
+export async function checkSpecialSeedReward(days: number): Promise<boolean> {
+  if (days < 30) return false
+  const snap = await get(ref(db, SPECIAL_SEED_GIVEN_PATH))
+  if (snap.val() === true) return false
+  return true
+}
+
+export async function claimSpecialSeedReward(): Promise<void> {
+  await set(ref(db, SPECIAL_SEED_GIVEN_PATH), true)
 }
