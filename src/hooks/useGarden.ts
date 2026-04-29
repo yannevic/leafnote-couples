@@ -1,27 +1,135 @@
 import { useState, useEffect } from 'react'
-import { PlantData, subscribePlant, waterPlant, checkWilt } from '../lib/garden'
+import { ref, onValue, off } from 'firebase/database'
+import { db } from '../lib/firebase'
+import {
+  PlantData,
+  SeedData,
+  StageEvent,
+  FlowerType,
+  subscribePlants,
+  subscribeSeeds,
+  subscribeStageEvents,
+  subscribePanicMode,
+  subscribeWelcomeSeedGiven,
+  waterPlant,
+  plantSeed,
+  addSeed,
+  checkWiltAll,
+  canPlantToday,
+  saveEventRoll,
+  saveWelcomeRoll,
+  setPanicMode,
+} from '../lib/garden'
 
 export function useGarden(uid: string, partnerUid: string) {
-  const [plant, setPlant] = useState<PlantData | null>(null)
+  const [plants, setPlants] = useState<PlantData[]>([])
+  const [seeds, setSeeds] = useState<SeedData[]>([])
+  const [stageEvents, setStageEvents] = useState<StageEvent[]>([])
+  const [panicMode, setPanicModeState] = useState(false)
+  const [welcomeGiven, setWelcomeGiven] = useState(true)
+  const [welcomeRolls, setWelcomeRolls] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = subscribePlant((data) => {
-      setPlant(data)
+    const unsubPlants = subscribePlants((data) => {
+      setPlants(data)
       setLoading(false)
     })
-    return unsub
+    const unsubSeeds = subscribeSeeds(setSeeds)
+    const unsubEvents = subscribeStageEvents(setStageEvents)
+    const unsubPanic = subscribePanicMode(setPanicModeState)
+    const unsubWelcome = subscribeWelcomeSeedGiven(setWelcomeGiven)
+    checkWiltAll()
+    return () => {
+      unsubPlants()
+      unsubSeeds()
+      unsubEvents()
+      unsubPanic()
+      unsubWelcome()
+    }
   }, [])
 
+  // Subscribe nos welcomeRolls
   useEffect(() => {
-    checkWilt()
+    const r = ref(db, 'garden/welcomeRolls')
+    const handler = onValue(r, (snap) => {
+      setWelcomeRolls((snap.val() as Record<string, number>) ?? {})
+    })
+    return () => off(r, 'value', handler)
   }, [])
 
-  const water = async () => {
-    await waterPlant(uid, partnerUid)
+  const water = async (plantId: string) => {
+    await waterPlant(plantId, uid, partnerUid, panicMode)
   }
 
-  const alreadyWatered = plant ? plant.water[uid] === true : false
+  const plant = async (seedId: string, flowerType: FlowerType) => {
+    await plantSeed(seedId, flowerType)
+  }
 
-  return { plant, loading, water, alreadyWatered }
+  const addNewSeed = async (flowerType: FlowerType) => {
+    await addSeed(flowerType)
+  }
+
+  const alreadyWatered = (plantId: string) => {
+    const p = plants.find((x) => x.id === plantId)
+    return p ? (p.water ?? {})[uid] === true : false
+  }
+
+  const partnerWatered = (plantId: string) => {
+    const p = plants.find((x) => x.id === plantId)
+    return p ? (p.water ?? {})[partnerUid] === true : false
+  }
+
+  // Eventos onde este uid ainda não rolou
+  const pendingEvents = stageEvents.filter((e) => e.rolls?.[uid] == null)
+  const currentEvent = pendingEvents[0] ?? null
+
+  const rollForEvent = async (
+    eventId: string,
+    roll: number
+  ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
+    return saveEventRoll(eventId, uid, roll, partnerUid, panicMode)
+  }
+
+  const rollForWelcome = async (
+    roll: number
+  ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
+    return saveWelcomeRoll(uid, roll, partnerUid, panicMode)
+  }
+
+  const togglePanic = async () => {
+    await setPanicMode(!panicMode)
+  }
+
+  const partnerRolledEvent = (eventId: string) => {
+    const event = stageEvents.find((e) => e.id === eventId)
+    return event ? event.rolls?.[partnerUid] != null : false
+  }
+
+  const canPlant = canPlantToday(plants)
+  const welcomePending = !welcomeGiven
+  const partnerRolledWelcome = welcomeRolls[partnerUid] != null
+  const iAlreadyRolledWelcome = welcomeRolls[uid] != null
+
+  return {
+    plants,
+    seeds,
+    loading,
+    water,
+    plant,
+    addNewSeed,
+    alreadyWatered,
+    partnerWatered,
+    canPlant,
+    currentEvent,
+    pendingEvents,
+    rollForEvent,
+    rollForWelcome,
+    panicMode,
+    togglePanic,
+    welcomePending,
+    partnerRolledEvent,
+    partnerRolledWelcome,
+    iAlreadyRolledWelcome,
+  }
 }

@@ -151,9 +151,11 @@ export default function Dice({ uid, displayName, partnerName, shared = false }: 
       frame += 1
       if (frame >= frames) {
         clearInterval(interval)
-        setLocalValues(
-          Array.from({ length: localDiceCount }, () => Math.floor(Math.random() * 6) + 1)
+        const finalValues = Array.from(
+          { length: localDiceCount },
+          () => Math.floor(Math.random() * 6) + 1
         )
+        setLocalValues(finalValues)
         setLocalRolling(false)
         setLocalHasRolled(true)
       }

@@ -39,6 +39,7 @@ import SpecialLetter from '../components/SpecialLetter'
 import type { SpecialLetterItem } from '../types/board'
 import { Mail } from 'lucide-react'
 import { useSpecialDates } from '../hooks/useSpecialDates'
+import GardenView from '../components/Garden/GardenView'
 import { DEFAULT_BOARD_ID, moveItemToBoard, moveItemsByTypeToBoard, BoardMeta } from '../lib/boards'
 import { useBoards } from '../hooks/useBoards'
 import { CARD_MODELS } from '../assets/letters/index'
@@ -116,6 +117,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [nickLoading, setNickLoading] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [showMovies, setShowMovies] = useState(false)
+  const [showGarden, setShowGarden] = useState(false)
   const [showWidgets, setShowWidgets] = useState(false)
   const [activeWidget, setActiveWidget] = useState<'dice' | 'timer' | 'roulette'>('dice')
   const [sharedDice, setSharedDice] = useState(false)
@@ -658,8 +660,9 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
         <MoodWidget uid={uid} partnerUid={partnerUid} />
 
-        {/* Botão jardim — desativado temporariamente */}
+        {/* Botão jardim */}
         <div
+          onClick={() => setShowGarden(true)}
           style={{
             position: 'fixed',
             bottom: 24,
@@ -674,12 +677,12 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             alignItems: 'center',
             justifyContent: 'center',
             color: '#2d4a2d',
-            cursor: 'not-allowed',
+            cursor: 'pointer',
             boxShadow: '0 3px 10px rgba(79,160,79,0.2)',
             userSelect: 'none',
-            opacity: 0.45,
+            transition: 'transform 0.15s',
           }}
-          title="jardim em breve 🌱"
+          title="jardim 🌱"
         >
           <Sprout size={22} strokeWidth={2} />
         </div>
@@ -957,6 +960,15 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
             displayName={displayName}
             partnerName={otherName}
             onClose={() => setShowMovies(false)}
+          />
+        )}
+
+        {showGarden && (
+          <GardenView
+            uid={uid}
+            partnerUid={partnerUid ?? ''}
+            partnerName={otherName}
+            onClose={() => setShowGarden(false)}
           />
         )}
 

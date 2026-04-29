@@ -1,570 +1,458 @@
 import { useState } from 'react'
+import { ChevronLeft, ChevronRight, Sprout, X, AlertTriangle } from 'lucide-react'
 import { useGarden } from '../../hooks/useGarden'
-import { initPlant, rollDice, getFlowerFromSum, FLOWERS, RARITY_COLORS } from '../../lib/garden'
+import { FLOWERS, FlowerType, SeedData } from '../../lib/garden'
 import Plant from './Plant'
-import WaterButton from './WaterButton'
+import FlowerModal from './FlowerModal'
+import SeedRollModal from './SeedRollModal'
 
-interface Props {
+interface GardenViewProps {
   uid: string
   partnerUid: string
-  displayName: string
   partnerName: string
-  onBack: () => void
+  onClose: () => void
 }
 
-export default function GardenView({ uid, partnerUid, displayName, partnerName, onBack }: Props) {
-  const { plant, loading, water, alreadyWatered } = useGarden(uid, partnerUid)
-  const [showDice, setShowDice] = useState(false)
-  const [myRoll, setMyRoll] = useState<number | null>(null)
-  const [partnerRoll, setPartnerRoll] = useState<number | null>(null)
-  const [rolling, setRolling] = useState(false)
+const PLANTS_PER_PAGE = 4
 
-  const partnerWatered = plant ? plant.water[partnerUid] === true : false
+export default function GardenView({ uid, partnerUid, partnerName, onClose }: GardenViewProps) {
+  const {
+    plants,
+    seeds,
+    loading,
+    water,
+    plant,
+    alreadyWatered,
+    partnerWatered,
+    canPlant,
+    currentEvent,
+    rollForEvent,
+    rollForWelcome,
+    panicMode,
+    togglePanic,
+    welcomePending,
+    partnerRolledEvent,
+    partnerRolledWelcome,
+    iAlreadyRolledWelcome,
+  } = useGarden(uid, partnerUid)
 
-  const handleRollMyDice = () => {
-    setRolling(true)
-    setTimeout(() => {
-      setMyRoll(rollDice())
-      setRolling(false)
-    }, 600)
+  const [page, setPage] = useState(0)
+  const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
+  const [showSeedModal, setShowSeedModal] = useState(false)
+  const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
+  const [seedRollDone, setSeedRollDone] = useState(false)
+
+  const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
+  const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
+  const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
+
+  const handleWater = async () => {
+    if (!selectedPlantId) return
+    await water(selectedPlantId)
   }
 
-  const handleRollPartnerDice = () => {
-    setRolling(true)
-    setTimeout(() => {
-      setPartnerRoll(rollDice())
-      setRolling(false)
-    }, 600)
+  const handlePlant = async () => {
+    if (!plantingSeed || !canPlant) return
+    await plant(plantingSeed.id, plantingSeed.flowerType)
+    setPlantingSeed(null)
+    setShowSeedModal(false)
   }
 
-  const handleConfirmFlower = async () => {
-    if (myRoll === null || partnerRoll === null) return
-    let sum = myRoll + partnerRoll
-    if (sum === 10) sum = 9
-    const flowerType = getFlowerFromSum(sum)
-    await initPlant(flowerType)
-    setShowDice(false)
-  }
+  // Modal de roll ativo: welcome ou evento de estágio
+  const showWelcomeRoll = welcomePending
+  const showEventRoll = !showWelcomeRoll && currentEvent != null
 
-  const stageLabels = ['terra vazia', 'semente', 'broto', 'jovem', 'adulta', 'florescida']
-
-  if (loading) {
-    return (
+  return (
+    <>
       <div
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'linear-gradient(160deg, #f0f7f0 0%, #e8f5e8 60%, #f5f0e8 100%)',
+          background: 'rgba(0,0,0,0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          zIndex: 200,
         }}
+        onClick={onClose}
       >
-        <span style={{ fontSize: 36, animation: 'spin 1s linear infinite' }}>🌱</span>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'linear-gradient(160deg, #f0f7f0 0%, #e8f5e8 60%, #f5f0e8 100%)',
-        fontFamily: 'Baloo 2, sans-serif',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        overflowY: 'auto',
-      }}
-    >
-      {/* topo */}
-      <div
-        style={{
-          width: '100%',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <button
-          onClick={onBack}
+        <div
+          onClick={(e) => e.stopPropagation()}
           style={{
-            background: 'none',
-            border: '1.5px solid #a8d8a8',
-            borderRadius: 10,
-            padding: '6px 14px',
-            color: '#2d4a2d',
+            background: 'var(--color-bark-100)',
+            border: '2px solid var(--color-wood-300)',
+            borderRadius: 24,
+            width: 600,
+            maxWidth: '95vw',
+            padding: '28px 24px 24px',
             fontFamily: 'Baloo 2, sans-serif',
-            fontWeight: 700,
-            fontSize: 12,
-            cursor: 'pointer',
+            boxShadow: '0 12px 48px rgba(0,0,0,0.22)',
+            position: 'relative',
           }}
         >
-          voltar ao mural
-        </button>
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#2d4a2d' }}>🌿 jardim</div>
-        <div style={{ width: 80 }} />
-      </div>
-
-      {/* sem planta ainda */}
-      {!plant && !showDice && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 16,
-            marginTop: 0,
-            flex: 1,
-            justifyContent: 'center',
-            padding: '0 40px',
-            textAlign: 'center',
-          }}
-        >
-          <span style={{ fontSize: 64 }}>🌱</span>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#2d4a2d' }}>
-            o jardim está vazio!
-          </div>
-          <div style={{ fontSize: 16, color: '#4a7a4a', lineHeight: 1.6 }}>
-            sorteiem juntos qual flor vai nascer aqui. cada um joga um dado e a soma define a flor!
-          </div>
-          <button
-            onClick={() => setShowDice(true)}
-            style={{
-              marginTop: 8,
-              padding: '10px 28px',
-              borderRadius: 14,
-              background: 'linear-gradient(180deg, #d4956a 0%, #b8744e 100%)',
-              border: '2px solid #8b5a2a',
-              color: '#5a2e0e',
-              fontWeight: 800,
-              fontSize: 16,
-              cursor: 'pointer',
-              fontFamily: 'Baloo 2, sans-serif',
-              boxShadow: '0 3px 10px #8b5a2a44',
-            }}
-          >
-            sortear a flor 🎲
-          </button>
-        </div>
-      )}
-
-      {/* sorteio de dados */}
-      {!plant && showDice && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 20,
-            marginTop: 40,
-            padding: '0 40px',
-            textAlign: 'center',
-            maxWidth: 400,
-          }}
-        >
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#2d4a2d' }}>🎲 sorteio da flor</div>
-          <div style={{ fontSize: 15, color: '#4a7a4a' }}>
-            cada um joga seu dado — a soma define a flor!
-          </div>
-
-          <div
-            style={{ display: 'flex', gap: 24, alignItems: 'flex-start', justifyContent: 'center' }}
-          >
-            {/* meu dado */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 8,
-                width: 80,
-              }}
+          {/* Cabeçalho */}
+          <div className="flex items-center justify-between mb-5">
+            <h2
+              style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-leaf-950)' }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>{displayName}</div>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 12,
-                  background: '#fdf6f0',
-                  border: '2px solid #e8a0b0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 900,
-                  color: '#7a3040',
-                  boxShadow: '0 2px 8px rgba(44,20,8,0.1)',
-                }}
-              >
-                {myRoll !== null ? myRoll : '?'}
-              </div>
-              <div
-                style={{
-                  height: 32,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <button
-                  onClick={handleRollMyDice}
-                  disabled={myRoll !== null || rolling}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: 10,
-                    background:
-                      myRoll !== null ? '#e8f5e8' : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
-                    border: '1.5px solid #4a7a4a',
-                    color: myRoll !== null ? '#4a7a4a' : '#fff',
-                    fontWeight: 700,
-                    fontSize: 11,
-                    cursor: myRoll !== null ? 'default' : 'pointer',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  {myRoll !== null ? 'jogado!' : 'jogar'}
-                </button>
-              </div>
-            </div>
-
-            <div style={{ fontSize: 20, color: '#c87090', fontWeight: 800, marginTop: 44 }}>+</div>
-
-            {/* dado do parceiro */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 8,
-                width: 80,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#7a3040' }}>{partnerName}</div>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 12,
-                  background: '#fdf6f0',
-                  border: '2px solid #e8a0b0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 900,
-                  color: '#7a3040',
-                  boxShadow: '0 2px 8px rgba(44,20,8,0.1)',
-                }}
-              >
-                {partnerRoll !== null ? partnerRoll : '?'}
-              </div>
-              <div
-                style={{
-                  height: 32,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <button
-                  onClick={handleRollPartnerDice}
-                  disabled={partnerRoll !== null || rolling}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: 10,
-                    background:
-                      partnerRoll !== null
-                        ? '#e8f5e8'
-                        : 'linear-gradient(180deg, #7fb87f, #4a7a4a)',
-                    border: '1.5px solid #4a7a4a',
-                    color: partnerRoll !== null ? '#4a7a4a' : '#fff',
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: partnerRoll !== null ? 'default' : 'pointer',
-                    fontFamily: 'Baloo 2, sans-serif',
-                  }}
-                >
-                  {partnerRoll !== null ? 'jogado!' : 'jogar'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* resultado */}
-          {myRoll !== null && partnerRoll !== null && (
-            <div
-              style={{
-                background: '#fdf6f0',
-                border: '1.5px solid #e8a0b0',
-                borderRadius: 14,
-                padding: '14px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <div style={{ fontSize: 13, color: '#7a3040', fontWeight: 700 }}>
-                soma: {myRoll + partnerRoll > 10 ? 9 : myRoll + partnerRoll}
-              </div>
-              {(() => {
-                const sum = Math.min(myRoll + partnerRoll, 9)
-                const flower = FLOWERS[getFlowerFromSum(sum)]
-                return (
-                  <>
-                    <div style={{ fontSize: 28 }}>{flower.emoji}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#5a1028' }}>
-                      {flower.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: RARITY_COLORS[flower.rarity],
-                        background: '#fff0f5',
-                        borderRadius: 8,
-                        padding: '3px 10px',
-                        border: '1px solid #e8a0b0',
-                      }}
-                    >
-                      {flower.rarity}
-                    </div>
-                  </>
-                )
-              })()}
+              🪴 Jardim
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Toggle modo pânico */}
               <button
-                onClick={handleConfirmFlower}
+                onClick={togglePanic}
+                title={
+                  panicMode ? 'Modo pânico ativo — clique para desativar' : 'Ativar modo pânico'
+                }
                 style={{
-                  marginTop: 6,
-                  padding: '8px 24px',
-                  borderRadius: 12,
-                  background: 'linear-gradient(180deg, #d4956a, #b8744e)',
-                  border: '2px solid #8b5a2a',
-                  color: '#5a2e0e',
-                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  border: `1.5px solid ${panicMode ? '#c87090' : 'var(--color-wood-300)'}`,
+                  background: panicMode ? '#fce8f0' : 'transparent',
+                  color: panicMode ? '#c87090' : 'var(--color-bark-700)',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
                   fontSize: 12,
                   cursor: 'pointer',
-                  fontFamily: 'Baloo 2, sans-serif',
                 }}
               >
-                plantar essa flor!
+                <AlertTriangle size={13} />
+                {panicMode ? 'Pânico ON' : 'Pânico'}
+              </button>
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-bark-700)',
+                }}
+              >
+                <X size={20} />
               </button>
             </div>
-          )}
-
-          <button
-            onClick={() => {
-              setShowDice(false)
-              setMyRoll(null)
-              setPartnerRoll(null)
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#7a3040',
-              fontSize: 14,
-              cursor: 'pointer',
-              fontFamily: 'Baloo 2, sans-serif',
-              fontWeight: 600,
-            }}
-          >
-            cancelar
-          </button>
-        </div>
-      )}
-
-      {/* planta existente */}
-      {plant && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 16,
-            marginTop: 20,
-            padding: '0 20px',
-            width: '100%',
-            maxWidth: 700,
-          }}
-        >
-          {/* barrinha de rega */}
-          <div
-            style={{
-              width: '100%',
-              height: 6,
-              background: '#d8eed8',
-              borderRadius: 10,
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width:
-                  alreadyWatered && partnerWatered
-                    ? '100%'
-                    : alreadyWatered || partnerWatered
-                      ? '50%'
-                      : '0%',
-                background: 'linear-gradient(90deg, #60b8e8, #3a8abf)',
-                borderRadius: 10,
-                transition: 'width 0.6s ease',
-              }}
-            />
           </div>
 
-          {/* linha principal */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              gap: 24,
-            }}
-          >
-            {/* coluna esquerda */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                alignItems: 'flex-start',
-                minWidth: 120,
-              }}
-            >
+          {loading ? (
+            <div className="text-center py-10" style={{ color: 'var(--color-bark-700)' }}>
+              Carregando jardim...
+            </div>
+          ) : (
+            <>
+              {/* Prateleira */}
               <div
                 style={{
-                  background: '#fdf6f0',
-                  border: '1.5px solid #e8a0b0',
-                  borderRadius: 14,
-                  padding: '10px 14px',
-                  textAlign: 'left',
+                  background: 'var(--color-leaf-100)',
+                  border: '2px solid var(--color-wood-300)',
+                  borderRadius: 16,
+                  padding: '16px 8px 12px',
+                  marginBottom: 16,
+                  minHeight: 280,
                 }}
               >
-                <span style={{ fontSize: 22 }}>{FLOWERS[plant.flowerType]?.emoji}</span>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#5a1028' }}>
-                  {FLOWERS[plant.flowerType]?.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: RARITY_COLORS[FLOWERS[plant.flowerType]?.rarity],
-                  }}
-                >
-                  {FLOWERS[plant.flowerType]?.rarity}
-                </div>
+                {plants.length === 0 ? (
+                  <div
+                    className="flex flex-col items-center justify-center h-full"
+                    style={{ minHeight: 220, color: 'var(--color-leaf-600)', gap: 8 }}
+                  >
+                    <span style={{ fontSize: 40 }}>🌱</span>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>Nenhuma planta ainda</span>
+                    <span style={{ fontSize: 12 }}>Plante uma semente para começar!</span>
+                  </div>
+                ) : (
+                  <div className="flex items-end justify-center gap-6" style={{ minHeight: 240 }}>
+                    {visiblePlants.map((p) => (
+                      <Plant key={p.id} plant={p} onClick={() => setSelectedPlantId(p.id)} />
+                    ))}
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#4a7a4a' }}>
-                {stageLabels[plant.stage]}
-              </div>
-              <div style={{ fontSize: 10, color: '#7fb87f' }}>{plant.daysWatered} dias regados</div>
-            </div>
 
-            {/* planta centralizada */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <Plant plant={plant} />
-              {plant.wilted && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 370,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#f0e8e8',
-                    border: '1.5px solid #e8a0b0',
-                    borderRadius: 12,
-                    padding: '8px 18px',
-                    fontSize: 12,
-                    color: '#7a3040',
-                    fontFamily: 'Baloo 2, sans-serif',
-                    fontWeight: 700,
-                    textAlign: 'center',
-                    whiteSpace: 'nowrap',
-                    zIndex: 10,
-                  }}
-                >
-                  🥀 reguem juntos pra recuperar a plantinha!
+              {/* Setas de navegação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <button
+                    onClick={() => setPage((v) => Math.max(0, v - 1))}
+                    disabled={page === 0}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: page === 0 ? 'default' : 'pointer',
+                      opacity: page === 0 ? 0.3 : 1,
+                      color: 'var(--color-bark-700)',
+                    }}
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <span style={{ fontSize: 13, color: 'var(--color-bark-700)' }}>
+                    {page + 1} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((v) => Math.min(totalPages - 1, v + 1))}
+                    disabled={page === totalPages - 1}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: page === totalPages - 1 ? 'default' : 'pointer',
+                      opacity: page === totalPages - 1 ? 0.3 : 1,
+                      color: 'var(--color-bark-700)',
+                    }}
+                  >
+                    <ChevronRight size={22} />
+                  </button>
                 </div>
               )}
-            </div>
 
-            {/* coluna direita */}
-            <div
+              {/* Estoque de sementes */}
+              <div
+                style={{
+                  background: '#fff8f0',
+                  border: '1.5px solid var(--color-wood-300)',
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-bark-700)' }}>
+                    🌰 Sementes ({seeds.length})
+                  </span>
+                  <button
+                    onClick={() => setShowSeedModal(true)}
+                    disabled={seeds.length === 0 || !canPlant}
+                    style={{
+                      background: seeds.length > 0 && canPlant ? 'var(--color-leaf-600)' : '#ccc',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '4px 12px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: seeds.length > 0 && canPlant ? 'pointer' : 'default',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                    title={
+                      !canPlant
+                        ? 'Já plantou hoje'
+                        : seeds.length === 0
+                          ? 'Sem sementes'
+                          : 'Plantar semente'
+                    }
+                  >
+                    <Sprout size={14} />
+                    {!canPlant ? 'Já plantou hoje' : 'Plantar'}
+                  </button>
+                </div>
+
+                {seeds.length === 0 ? (
+                  <p style={{ fontSize: 12, color: 'var(--color-bark-700)', margin: 0 }}>
+                    Sementes são ganhas quando uma planta sobe de estágio!
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {seeds.map((s) => {
+                      const info = FLOWERS[s.flowerType]
+                      return (
+                        <span
+                          key={s.id}
+                          style={{
+                            background: 'var(--color-leaf-100)',
+                            borderRadius: 8,
+                            padding: '3px 10px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--color-leaf-950)',
+                          }}
+                        >
+                          {info.emoji} {info.name}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de detalhes da planta — fora do overlay */}
+      {selectedPlant && (
+        <FlowerModal
+          plant={selectedPlant}
+          uid={uid}
+          partnerUid={partnerUid}
+          partnerName={partnerName}
+          alreadyWatered={alreadyWatered(selectedPlant.id)}
+          partnerWatered={partnerWatered(selectedPlant.id)}
+          onWater={handleWater}
+          onClose={() => setSelectedPlantId(null)}
+        />
+      )}
+
+      {/* Modal welcome seed */}
+      {showWelcomeRoll && (
+        <SeedRollModal
+          isWelcome
+          panicMode={panicMode}
+          partnerName={partnerName}
+          partnerAlreadyRolled={partnerRolledWelcome}
+          iAlreadyRolled={iAlreadyRolledWelcome}
+          onRoll={rollForWelcome}
+          onClose={() => setSeedRollDone(true)}
+        />
+      )}
+
+      {/* Modal evento de estágio */}
+      {showEventRoll && currentEvent && (
+        <SeedRollModal
+          eventId={currentEvent.id}
+          plantName={currentEvent.plantName}
+          newStage={currentEvent.newStage}
+          panicMode={panicMode}
+          partnerName={partnerName}
+          partnerAlreadyRolled={partnerRolledEvent(currentEvent.id)}
+          iAlreadyRolled={false}
+          onRoll={(roll: number) => rollForEvent(currentEvent.id, roll)}
+          onClose={() => setSeedRollDone(true)}
+        />
+      )}
+
+      {/* Modal de escolha de semente para plantar */}
+      {showSeedModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 300,
+          }}
+          onClick={() => {
+            setShowSeedModal(false)
+            setPlantingSeed(null)
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--color-bark-100)',
+              border: '2px solid var(--color-wood-300)',
+              borderRadius: 18,
+              padding: '24px',
+              width: 320,
+              fontFamily: 'Baloo 2, sans-serif',
+            }}
+          >
+            <h3
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-                alignItems: 'center',
-                minWidth: 160,
-                background: '#fdf6f0',
-                border: '1.5px solid #a8d8a8',
-                borderRadius: 16,
-                padding: '16px 18px',
+                margin: '0 0 14px',
+                fontSize: 17,
+                fontWeight: 700,
+                color: 'var(--color-leaf-950)',
               }}
             >
-              {plant.stage < 5 && (
-                <div style={{ width: '100%' }}>
-                  <div
+              🌱 Escolha uma semente para plantar
+            </h3>
+            <div className="flex flex-col gap-2 mb-4">
+              {seeds.map((s) => {
+                const info = FLOWERS[s.flowerType]
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setPlantingSeed(s)}
                     style={{
-                      fontSize: 10,
-                      color: '#4a7a4a',
-                      fontWeight: 700,
-                      marginBottom: 4,
-                      textAlign: 'center',
-                    }}
-                  >
-                    próximo estágio
-                  </div>
-                  <div
-                    style={{
-                      height: 8,
-                      background: '#d8eed8',
+                      background: plantingSeed?.id === s.id ? 'var(--color-leaf-100)' : '#fff8f0',
+                      border:
+                        plantingSeed?.id === s.id
+                          ? '2px solid var(--color-leaf-600)'
+                          : '1.5px solid var(--color-wood-300)',
                       borderRadius: 10,
-                      overflow: 'hidden',
+                      padding: '8px 14px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'Baloo 2, sans-serif',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-leaf-950)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
                     }}
                   >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${((plant.daysWatered % 3) / 3) * 100}%`,
-                        background: 'linear-gradient(90deg, #7fb87f, #4a7a4a)',
-                        borderRadius: 10,
-                        transition: 'width 0.6s ease',
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{ fontSize: 10, color: '#7fb87f', marginTop: 3, textAlign: 'center' }}
-                  >
-                    {plant.daysWatered % 3}/3 dias
-                  </div>
-                </div>
-              )}
-
-              {plant.stage >= 5 && (
-                <div
-                  style={{ fontSize: 13, fontWeight: 800, color: '#7a3040', textAlign: 'center' }}
-                >
-                  florzinha crescida! 🌸
-                </div>
-              )}
-
-              <WaterButton
-                alreadyWatered={alreadyWatered}
-                partnerWatered={partnerWatered}
-                onWater={water}
-              />
+                    <span style={{ fontSize: 20 }}>{info.emoji}</span>
+                    <div>
+                      <div>{info.name}</div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--color-bark-700)',
+                          fontWeight: 400,
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {info.rarity}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex gap-2" style={{ marginTop: 12 }}>
+              <button
+                onClick={() => {
+                  setShowSeedModal(false)
+                  setPlantingSeed(null)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  background: '#f0e8d8',
+                  border: '1.5px solid var(--color-wood-300)',
+                  color: 'var(--color-bark-700)',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePlant}
+                disabled={!plantingSeed}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  background: plantingSeed ? 'var(--color-leaf-600)' : '#ccc',
+                  border: 'none',
+                  color: '#fff',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: plantingSeed ? 'pointer' : 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                <Sprout size={14} />
+                Plantar
+              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

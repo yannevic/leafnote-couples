@@ -1,8 +1,7 @@
-import { ref, set, get, onValue, off } from 'firebase/database'
+import { ref, set, get, push, remove, onValue, off, update } from 'firebase/database'
 import { db } from './firebase'
 
 export type FlowerType = 'rosa' | 'margarida' | 'tulipa' | 'girassol' | 'orquidea' | 'especial'
-
 export type FlowerRarity = 'comum' | 'incomum' | 'rara' | 'epica'
 
 export interface FlowerInfo {
@@ -28,61 +27,137 @@ export const RARITY_COLORS: Record<FlowerRarity, string> = {
   epica: '#7a3040',
 }
 
-export interface WaterEntry {
-  [uid: string]: boolean
+export interface SeedData {
+  id: string
+  flowerType: FlowerType
+  gainedAt: string
 }
 
 export interface PlantData {
+  id: string
   flowerType: FlowerType
   stage: number
   daysWatered: number
-  lastWateredDate: string | null
-  water: WaterEntry
+  lastWateredDate: string
+  water: Record<string, boolean>
   wilted: boolean
-  unlockedAt: string
+  plantedAt: string
 }
 
-const GARDEN_PATH = 'garden/plant'
+export interface StageEvent {
+  id: string
+  plantId: string
+  plantName: string
+  newStage: number
+  rolls: Record<string, number>
+  claimedBy: Record<string, boolean>
+  createdAt: string
+}
 
-export function subscribePlant(callback: (data: PlantData | null) => void) {
-  const plantRef = ref(db, GARDEN_PATH)
-  onValue(plantRef, (snap) => {
-    callback(snap.val() as PlantData | null)
+// ─── Subscribes ──────────────────────────────────────────────────────────────
+
+export function subscribePlants(callback: (plants: PlantData[]) => void): () => void {
+  const r = ref(db, 'garden/plants')
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, PlantData> | null
+    const list = val ? Object.entries(val).map(([id, p]) => ({ ...p, id })) : []
+    callback(list)
   })
-  return () => off(plantRef, 'value')
+  return () => off(r, 'value', handler)
 }
 
-export async function initPlant(flowerType: FlowerType): Promise<void> {
-  const plantRef = ref(db, GARDEN_PATH)
-  const snap = await get(plantRef)
-  if (snap.exists()) return
-  const data: PlantData = {
+export function subscribeSeeds(callback: (seeds: SeedData[]) => void): () => void {
+  const r = ref(db, 'garden/seeds')
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, SeedData> | null
+    const list = val ? Object.entries(val).map(([id, s]) => ({ ...s, id })) : []
+    callback(list)
+  })
+  return () => off(r, 'value', handler)
+}
+
+export function subscribeStageEvents(callback: (events: StageEvent[]) => void): () => void {
+  const r = ref(db, 'garden/stageEvents')
+  const handler = onValue(r, (snap) => {
+    const val = snap.val() as Record<string, StageEvent> | null
+    const list = val ? Object.entries(val).map(([id, e]) => ({ ...e, id })) : []
+    callback(list)
+  })
+  return () => off(r, 'value', handler)
+}
+
+export function subscribePanicMode(callback: (active: boolean) => void): () => void {
+  const r = ref(db, 'garden/panicMode')
+  const handler = onValue(r, (snap) => {
+    callback(snap.val() === true)
+  })
+  return () => off(r, 'value', handler)
+}
+
+export function subscribeWelcomeSeedGiven(callback: (given: boolean) => void): () => void {
+  const r = ref(db, 'garden/welcomeSeedGiven')
+  const handler = onValue(r, (snap) => {
+    callback(snap.val() === true)
+  })
+  return () => off(r, 'value', handler)
+}
+
+// ─── Seeds ────────────────────────────────────────────────────────────────────
+
+export async function addSeed(flowerType: FlowerType): Promise<void> {
+  const seedsRef = ref(db, 'garden/seeds')
+  const newRef = push(seedsRef)
+  const seed: SeedData = {
+    id: newRef.key!,
     flowerType,
-    stage: 0,
+    gainedAt: new Date().toISOString(),
+  }
+  await set(newRef, seed)
+}
+
+// ─── Plants ───────────────────────────────────────────────────────────────────
+
+export async function plantSeed(seedId: string, flowerType: FlowerType): Promise<void> {
+  const plantsRef = ref(db, 'garden/plants')
+  const newRef = push(plantsRef)
+  const plant: PlantData = {
+    id: newRef.key!,
+    flowerType,
+    stage: 1,
     daysWatered: 0,
     lastWateredDate: '',
-    water: { nana: false, gueguel: false },
+    water: {},
     wilted: false,
-    unlockedAt: new Date().toISOString(),
+    plantedAt: new Date().toISOString(),
   }
-  await set(plantRef, data)
+  await set(newRef, plant)
+  await remove(ref(db, `garden/seeds/${seedId}`))
 }
 
-export async function waterPlant(uid: string, partnerUid: string): Promise<void> {
-  const plantRef = ref(db, GARDEN_PATH)
+export async function waterPlant(
+  plantId: string,
+  uid: string,
+  partnerUid: string,
+  panicMode: boolean
+): Promise<void> {
+  const plantRef = ref(db, `garden/plants/${plantId}`)
   const snap = await get(plantRef)
   if (!snap.exists()) return
   const plant = snap.val() as PlantData
 
-  const today = new Date().toISOString().split('T')[0]
-  const isNewDay = !plant.lastWateredDate || plant.lastWateredDate !== today
+  if (plant.stage >= 5) return
 
-  const currentWater: WaterEntry = isNewDay ? {} : { ...plant.water }
+  const today = new Date().toISOString().split('T')[0]
+  const isNewDay = plant.lastWateredDate !== today
+  const currentWater: Record<string, boolean> = isNewDay ? {} : { ...plant.water }
   currentWater[uid] = true
 
-  const bothWatered = currentWater[uid] === true && currentWater[partnerUid] === true
+  const bothWatered = panicMode
+    ? true
+    : currentWater[uid] === true && currentWater[partnerUid] === true
+
   const newDaysWatered = bothWatered ? plant.daysWatered + 1 : plant.daysWatered
-  const newStage = Math.min(5, Math.floor(newDaysWatered / 3))
+  const newStage = Math.min(5, Math.floor(newDaysWatered / 3) + 1)
 
   await set(plantRef, {
     ...plant,
@@ -92,32 +167,157 @@ export async function waterPlant(uid: string, partnerUid: string): Promise<void>
     stage: newStage,
     wilted: false,
   })
-}
 
-export async function checkWilt(): Promise<void> {
-  const plantRef = ref(db, GARDEN_PATH)
-  const snap = await get(plantRef)
-  if (!snap.exists()) return
-  const plant = snap.val() as PlantData
-  if (!plant.lastWateredDate) return
-
-  const last = new Date(plant.lastWateredDate)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24))
-
-  if (diffDays >= 2 && !plant.wilted) {
-    await set(plantRef, { ...plant, wilted: true })
+  // Cria evento de subida de estágio
+  if (newStage > plant.stage) {
+    await createStageEvent(plantId, plant.flowerType, newStage)
   }
 }
 
+async function createStageEvent(
+  plantId: string,
+  flowerType: FlowerType,
+  newStage: number
+): Promise<void> {
+  const eventsRef = ref(db, 'garden/stageEvents')
+  const newRef = push(eventsRef)
+  const event: StageEvent = {
+    id: newRef.key!,
+    plantId,
+    plantName: FLOWERS[flowerType].name,
+    newStage,
+    rolls: {},
+    claimedBy: {},
+    createdAt: new Date().toISOString(),
+  }
+  await set(newRef, event)
+}
+
+// ─── Stage event — salvar roll e verificar conclusão ─────────────────────────
+
+export async function saveEventRoll(
+  eventId: string,
+  uid: string,
+  roll: number,
+  partnerUid: string,
+  panicMode: boolean
+): Promise<{ done: boolean; flowerType: FlowerType | null }> {
+  const eventRef = ref(db, `garden/stageEvents/${eventId}`)
+  const snap = await get(eventRef)
+  if (!snap.exists()) return { done: false, flowerType: null }
+  const event = snap.val() as StageEvent
+
+  const updatedRolls = { ...(event.rolls ?? {}), [uid]: roll }
+  await update(eventRef, { rolls: updatedRolls })
+
+  const partnerRoll = updatedRolls[partnerUid]
+  const myRoll = updatedRolls[uid]
+
+  const bothRolled = panicMode ? true : partnerRoll != null && myRoll != null
+
+  if (!bothRolled) return { done: false, flowerType: null }
+
+  // Soma dos dois rolls (ou dobra o único roll no modo pânico)
+  const sum = panicMode ? myRoll : myRoll + partnerRoll
+  const flowerType = getFlowerFromSum(sum)
+
+  await addSeed(flowerType)
+  await remove(eventRef)
+
+  return { done: true, flowerType }
+}
+
+// ─── Welcome seed ─────────────────────────────────────────────────────────────
+
+export async function checkWelcomeSeed(): Promise<boolean> {
+  const snap = await get(ref(db, 'garden/welcomeSeedGiven'))
+  return snap.val() === true
+}
+
+export async function claimWelcomeSeed(roll: number, panicMode: boolean): Promise<FlowerType> {
+  const sum = panicMode ? roll * 2 : roll
+  const flowerType = getFlowerFromSum(sum)
+  await addSeed(flowerType)
+  await set(ref(db, 'garden/welcomeSeedGiven'), true)
+  return flowerType
+}
+
+// Salva o roll do welcome sem concluir ainda (aguarda parceiro)
+export async function saveWelcomeRoll(
+  uid: string,
+  roll: number,
+  partnerUid: string,
+  panicMode: boolean
+): Promise<{ done: boolean; flowerType: FlowerType | null }> {
+  const rollsRef = ref(db, 'garden/welcomeRolls')
+  await update(rollsRef, { [uid]: roll })
+
+  const snap = await get(rollsRef)
+  const rolls = (snap.val() ?? {}) as Record<string, number>
+
+  const myRoll = rolls[uid]
+  const partnerRoll = rolls[partnerUid]
+  const bothRolled = panicMode ? true : myRoll != null && partnerRoll != null
+
+  if (!bothRolled) return { done: false, flowerType: null }
+
+  const sum = panicMode ? myRoll * 2 : myRoll + partnerRoll
+  const flowerType = getFlowerFromSum(sum)
+
+  await addSeed(flowerType)
+  await set(ref(db, 'garden/welcomeSeedGiven'), true)
+  await remove(rollsRef)
+
+  return { done: true, flowerType }
+}
+
+// ─── Panic mode ───────────────────────────────────────────────────────────────
+
+export async function setPanicMode(active: boolean): Promise<void> {
+  await set(ref(db, 'garden/panicMode'), active)
+}
+
+// ─── Wilt check ───────────────────────────────────────────────────────────────
+
+export async function checkWiltAll(): Promise<void> {
+  const plantsRef = ref(db, 'garden/plants')
+  const snap = await get(plantsRef)
+  if (!snap.exists()) return
+  const plants = snap.val() as Record<string, PlantData>
+  const now = new Date()
+  await Promise.all(
+    Object.entries(plants).map(async ([id, plant]) => {
+      if (plant.stage >= 5) return
+      if (!plant.lastWateredDate) return
+      const last = new Date(plant.lastWateredDate)
+      const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
+      if (diffHours >= 24 && !plant.wilted) {
+        const newDaysWatered = Math.max(0, plant.daysWatered - 1)
+        await set(ref(db, `garden/plants/${id}`), {
+          ...plant,
+          wilted: true,
+          daysWatered: newDaysWatered,
+        })
+      }
+    })
+  )
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 export function rollDice(): number {
-  return Math.floor(Math.random() * 6)
+  return Math.floor(Math.random() * 6) + 1
 }
 
 export function getFlowerFromSum(sum: number): FlowerType {
-  if (sum <= 1) return 'rosa'
-  if (sum <= 3) return 'margarida'
-  if (sum <= 5) return 'tulipa'
-  if (sum <= 7) return 'girassol'
+  if (sum <= 2) return 'rosa'
+  if (sum <= 4) return 'margarida'
+  if (sum <= 6) return 'tulipa'
+  if (sum <= 8) return 'girassol'
   return 'orquidea'
+}
+
+export function canPlantToday(plants: PlantData[]): boolean {
+  const today = new Date().toISOString().split('T')[0]
+  return !plants.some((p) => p.plantedAt.startsWith(today))
 }
