@@ -23,6 +23,7 @@ interface Props {
     specialDate: string
     specialDateMmdd: string
     specialDateLabel: string
+    dayOnly?: boolean
   }) => void
   onClose: () => void
   onSaveDates: (dates: SpecialDates) => void
@@ -60,6 +61,7 @@ export default function SpecialLetterModal({
       specialDate: selectedDateKey,
       specialDateMmdd: selectedDateObj.mmdd,
       specialDateLabel: selectedDateObj.label,
+      ...(selectedDateObj.dayOnly && { dayOnly: true }),
     })
     onClose()
   }
