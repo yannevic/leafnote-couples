@@ -543,7 +543,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         {/* Itens do mural */}
         <div>
           {sortedItems.map((item) => {
-            const z = (item.zOrder ?? 0) + 10
+            const z = Math.min((item.zOrder ?? 0) + 10, 40)
             const commonProps = {
               editMode,
               zIndex: z,
@@ -593,7 +593,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   currentUid={uid}
                   displayName={displayName}
                   otherName={otherName}
-                  onOpenModal={(i) => setOpenLetter(i)}
+                  onOpenModal={(i) => {
+                    const fresh = items.find((x) => x.id === i.id)
+                    setOpenLetter((fresh as LetterItem) ?? i)
+                  }}
                 />
               )
             }

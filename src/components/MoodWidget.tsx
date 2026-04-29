@@ -139,7 +139,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
         position: 'fixed',
         left: pos.x,
         top: pos.y,
-        zIndex: 49,
+        zIndex: 200,
         userSelect: 'none',
         fontFamily: 'Baloo 2, sans-serif',
       }}
@@ -229,6 +229,7 @@ export default function MoodWidget({ uid, partnerUid }: Props) {
             borderRadius: 16,
             padding: 12,
             boxShadow: '0 4px 24px rgba(44,20,8,0.2)',
+            zIndex: 101,
             display: 'grid',
             gridTemplateColumns: `repeat(${COLS}, ${IMG_SIZE}px)`,
             gridTemplateRows: `repeat(${rows}, ${IMG_SIZE}px)`,
