@@ -15,7 +15,6 @@ interface FlowerModalProps {
 
 export default function FlowerModal({
   plant,
-  uid,
   partnerName,
   alreadyWatered,
   partnerWatered,
@@ -26,8 +25,6 @@ export default function FlowerModal({
   const imgSrc = getFlowerImage(plant.flowerType, plant.stage)
   const rarityColor = RARITY_COLORS[info.rarity]
   const isFullyGrown = plant.stage >= 5
-
-  const daysUntilNextStage = isFullyGrown ? null : 3 - (plant.daysWatered % 3)
 
   const stageLabels: Record<number, string> = {
     1: 'Semente 🌱',

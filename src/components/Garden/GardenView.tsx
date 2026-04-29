@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Sprout, X, AlertTriangle, Leaf } from 'lucide-react'
 import { useGarden } from '../../hooks/useGarden'
-import { FLOWERS, FlowerType, SeedData } from '../../lib/garden'
+import { FLOWERS, SeedData } from '../../lib/garden'
 import Plant from './Plant'
 import FlowerModal from './FlowerModal'
 import SeedRollModal from './SeedRollModal'
@@ -41,7 +41,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   const [showSeedModal, setShowSeedModal] = useState(false)
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
-  const [seedRollDone, setSeedRollDone] = useState(false)
+  const [_seedRollDone, setSeedRollDone] = useState(false)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
