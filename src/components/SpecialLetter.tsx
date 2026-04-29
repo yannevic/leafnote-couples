@@ -1,19 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import type { SpecialLetterItem } from '../types/board'
-import { CARD_MODELS } from '../assets/letters/index'
 import { isToday, formatMmdd, isTodayDay } from '../lib/specialDates'
-
-const LAYOUT_TEXT_AREA = {
-  A: { top: '30%', bottom: '22%', left: '20%', right: '10%' },
-  B: { top: '28%', bottom: '18%', left: '20%', right: '10%' },
-  C: { top: '30%', bottom: '24%', left: '20%', right: '10%' },
-}
-
-const LAYOUT_SIZE = {
-  A: { width: 220, height: 350 },
-  B: { width: 220, height: 283 },
-  C: { width: 220, height: 352 },
-}
 
 interface Props {
   item: SpecialLetterItem
@@ -49,9 +36,6 @@ export default function SpecialLetter({
   const [showMenu, setShowMenu] = useState(false)
   const [showBlocked, setShowBlocked] = useState(false)
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
-
-  const model = CARD_MODELS.find((m) => m.id === item.cardModel)
-  const size = LAYOUT_SIZE[item.layout]
 
   const ENV_W = 110
   const ENV_H = 70
@@ -513,135 +497,5 @@ function CtxBtn({
     >
       {label}
     </button>
-  )
-}
-
-function SpecialLetterModal({
-  item,
-  model,
-  size,
-  area,
-  onClose,
-}: {
-  item: SpecialLetterItem
-  model: { image: string; label: string }
-  size: { width: number; height: number }
-  area: { top: string; bottom: string; left: string; right: string }
-  onClose: () => void
-}) {
-  // escala para caber bem na tela mantendo proporção
-  const scale = Math.min(480 / size.width, 600 / size.height)
-  const displayW = Math.round(size.width * scale)
-  const displayH = Math.round(size.height * scale)
-
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: 'rgba(26,20,8,0.65)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          width: displayW,
-          height: displayH,
-          animation: 'specialLetterPop 0.4s cubic-bezier(.34,1.56,.64,1)',
-        }}
-      >
-        <style>{`
-          @keyframes specialLetterPop {
-            from { transform: scale(0.8) translateY(30px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-          }
-        `}</style>
-        {/* PNG da carta */}
-        <img
-          src={model.image}
-          alt={model.label}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'fill',
-            display: 'block',
-            borderRadius: 12,
-            boxShadow: '0 16px 48px rgba(0,0,0,0.4), 0 0 0 2px #f5d06055',
-          }}
-          draggable={false}
-        />
-        {/* Texto sobre o PNG */}
-        <div
-          style={{
-            position: 'absolute',
-            top: area.top,
-            bottom: area.bottom,
-            left: area.left,
-            right: area.right,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "'Baloo 2', cursive",
-              fontSize: 13,
-              color: item.cardModel === 'lua-noite' ? '#ffffff' : '#2a1010',
-              lineHeight: 1.7,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              margin: 0,
-            }}
-          >
-            {item.message}
-          </p>
-          <p
-            style={{
-              fontFamily: "'Baloo 2', cursive",
-              fontSize: 11,
-              color: item.cardModel === 'lua-noite' ? '#ffffffcc' : '#5a2a2a',
-              marginTop: 10,
-              textAlign: 'right',
-              fontWeight: 700,
-            }}
-          >
-            {item.from} → {item.to}
-          </p>
-        </div>
-        {/* botão fechar */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: -14,
-            right: -14,
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #ffe680, #c8960c)',
-            border: '2px solid #b8860b',
-            cursor: 'pointer',
-            fontSize: 14,
-            color: '#5a3a00',
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          ✕
-        </button>
-      </div>
-    </div>
   )
 }
