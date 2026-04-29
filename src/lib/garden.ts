@@ -148,27 +148,42 @@ export async function waterPlant(
   if (plant.stage >= 5) return
 
   const today = new Date().toISOString().split('T')[0]
-  const isNewDay = plant.lastWateredDate !== today
-  const currentWater: Record<string, boolean> = isNewDay ? {} : { ...plant.water }
-  currentWater[uid] = true
+
+  // Já regou hoje
+  if (plant.water?.[uid] === true && plant.lastWateredDate === today) return
+
+  // Salva só o water deste uid sem sobrescrever o do parceiro
+  await update(plantRef, { [`water/${uid}`]: true })
+
+  // Lê o estado atualizado pra decidir se os dois já regaram
+  const snapAfter = await get(plantRef)
+  if (!snapAfter.exists()) return
+  const updated = snapAfter.val() as PlantData
+
+  const lastWasCompleted = updated.water?.[uid] === true && updated.water?.[partnerUid] === true
+  const isNewDay = updated.lastWateredDate !== today
+  const shouldReset = isNewDay && !lastWasCompleted
+
+  if (shouldReset) {
+    await update(plantRef, { [`water/${partnerUid}`]: null })
+  }
 
   const bothWatered = panicMode
     ? true
-    : currentWater[uid] === true && currentWater[partnerUid] === true
+    : updated.water?.[uid] === true && updated.water?.[partnerUid] === true
 
-  const newDaysWatered = bothWatered ? plant.daysWatered + 1 : plant.daysWatered
+  if (!bothWatered) return
+
+  const newDaysWatered = plant.daysWatered + 1
   const newStage = Math.min(5, Math.floor(newDaysWatered / 3) + 1)
 
-  await set(plantRef, {
-    ...plant,
-    water: currentWater,
-    lastWateredDate: bothWatered ? today : plant.lastWateredDate,
+  await update(plantRef, {
+    lastWateredDate: today,
     daysWatered: newDaysWatered,
     stage: newStage,
     wilted: false,
   })
 
-  // Cria evento de subida de estágio
   if (newStage > plant.stage) {
     await createStageEvent(plantId, plant.flowerType, newStage)
   }
