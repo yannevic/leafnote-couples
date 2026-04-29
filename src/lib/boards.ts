@@ -1,4 +1,4 @@
-import { ref, push, set, remove, onValue, off } from 'firebase/database'
+import { ref, push, set, remove, get, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 import type { AnyBoardItem } from '../types/board'
 
@@ -44,6 +44,16 @@ export async function createBoard(name: string, createdBy: string): Promise<stri
 
 export async function deleteBoard(boardId: string): Promise<void> {
   if (boardId === DEFAULT_BOARD_ID) return
+
+  const itemsSnap = await get(ref(db, `boards/${boardId}/items`))
+  const items = itemsSnap.val() ?? {}
+
+  await Promise.all(
+    Object.values(items as Record<string, AnyBoardItem>).map(async (item) => {
+      await set(ref(db, `board/items/${item.id}`), JSON.parse(JSON.stringify(item)))
+    })
+  )
+
   await remove(ref(db, `boards/_meta/${boardId}`))
   await remove(ref(db, `boards/${boardId}`))
 }
