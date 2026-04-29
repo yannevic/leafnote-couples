@@ -25,7 +25,8 @@ const MILESTONES = [
     days: 30,
     emoji: '🌙',
     title: '1 mês! Super prêmio!',
-    prize: 'Filme com pipoca ao mesmo tempo em chamada, caminhas combinadas e noite especial',
+    prize:
+      'Filme com pipoca ao mesmo tempo em chamada e noite especial — e uma semente épica foi adicionada ao jardim de vocês!',
   },
 ]
 
