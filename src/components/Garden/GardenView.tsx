@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Sprout, X, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sprout, X, AlertTriangle, Leaf } from 'lucide-react'
 import { useGarden } from '../../hooks/useGarden'
 import { FLOWERS, FlowerType, SeedData } from '../../lib/garden'
 import Plant from './Plant'
@@ -93,9 +93,17 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
           {/* Cabeçalho */}
           <div className="flex items-center justify-between mb-5">
             <h2
-              style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-leaf-950)' }}
+              style={{
+                margin: 0,
+                fontSize: 22,
+                fontWeight: 700,
+                color: 'var(--color-leaf-950)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
             >
-              🪴 Jardim
+              <Leaf size={20} style={{ color: 'var(--color-leaf-600)' }} /> Jardim
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Toggle modo pânico */}
@@ -108,15 +116,17 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '4px 12px',
+                  padding: '5px 14px',
                   borderRadius: 20,
-                  border: `1.5px solid ${panicMode ? '#c87090' : 'var(--color-wood-300)'}`,
-                  background: panicMode ? '#fce8f0' : 'transparent',
-                  color: panicMode ? '#c87090' : 'var(--color-bark-700)',
+                  border: 'none',
+                  background: panicMode ? '#c0392b' : '#e8d8c0',
+                  color: panicMode ? '#fff' : 'var(--color-bark-700)',
                   fontFamily: 'Baloo 2, sans-serif',
                   fontWeight: 700,
                   fontSize: 12,
                   cursor: 'pointer',
+                  boxShadow: panicMode ? '0 2px 8px rgba(192,57,43,0.4)' : 'none',
+                  transition: 'all 0.2s',
                 }}
               >
                 <AlertTriangle size={13} />
@@ -217,7 +227,8 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               >
                 <div className="flex items-center justify-between mb-2">
                   <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-bark-700)' }}>
-                    🌰 Sementes ({seeds.length})
+                    <Sprout size={14} style={{ marginRight: 5, display: 'inline' }} /> Sementes (
+                    {seeds.length})
                   </span>
                   <button
                     onClick={() => setShowSeedModal(true)}

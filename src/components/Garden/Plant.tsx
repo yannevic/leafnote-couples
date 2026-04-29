@@ -17,6 +17,18 @@ export default function Plant({ plant, onClick }: PlantProps) {
       style={{ background: 'none', border: 'none', padding: 0 }}
       title={`${info.name} — Estágio ${plant.stage}`}
     >
+      <span
+        className="text-xs"
+        style={{
+          color: 'var(--color-leaf-600)',
+          minHeight: 18,
+          display: 'block',
+          fontFamily: 'Baloo 2, sans-serif',
+          fontWeight: 600,
+        }}
+      >
+        {plant.stage >= 5 ? 'Florescida' : ''}
+      </span>
       <img
         src={imgSrc}
         alt={`${info.name} estágio ${plant.stage}`}
@@ -36,12 +48,7 @@ export default function Plant({ plant, onClick }: PlantProps) {
       </span>
       {plant.wilted && (
         <span className="text-xs" style={{ color: '#c87090' }}>
-          🥀 Murcha
-        </span>
-      )}
-      {plant.stage >= 5 && (
-        <span className="text-xs" style={{ color: 'var(--color-leaf-600)' }}>
-          🌸 Florescida
+          Murcha
         </span>
       )}
     </button>

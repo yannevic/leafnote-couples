@@ -99,7 +99,7 @@ export default function FlowerModal({
         </div>
 
         {/* Imagem */}
-        <div className="flex justify-center mb-5">
+        <div className="flex justify-center mb-8">
           <img
             src={imgSrc}
             alt={info.name}
@@ -116,8 +116,9 @@ export default function FlowerModal({
           style={{
             background: 'var(--color-leaf-100)',
             borderRadius: 10,
-            padding: '10px 14px',
+            padding: isFullyGrown ? '8px 14px' : '10px 14px',
             marginBottom: 12,
+            marginTop: 16,
           }}
         >
           <div
@@ -125,7 +126,7 @@ export default function FlowerModal({
               fontWeight: 700,
               fontSize: 14,
               color: 'var(--color-leaf-950)',
-              marginBottom: 8,
+              marginBottom: isFullyGrown ? 0 : 8,
               textAlign: 'center',
             }}
           >
@@ -161,8 +162,16 @@ export default function FlowerModal({
             </>
           )}
           {plant.wilted && (
-            <div style={{ fontSize: 12, color: '#c87090', marginTop: 8 }}>
-              Murcha — os dois precisam regar para recuperar
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 14,
+                color: 'var(--color-leaf-950)',
+                marginBottom: isFullyGrown ? 0 : 8,
+                textAlign: 'center',
+              }}
+            >
+              Estágio {plant.stage} — {stageLabels[plant.stage] ?? ''}
             </div>
           )}
         </div>
@@ -246,12 +255,13 @@ export default function FlowerModal({
           <div
             style={{
               textAlign: 'center',
+              padding: '10px 0',
               fontSize: 14,
               color: 'var(--color-leaf-600)',
-              fontWeight: 600,
+              fontWeight: 700,
             }}
           >
-            🌸 Esta flor está totalmente florescida!
+            Totalmente florescida
           </div>
         )}
       </div>
