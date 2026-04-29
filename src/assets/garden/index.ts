@@ -14,6 +14,8 @@ import orquidea4 from './orquidea-estagio-4.png'
 import orquidea5 from './orquidea-estagio-5.png'
 import especialE4 from './especial-estagio-4.png'
 import especialE5 from './especial-estagio-5.png'
+import bgCartoon from './bg-cartoon.jpg'
+export { bgCartoon }
 
 import type { FlowerType } from '../../lib/garden'
 

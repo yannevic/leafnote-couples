@@ -42,7 +42,13 @@ export default function Plant({ plant, onClick }: PlantProps) {
       />
       <span
         className="text-xs font-semibold"
-        style={{ color: 'var(--color-bark-700)', fontFamily: 'Baloo 2, sans-serif' }}
+        style={{
+          color: 'var(--color-bark-700)',
+          fontFamily: 'Baloo 2, sans-serif',
+          background: 'rgba(255,255,255,0.45)',
+          borderRadius: 6,
+          padding: '1px 6px',
+        }}
       >
         {info.emoji} {info.name}
       </span>

@@ -5,6 +5,7 @@ import { FLOWERS, FlowerType, SeedData } from '../../lib/garden'
 import Plant from './Plant'
 import FlowerModal from './FlowerModal'
 import SeedRollModal from './SeedRollModal'
+import { bgCartoon } from '../../assets/garden'
 
 interface GardenViewProps {
   uid: string
@@ -155,30 +156,47 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
               {/* Prateleira */}
               <div
                 style={{
-                  background: 'var(--color-leaf-100)',
+                  position: 'relative',
                   border: '2px solid var(--color-wood-300)',
                   borderRadius: 16,
                   padding: '16px 8px 12px',
                   marginBottom: 16,
                   minHeight: 280,
+                  overflow: 'hidden',
                 }}
               >
-                {plants.length === 0 ? (
-                  <div
-                    className="flex flex-col items-center justify-center h-full"
-                    style={{ minHeight: 220, color: 'var(--color-leaf-600)', gap: 8 }}
-                  >
-                    <span style={{ fontSize: 40 }}>🌱</span>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>Nenhuma planta ainda</span>
-                    <span style={{ fontSize: 12 }}>Plante uma semente para começar!</span>
-                  </div>
-                ) : (
-                  <div className="flex items-end justify-center gap-6" style={{ minHeight: 240 }}>
-                    {visiblePlants.map((p) => (
-                      <Plant key={p.id} plant={p} onClick={() => setSelectedPlantId(p.id)} />
-                    ))}
-                  </div>
-                )}
+                <img
+                  src={bgCartoon}
+                  alt=""
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: 'blur(7px) brightness(0.92)',
+                    transform: 'scale(1.04)',
+                    zIndex: 0,
+                  }}
+                />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  {plants.length === 0 ? (
+                    <div
+                      className="flex flex-col items-center justify-center h-full"
+                      style={{ minHeight: 220, color: 'var(--color-leaf-600)', gap: 8 }}
+                    >
+                      <span style={{ fontSize: 40 }}>🌱</span>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>Nenhuma planta ainda</span>
+                      <span style={{ fontSize: 12 }}>Plante uma semente para começar!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-end justify-center gap-6" style={{ minHeight: 240 }}>
+                      {visiblePlants.map((p) => (
+                        <Plant key={p.id} plant={p} onClick={() => setSelectedPlantId(p.id)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Setas de navegação */}
