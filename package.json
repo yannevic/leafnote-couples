@@ -49,6 +49,7 @@
   "build": {
     "appId": "com.leafnote.app",
     "productName": "leafnote",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
     "directories": {
       "output": "release"
     },

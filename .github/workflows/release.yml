@@ -94,8 +94,8 @@ jobs:
           name: leafnote v${{ steps.bump.outputs.new_version }}
           body: ${{ steps.bump.outputs.changelog_input }}
           files: |
-            release/*.exe
-            release/*.blockmap
+            release/leafnote-Setup-*.exe
+            release/leafnote-Setup-*.exe.blockmap
             release/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
