@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# 🌿 leafnote
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+mural colaborativo em tempo real para dois usuários — feito com carinho 🌸
 
-Currently, two official plugins are available:
+## o que é
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+leafnote é um app de casal com mural compartilhado, jardim virtual, cartas especiais, streak e muito mais. desenvolvido com Electron + React + Firebase.
 
-## React Compiler
+## funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 🗒️ post-its, checklists, tags, desenhos e cartinhas no mural
+- 💌 cartas especiais com datas comemorativas e data de abertura
+- 🌱 jardim compartilhado com sementes, estágios e modo pânico
+- 📅 calendário semanal e datas especiais do casal
+- 🔥 streak diário com marcos e recompensas
+- 🎲 widgets: dado, timer e roleta
+- 🎬 lista de filmes e séries
+- 🌐 presença online em tempo real
+- 📋 múltiplos murais
+- 🔄 atualização automática
 
-## Expanding the ESLint configuration
+## stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Electron + React 19 + TypeScript
+- Tailwind CSS v4 + Vite 6
+- Firebase Realtime Database + Auth
+- electron-updater
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## configurar
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. clone o repositório
+2. copie `.env.example` para `.env` e preencha com suas credenciais do Firebase
+3. instale as dependências:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+4. rode em desenvolvimento:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+5. gere o instalador:
+
+```bash
+npm run build
+```
+
+## variáveis de ambiente
+
+veja `.env.example` para a lista completa de variáveis necessárias.
+
+---
+
+feito com 🌸 por Nana
