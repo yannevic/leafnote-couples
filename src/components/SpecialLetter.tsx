@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
 import type { SpecialLetterItem } from '../types/board'
-import { isToday, formatMmdd, isTodayDay } from '../lib/specialDates'
 
 interface Props {
   item: SpecialLetterItem
@@ -41,11 +40,10 @@ export default function SpecialLetter({
   const ENV_H = 70
 
   const canOpen = (() => {
-    if (item.availableFrom) {
-      const today = new Date().toISOString().split('T')[0]
-      if (today < item.availableFrom) return false
-    }
-    return item.dayOnly ? isTodayDay(item.specialDateMmdd) : isToday(item.specialDateMmdd)
+    if (isOwner && item.opened) return true
+    if (!item.availableFrom) return false
+    const today = new Date().toISOString().split('T')[0]
+    return today >= item.availableFrom
   })()
 
   const onMouseDown = useCallback(
@@ -395,7 +393,7 @@ export default function SpecialLetter({
               zIndex: 99,
             }}
           >
-            abre em {formatMmdd(item.specialDateMmdd)} 💌
+            {`abre em ${item.availableFrom!.split('-').reverse().join('/')}`}
           </div>
         )}
 

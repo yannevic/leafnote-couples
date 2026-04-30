@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 corrige Firebase no build do workflow
+🌸 leafnote | ✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir | 🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura
