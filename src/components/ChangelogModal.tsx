@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.3': [
+    '🌸 leafnote',
+    '✨ teste updater',
+  ],
+
   '2.1.2': [
     '🌸 leafnote',
     '✨ sistema de atualização automática',
