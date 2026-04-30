@@ -1,6 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { autoUpdater } from 'electron-updater'
+import log from 'electron-log'
+autoUpdater.logger = log
+log.transports.file.level = 'info'
 
 autoUpdater.autoDownload = true
 autoUpdater.autoInstallOnAppQuit = true
