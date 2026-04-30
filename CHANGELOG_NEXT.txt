@@ -1,1 +1,1 @@
-🌸 leafnote | ✨ nome do instalador corrigido | 🐛 banner de atualização agora aparece corretamente
+🌸 leafnote | ✨ botão de atualização com progresso e status claros na barra de título

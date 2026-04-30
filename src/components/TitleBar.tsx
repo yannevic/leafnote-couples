@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
+import { RefreshCw, Download, ArrowDownToLine, Loader } from 'lucide-react'
 import BoardSwitcher from './BoardSwitcher'
 import type { BoardMeta } from '../lib/boards'
 
 const icon = new URL('../../resources/icon.png', import.meta.url).href
+
+import type { UpdateStatus } from './UpdateNotifier'
 
 interface TitleBarProps {
   extraBoards: BoardMeta[]
@@ -10,6 +13,10 @@ interface TitleBarProps {
   onSwitchBoard: (id: string) => void
   onAddBoard: (name: string) => void
   onRemoveBoard: (id: string) => void
+  updateStatus?: UpdateStatus
+  updateProgress?: number
+  onInstallUpdate?: () => void
+  onCheckUpdate?: () => void
 }
 
 export default function TitleBar({
@@ -18,6 +25,10 @@ export default function TitleBar({
   onSwitchBoard,
   onAddBoard,
   onRemoveBoard,
+  updateStatus = 'idle',
+  updateProgress = 0,
+  onInstallUpdate,
+  onCheckUpdate,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
@@ -146,7 +157,7 @@ export default function TitleBar({
         <span style={{ fontSize: 9.5, color: '#c4956a', opacity: 0.8 }}>{dateStr}</span>
       </div>
 
-      {/* Direita — botões macOS */}
+      {/* Direita — updater + botões macOS */}
       <div
         style={
           {
@@ -157,6 +168,12 @@ export default function TitleBar({
           } as React.CSSProperties
         }
       >
+        <UpdateBtn
+          status={updateStatus}
+          progress={updateProgress}
+          onInstall={onInstallUpdate}
+          onCheck={onCheckUpdate}
+        />
         <WinBtn
           color="#e8a030"
           hoverColor="#f5b840"
@@ -180,6 +197,136 @@ export default function TitleBar({
         />
       </div>
     </div>
+  )
+}
+
+function UpdateBtn({
+  status,
+  progress,
+  onInstall,
+  onCheck,
+}: {
+  status: UpdateStatus
+  progress: number
+  onInstall?: () => void
+  onCheck?: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  const base: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    height: 22,
+    borderRadius: 6,
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'Baloo 2, sans-serif',
+    fontSize: 10,
+    fontWeight: 700,
+    transition: 'all 0.15s',
+    padding: '0 8px',
+    marginRight: 2,
+  }
+
+  if (status === 'downloading') {
+    return (
+      <div
+        title={`Baixando atualização... ${progress}%`}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 6 }}
+      >
+        <Download size={11} color="#7FB87F" />
+        <div
+          style={{
+            width: 52,
+            height: 3,
+            borderRadius: 2,
+            background: 'rgba(255,255,255,0.12)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              width: `${progress}%`,
+              height: '100%',
+              borderRadius: 2,
+              background: '#7FB87F',
+              transition: 'width 0.4s',
+            }}
+          />
+        </div>
+        <span style={{ fontSize: 9.5, color: '#7FB87F', minWidth: 24 }}>{progress}%</span>
+      </div>
+    )
+  }
+
+  if (status === 'available') {
+    return (
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: 5, marginRight: 6 }}
+        title="Atualização disponível — baixando em breve"
+      >
+        <Download size={11} color="#c4956a" />
+        <span
+          style={{
+            fontSize: 9.5,
+            color: '#c4956a',
+            fontFamily: 'Baloo 2, sans-serif',
+            fontWeight: 700,
+          }}
+        >
+          atualização disponível
+        </span>
+      </div>
+    )
+  }
+
+  if (status === 'downloaded') {
+    return (
+      <button
+        onClick={onInstall}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        title="Clique para instalar a atualização"
+        style={{
+          ...base,
+          color: '#1A2A1A',
+          background: hovered ? '#9fd49f' : '#7FB87F',
+          boxShadow: hovered ? '0 0 8px #7FB87F88' : '0 1px 4px #7FB87F44',
+        }}
+      >
+        <ArrowDownToLine size={11} />
+        atualização pronta — instalar
+      </button>
+    )
+  }
+
+  if (status === 'checking') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginRight: 6, opacity: 0.6 }}>
+        <Loader size={11} color="#c4956a" style={{ animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: 9.5, color: '#c4956a', fontFamily: 'Baloo 2, sans-serif' }}>
+          verificando...
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={onCheck}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      title="Verificar atualizações"
+      style={{
+        ...base,
+        color: hovered ? '#c4956a' : 'rgba(196,149,106,0.45)',
+        background: hovered ? 'rgba(196,149,106,0.12)' : 'transparent',
+      }}
+    >
+      <RefreshCw size={11} />
+      buscar atualizações
+    </button>
   )
 }
 

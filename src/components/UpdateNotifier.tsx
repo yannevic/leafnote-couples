@@ -11,10 +11,11 @@ export type UpdateStatus =
 
 interface Props {
   onStatus: (status: UpdateStatus) => void
+  onProgress: (percent: number) => void
   onError: (msg: string) => void
 }
 
-export default function UpdateNotifier({ onStatus, onError }: Props) {
+export default function UpdateNotifier({ onStatus, onProgress, onError }: Props) {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const api = (window as any).api
@@ -22,7 +23,10 @@ export default function UpdateNotifier({ onStatus, onError }: Props) {
     api.onUpdateChecking(() => onStatus('checking'))
     api.onUpdateAvailable(() => onStatus('available'))
     api.onUpdateNotAvailable(() => onStatus('up-to-date'))
-    api.onUpdateProgress(() => onStatus('downloading'))
+    api.onUpdateProgress((p: { percent: number }) => {
+      onStatus('downloading')
+      onProgress(Math.round(p.percent))
+    })
     api.onUpdateDownloaded(() => onStatus('downloaded'))
     api.onUpdateError((msg: string) => {
       onStatus('error')

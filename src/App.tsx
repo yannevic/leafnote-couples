@@ -5,21 +5,33 @@ import { auth } from './lib/firebase'
 import Board from './pages/Board'
 import Login from './pages/Login'
 import TitleBar from './components/TitleBar'
+import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
 
 function AppInner({ user }: { user: User }) {
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
     user.uid
   )
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
+  const [updateProgress, setUpdateProgress] = useState(0)
 
   return (
     <div className="fixed inset-0 flex flex-col">
+      <UpdateNotifier
+        onStatus={setUpdateStatus}
+        onProgress={setUpdateProgress}
+        onError={() => {}}
+      />
       <TitleBar
         extraBoards={extraBoards}
         activeBoardId={activeBoardId}
         onSwitchBoard={setActiveBoardId}
         onAddBoard={addBoard}
         onRemoveBoard={removeBoard}
+        updateStatus={updateStatus}
+        updateProgress={updateProgress}
+        onInstallUpdate={() => window.api.installUpdate()}
+        onCheckUpdate={() => window.api.checkForUpdates()}
       />
       <div className="flex-1 overflow-hidden">
         <HashRouter>
