@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.4': [
+    '🌸 leafnote',
+    '✨ nome do instalador corrigido',
+    '🐛 banner de atualização agora aparece corretamente',
+  ],
+
   '2.1.3': [
     '🌸 leafnote',
     '✨ teste updater',
