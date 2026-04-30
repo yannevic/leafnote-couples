@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 ajustes internos
+🌸 leafnote | 🐛 corrige Firebase no build do workflow
