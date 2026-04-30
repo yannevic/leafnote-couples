@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.7': [
+    '🌸 leafnote',
+    '🐛 corrige Firebase no build do workflow',
+  ],
+
   '2.1.6': [
     '🌸 leafnote',
     '🐛 ajustes internos',
