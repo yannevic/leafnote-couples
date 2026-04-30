@@ -1,1 +1,1 @@
-🌸 leafnote | ✨ teste updater
+🌸 leafnote | ✨ nome do instalador corrigido | 🐛 banner de atualização agora aparece corretamente
