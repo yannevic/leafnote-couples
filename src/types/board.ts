@@ -87,4 +87,5 @@ export interface SpecialLetterItem extends BoardItem {
   specialDateMmdd: string
   specialDateLabel: string
   dayOnly?: boolean
+  availableFrom?: string // 'AAAA-MM-DD' — data a partir de quando pode abrir
 }

@@ -40,7 +40,13 @@ export default function SpecialLetter({
   const ENV_W = 110
   const ENV_H = 70
 
-  const canOpen = item.dayOnly ? isTodayDay(item.specialDateMmdd) : isToday(item.specialDateMmdd)
+  const canOpen = (() => {
+    if (item.availableFrom) {
+      const today = new Date().toISOString().split('T')[0]
+      if (today < item.availableFrom) return false
+    }
+    return item.dayOnly ? isTodayDay(item.specialDateMmdd) : isToday(item.specialDateMmdd)
+  })()
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {

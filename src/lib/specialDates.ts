@@ -104,9 +104,9 @@ export function isToday(ddmm: string) {
 
 export function isTodayDay(ddmmaaaa: string) {
   if (!ddmmaaaa) return false
-  const dd = ddmmaaaa.split('-')[0]
-  const todayDd = String(new Date().getDate()).padStart(2, '0')
-  return dd === todayDd
+  const dd = parseInt(ddmmaaaa.split('-')[0], 10)
+  const todayDd = new Date().getDate()
+  return todayDd >= dd
 }
 
 export function formatMmdd(ddmm: string) {

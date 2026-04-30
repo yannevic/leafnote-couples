@@ -24,6 +24,7 @@ interface Props {
     specialDateMmdd: string
     specialDateLabel: string
     dayOnly?: boolean
+    availableFrom?: string
   }) => void
   onClose: () => void
   onSaveDates: (dates: SpecialDates) => void
@@ -43,6 +44,7 @@ export default function SpecialLetterModal({
   const [message, setMessage] = useState('')
   const availableDates = getAvailableDates(specialDates, myUid, partnerUid, myNick, partnerNick)
   const [selectedDateKey, setSelectedDateKey] = useState(availableDates[0]?.key ?? '')
+  const [availableFrom, setAvailableFrom] = useState('')
   const [showDatesModal, setShowDatesModal] = useState(false)
 
   const model = CARD_MODELS.find((m) => m.id === selectedModel)!
@@ -61,7 +63,7 @@ export default function SpecialLetterModal({
       specialDate: selectedDateKey,
       specialDateMmdd: selectedDateObj.mmdd,
       specialDateLabel: selectedDateObj.label,
-      ...(selectedDateObj.dayOnly && { dayOnly: true }),
+      availableFrom: availableFrom || undefined,
     })
     onClose()
   }
@@ -238,6 +240,34 @@ export default function SpecialLetterModal({
             </button>
           ))}
         </div>
+
+        {/* disponível a partir de */}
+        <p
+          style={{
+            fontFamily: "'Baloo 2', cursive",
+            fontSize: 13,
+            color: '#a06060',
+            marginBottom: 8,
+          }}
+        >
+          Disponível para abrir a partir de:
+        </p>
+        <input
+          type="date"
+          value={availableFrom}
+          onChange={(e) => setAvailableFrom(e.target.value)}
+          style={{
+            fontFamily: "'Baloo 2', cursive",
+            fontSize: 13,
+            padding: '6px 12px',
+            borderRadius: 10,
+            border: '1.5px solid #e8d5b0',
+            background: '#fffaf4',
+            color: '#5a2a2a',
+            marginBottom: 20,
+            outline: 'none',
+          }}
+        />
 
         {/* preview + escrita */}
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>

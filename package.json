@@ -1,6 +1,8 @@
 {
   "name": "leafnote",
-  "version": "2.0.0",
+  "version": "2.1.0",
+  "description": "mural colaborativo de casal",
+  "author": "Nana",
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {
