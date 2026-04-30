@@ -66,9 +66,11 @@ function createWindow() {
   }
 
   // Verifica atualização ao abrir (só em produção)
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdates()
-  }
+  win.webContents.on('did-finish-load', () => {
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdates()
+    }
+  })
 }
 
 app.whenReady().then(() => {
