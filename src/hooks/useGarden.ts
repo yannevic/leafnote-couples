@@ -35,13 +35,10 @@ export function useGarden(uid: string, partnerUid: string) {
     const unsubPlants = subscribePlants((data) => {
       const today = new Date().toISOString().split('T')[0]
       data.forEach((plant) => {
-        const alreadyWateredToday = plant.water?.[uid] === true || plant.water?.[partnerUid] === true
         if (
-          plant.lastWateredDate &&
-          plant.lastWateredDate !== today &&
           plant.water &&
           Object.keys(plant.water).length > 0 &&
-          !alreadyWateredToday
+          (plant as PlantData & { waterDate?: string }).waterDate !== today
         ) {
           resetPlantWater(plant.id)
         }

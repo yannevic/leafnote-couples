@@ -39,6 +39,7 @@ export interface PlantData {
   stage: number
   daysWatered: number
   lastWateredDate: string
+  waterDate?: string
   water: Record<string, boolean>
   wilted: boolean
   plantedAt: string
@@ -150,17 +151,13 @@ export async function waterPlant(
   const today = new Date().toISOString().split('T')[0]
 
   // Se já regou hoje, ignora
-  if (plant.water?.[uid] === true && plant.lastWateredDate === today) return
+  if (plant.water?.[uid] === true && plant.waterDate === today) return
 
-  // Se é um novo dia, limpa o water do dia anterior antes de salvar o novo
-  if (plant.lastWateredDate !== today) {
-    await update(plantRef, {
-      [`water/${uid}`]: true,
-      [`water/${partnerUid}`]: null,
-    })
-  } else {
-    await update(plantRef, { [`water/${uid}`]: true })
-  }
+  // Salva o water do uid e a data de hoje
+  await update(plantRef, {
+    [`water/${uid}`]: true,
+    waterDate: today,
+  })
 
   // Lê o estado atualizado pra decidir se os dois já regaram
   const snapAfter = await get(plantRef)
@@ -176,7 +173,6 @@ export async function waterPlant(
   const newDaysWatered = plant.daysWatered + 1
   const newStage = Math.min(5, Math.floor(newDaysWatered / 3) + 1)
 
-  // Zera o water após completar a rega do dia
   await update(plantRef, {
     lastWateredDate: today,
     daysWatered: newDaysWatered,
@@ -193,7 +189,7 @@ export async function waterPlant(
 
 export async function resetPlantWater(plantId: string): Promise<void> {
   const plantRef = ref(db, `garden/plants/${plantId}`)
-  await update(plantRef, { water: null })
+  await update(plantRef, { water: null, waterDate: null })
 }
 
 async function createStageEvent(

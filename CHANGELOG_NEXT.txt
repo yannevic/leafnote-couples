@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 jardim: rega não some mais ao reabrir o app
+🌸 leafnote | 🐛 jardim: rega do parceiro não é mais apagada ao regar
