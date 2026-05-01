@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 jardim: rega do parceiro não é mais apagada ao regar
+🌸 leafnote | ✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir | 🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura

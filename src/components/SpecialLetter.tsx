@@ -40,8 +40,8 @@ export default function SpecialLetter({
   const ENV_H = 70
 
   const canOpen = (() => {
-    if (isOwner && item.opened) return true
-    if (!item.availableFrom) return false
+    if (isOwner) return item.opened === true
+    if (!item.availableFrom) return true
     const today = new Date().toISOString().split('T')[0]
     return today >= item.availableFrom
   })()
@@ -86,8 +86,8 @@ export default function SpecialLetter({
       return
     }
 
-    // dono não pode abrir nunca
-    if (isOwner) return
+    // dono só pode abrir depois que o receptor abriu
+    if (isOwner && !item.opened) return
 
     // receptor bloqueado fora da data
     if (!canOpen) {
