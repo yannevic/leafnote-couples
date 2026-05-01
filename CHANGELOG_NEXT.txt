@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 jardim: rega diária agora reseta corretamente entre os dias | 🐛 jardim: removido texto de estágio duplicado ao murchar | 🐛 jardim: water reseta automaticamente ao abrir o jardim em dia novo
+🌸 leafnote | 🐛 jardim: rega não some mais ao reabrir o app
