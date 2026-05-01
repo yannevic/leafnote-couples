@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.8': [
+    '🌸 leafnote',
+    '✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir',
+    '🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura',
+  ],
+
   '2.1.7': [
     '🌸 leafnote',
     '🐛 corrige Firebase no build do workflow',
