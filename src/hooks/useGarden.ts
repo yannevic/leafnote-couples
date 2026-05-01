@@ -19,6 +19,7 @@ import {
   saveEventRoll,
   saveWelcomeRoll,
   setPanicMode,
+  resetPlantWater,
 } from '../lib/garden'
 
 export function useGarden(uid: string, partnerUid: string) {
@@ -32,6 +33,17 @@ export function useGarden(uid: string, partnerUid: string) {
 
   useEffect(() => {
     const unsubPlants = subscribePlants((data) => {
+      const today = new Date().toISOString().split('T')[0]
+      data.forEach((plant) => {
+        if (
+          plant.lastWateredDate &&
+          plant.lastWateredDate !== today &&
+          plant.water &&
+          Object.keys(plant.water).length > 0
+        ) {
+          resetPlantWater(plant.id)
+        }
+      })
       setPlants(data)
       setLoading(false)
     })

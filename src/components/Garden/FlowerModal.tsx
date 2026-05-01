@@ -161,14 +161,14 @@ export default function FlowerModal({
           {plant.wilted && (
             <div
               style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: 'var(--color-leaf-950)',
-                marginBottom: isFullyGrown ? 0 : 8,
+                fontWeight: 600,
+                fontSize: 13,
+                color: '#b05050',
                 textAlign: 'center',
+                marginTop: 6,
               }}
             >
-              Estágio {plant.stage} — {stageLabels[plant.stage] ?? ''}
+              Murcha — regue para recuperar
             </div>
           )}
         </div>
