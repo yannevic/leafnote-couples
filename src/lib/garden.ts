@@ -175,6 +175,7 @@ export async function waterPlant(
 
   await update(plantRef, {
     lastWateredDate: today,
+    waterDate: today,
     daysWatered: newDaysWatered,
     stage: newStage,
     wilted: false,
@@ -309,12 +310,14 @@ export async function checkWiltAll(): Promise<void> {
       if (!plant.lastWateredDate) return
       const last = new Date(plant.lastWateredDate)
       const diffHours = (now.getTime() - last.getTime()) / (1000 * 60 * 60)
-      if (diffHours >= 24 && !plant.wilted) {
+      if (diffHours >= 48 && !plant.wilted) {
         const newDaysWatered = Math.max(0, plant.daysWatered - 1)
-        await set(ref(db, `garden/plants/${id}`), {
-          ...plant,
+        const today = now.toISOString().split('T')[0]
+        await update(ref(db, `garden/plants/${id}`), {
           wilted: true,
           daysWatered: newDaysWatered,
+          lastWateredDate: today,
+          waterDate: today,
         })
       }
     })

@@ -1,1 +1,1 @@
-🌸 leafnote | ✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir | 🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura
+🌸 leafnote | 🐛 jardim: corrigido bug que permitia regar mais de uma vez por dia | 🐛 jardim: planta agora murcha apenas após 2 dias sem rega
