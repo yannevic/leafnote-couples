@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.13': [
+    '🌸 leafnote',
+    '🐛 jardim: corrigido bug que permitia regar mais de uma vez por dia',
+    '🐛 jardim: planta agora murcha apenas após 2 dias sem rega',
+  ],
+
   '2.1.12': [
     '🌸 leafnote',
     '✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir',
