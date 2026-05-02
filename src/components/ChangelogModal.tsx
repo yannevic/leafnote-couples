@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.14': [
+    '🌸 leafnote',
+    '✨ novo widget no mural: fixe eventos do calendário e veja a contagem regressiva em tempo real',
+  ],
+
   '2.1.13': [
     '🌸 leafnote',
     '🐛 jardim: corrigido bug que permitia regar mais de uma vez por dia',
