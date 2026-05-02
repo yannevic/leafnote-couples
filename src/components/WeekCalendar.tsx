@@ -12,12 +12,15 @@ const THEME_OPTIONS: { key: CalendarTheme; label: string }[] = [
   { key: 'especial', label: 'Especial 🌿' },
 ]
 
+import type { CalendarEvent } from '../lib/calendar'
+
 interface Props {
   displayName: string
   onClose: () => void
+  onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
 }
 
-export default function WeekCalendar({ displayName, onClose }: Props) {
+export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Props) {
   const {
     theme,
     dayEntries,
@@ -370,6 +373,7 @@ export default function WeekCalendar({ displayName, onClose }: Props) {
           onClose={() => setSelectedDateKey(null)}
           onAdd={(text, time) => addEvent(selectedDateKey, text, time)}
           onRemove={(id) => removeEvent(selectedDateKey, id)}
+          onPinToBoard={onPinToBoard}
           currentUser={displayName}
         />
       )}

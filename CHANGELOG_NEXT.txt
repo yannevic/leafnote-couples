@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 jardim: corrigido bug que permitia regar mais de uma vez por dia | 🐛 jardim: planta agora murcha apenas após 2 dias sem rega
+🌸 leafnote | ✨ novo widget no mural: fixe eventos do calendário e veja a contagem regressiva em tempo real

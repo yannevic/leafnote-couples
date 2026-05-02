@@ -1,4 +1,11 @@
-export type BoardItemType = 'postit' | 'checklist' | 'drawing' | 'tag' | 'letter' | 'special-letter'
+export type BoardItemType =
+  | 'postit'
+  | 'checklist'
+  | 'drawing'
+  | 'tag'
+  | 'letter'
+  | 'special-letter'
+  | 'countdown-pin'
 
 export type PostItColor = 'yellow' | 'green' | 'pink' | 'blue' | 'lavender' | 'peach'
 export type LetterColor = 'rosa' | 'verde' | 'azul' | 'amarelo' | 'lilas'
@@ -69,8 +76,16 @@ export type AnyBoardItem =
   | TagItem
   | LetterItem
   | SpecialLetterItem
+  | CountdownPinItem
 
 export type SpecialLetterLayout = 'A' | 'B' | 'C'
+
+export interface CountdownPinItem extends BoardItem {
+  type: 'countdown-pin'
+  label: string
+  targetDate: string
+  color: string
+}
 
 export interface SpecialLetterItem extends BoardItem {
   type: 'special-letter'

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarEvent, CalendarTheme, THEME_COLORS, MONTH_NAMES, DAY_NAMES } from '../lib/calendar'
+import { X, Pin } from 'lucide-react'
 
 interface Props {
   dateKey: string
@@ -8,6 +9,7 @@ interface Props {
   onClose: () => void
   onAdd: (text: string, time: string | null) => void
   onRemove: (id: string) => void
+  onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
   currentUser: string
 }
 
@@ -23,6 +25,7 @@ export default function WeekCalendarModal({
   onClose,
   onAdd,
   onRemove,
+  onPinToBoard,
   currentUser,
 }: Props) {
   const [newText, setNewText] = useState('')
@@ -119,7 +122,7 @@ export default function WeekCalendarModal({
                     className="text-xs font-bold"
                     style={{ color: t.accent, fontFamily: 'Baloo 2, sans-serif' }}
                   >
-                    🕐 {entry.time}
+                    {entry.time}
                   </span>
                 )}
                 <span
@@ -135,20 +138,42 @@ export default function WeekCalendarModal({
                   por {entry.createdBy}
                 </span>
               </div>
-              {entry.createdBy === currentUser && (
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginTop: 2 }}>
                 <button
-                  className="rounded-lg text-xs font-bold hover:opacity-70 transition-opacity shrink-0"
+                  className="rounded-lg text-xs font-bold hover:opacity-70 transition-opacity"
                   style={{
-                    background: '#f5d5dc',
-                    color: '#e8607a',
-                    padding: '6px 12px',
-                    marginTop: 2,
+                    background: '#e8f5e8',
+                    color: '#4A7A4A',
+                    padding: '6px 10px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
                   }}
-                  onClick={() => onRemove(entry.id)}
+                  onClick={() => onPinToBoard(entry, dateKey)}
+                  title="fixar no mural"
                 >
-                  🗑️
+                  <Pin size={12} />
                 </button>
-              )}
+                {entry.createdBy === currentUser && (
+                  <button
+                    className="rounded-lg text-xs font-bold hover:opacity-70 transition-opacity"
+                    style={{
+                      background: '#f5d5dc',
+                      color: '#e8607a',
+                      padding: '6px 10px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    onClick={() => onRemove(entry.id)}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

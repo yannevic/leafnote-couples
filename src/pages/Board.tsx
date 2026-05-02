@@ -43,6 +43,8 @@ import GardenView from '../components/Garden/GardenView'
 import { DEFAULT_BOARD_ID, moveItemToBoard, moveItemsByTypeToBoard, BoardMeta } from '../lib/boards'
 import { useBoards } from '../hooks/useBoards'
 import { CARD_MODELS } from '../assets/letters/index'
+import type { CountdownPinItem } from '../types/board'
+import CountdownPin from '../components/CountdownPin'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -127,6 +129,10 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
   const [openSpecialLetter, setOpenSpecialLetter] = useState<SpecialLetterItem | null>(null)
   const [openLetter, setOpenLetter] = useState<LetterItem | null>(null)
   const [showSpecialLetter, setShowSpecialLetter] = useState(false)
+  const [pinColorPicker, setPinColorPicker] = useState<{
+    entry: { id: string; text: string }
+    dateKey: string
+  } | null>(null)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
   const defaultBoard: BoardMeta = {
@@ -392,6 +398,32 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     [items]
   )
 
+  const handlePinToBoard = useCallback(
+    (entry: { id: string; text: string }, dateKey: string, color: string) => {
+      const item: CountdownPinItem = {
+        id: makeId(),
+        type: 'countdown-pin',
+        x: 300,
+        y: 200,
+        width: 210,
+        height: 80,
+        createdBy: uid,
+        updatedBy: uid,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        zOrder: nextZOrder(),
+        label: entry.text,
+        targetDate: dateKey,
+        color,
+      }
+      setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+      saveItem(item as unknown as AnyBoardItem)
+      setPinColorPicker(null)
+      setShowCalendar(false)
+    },
+    [uid, saveItem, items]
+  )
+
   const sortedItems = [...items].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0))
 
   if (!nickSaved) {
@@ -638,6 +670,19 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                   onSendBackward={handleSendBackward}
                   onFocus={handleFocus}
                   {...withContext(item)}
+                />
+              )
+            }
+
+            if (item.type === 'countdown-pin') {
+              return (
+                <CountdownPin
+                  key={item.id}
+                  item={item as CountdownPinItem}
+                  zIndex={z}
+                  onUpdate={handleUpdate as never}
+                  onDelete={handleDelete}
+                  onFocus={handleFocus}
                 />
               )
             }
@@ -1152,7 +1197,11 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         />
         <StreakCounter />
         {showCalendar && (
-          <WeekCalendar displayName={displayName} onClose={() => setShowCalendar(false)} />
+          <WeekCalendar
+            displayName={displayName}
+            onClose={() => setShowCalendar(false)}
+            onPinToBoard={(entry, dateKey) => setPinColorPicker({ entry, dateKey })}
+          />
         )}
         {trashOpen && (
           <div
@@ -1322,6 +1371,84 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
           </div>
         )}
       </div>
+
+      {pinColorPicker && (
+        <div
+          onClick={() => setPinColorPicker(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            background: 'rgba(26,42,26,0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fdf6ec',
+              borderRadius: 16,
+              padding: '24px 28px',
+              fontFamily: 'Baloo 2, sans-serif',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+              border: '1.5px solid #e8d5b0',
+              minWidth: 260,
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#2C1810', marginBottom: 6 }}>
+              fixar no mural
+            </div>
+            <div style={{ fontSize: 12, color: '#8b6914', marginBottom: 16, opacity: 0.8 }}>
+              {pinColorPicker.entry.text}
+            </div>
+            <div style={{ fontSize: 12, color: '#8b6914', marginBottom: 10 }}>escolha uma cor:</div>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              {['#7FB87F', '#E8A0B0', '#C4956A', '#7a9ed4', '#9B7FD4', '#c87090'].map((color) => (
+                <button
+                  key={color}
+                  onClick={() =>
+                    handlePinToBoard(pinColorPicker.entry, pinColorPicker.dateKey, color)
+                  }
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: color,
+                    border: '2px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setPinColorPicker(null)}
+              style={{
+                width: '100%',
+                background: 'none',
+                border: '1px solid #d4aa80',
+                borderRadius: 8,
+                padding: '8px 0',
+                fontSize: 12,
+                color: '#8b6914',
+                cursor: 'pointer',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontWeight: 600,
+              }}
+            >
+              cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── Modais de carta fora do overflow:hidden — fix z-index no Electron ─── */}
 
