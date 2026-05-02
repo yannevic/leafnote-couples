@@ -83,7 +83,10 @@ export function useGarden(uid: string, partnerUid: string) {
 
   const alreadyWatered = (plantId: string) => {
     const p = plants.find((x) => x.id === plantId)
-    return p ? (p.water ?? {})[uid] === true : false
+    if (!p) return false
+    const today = new Date().toISOString().split('T')[0]
+    if (p.waterDate === today && !p.water?.[uid] && !p.water?.[partnerUid]) return true
+    return (p.water ?? {})[uid] === true
   }
 
   const partnerWatered = (plantId: string) => {

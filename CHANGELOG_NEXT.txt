@@ -1,1 +1,1 @@
-🌸 leafnote | ✨ novo widget no mural: fixe eventos do calendário e veja a contagem regressiva em tempo real
+🌸 leafnote | 🐛 jardim: botão de regar agora bloqueia corretamente após os dois regarem no mesmo dia
