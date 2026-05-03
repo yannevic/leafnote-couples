@@ -148,7 +148,7 @@ export async function waterPlant(
 
   if (plant.stage >= 5) return
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA')
 
   // Se já regou hoje, ignora
   if (plant.water?.[uid] === true && plant.waterDate === today) return
@@ -339,6 +339,6 @@ export function getFlowerFromSum(sum: number): FlowerType {
 }
 
 export function canPlantToday(plants: PlantData[]): boolean {
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA')
   return !plants.some((p) => p.plantedAt.startsWith(today))
 }

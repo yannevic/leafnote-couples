@@ -33,7 +33,7 @@ export function useGarden(uid: string, partnerUid: string) {
 
   useEffect(() => {
     const unsubPlants = subscribePlants((data) => {
-      const today = new Date().toISOString().split('T')[0]
+      const today = new Date().toLocaleDateString('en-CA')
       data.forEach((plant) => {
         if (
           plant.water &&
@@ -84,7 +84,7 @@ export function useGarden(uid: string, partnerUid: string) {
   const alreadyWatered = (plantId: string) => {
     const p = plants.find((x) => x.id === plantId)
     if (!p) return false
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA')
     if (p.waterDate === today && !p.water?.[uid] && !p.water?.[partnerUid]) return true
     return (p.water ?? {})[uid] === true
   }

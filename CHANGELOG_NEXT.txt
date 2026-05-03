@@ -1,1 +1,1 @@
-🌸 leafnote | 🐛 jardim: botão de regar agora bloqueia corretamente após os dois regarem no mesmo dia
+🌸 leafnote | 🐛 jardim: rega agora reseta à meia-noite no horário local, não em UTC
