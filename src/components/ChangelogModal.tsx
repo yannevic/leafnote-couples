@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
+  '2.1.16': [
+    '🌸 leafnote',
+    '🐛 jardim: rega agora reseta à meia-noite no horário local, não em UTC',
+  ],
+
   '2.1.15': [
     '🌸 leafnote',
     '🐛 jardim: botão de regar agora bloqueia corretamente após os dois regarem no mesmo dia',
