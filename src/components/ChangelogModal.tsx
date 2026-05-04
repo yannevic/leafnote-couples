@@ -71,7 +71,7 @@ export default function ChangelogModal() {
         </button>
 
         <div style={{ fontSize: 22, fontWeight: 800, color: '#2d4a2d', marginBottom: 16 }}>
-          novidades 🌸
+          o que há de novo
         </div>
 
         <ul

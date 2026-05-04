@@ -11,6 +11,7 @@ import TitleBar from './components/TitleBar'
 import UpdateNotifier, { UpdateStatus } from './components/UpdateNotifier'
 import { useBoards } from './hooks/useBoards'
 import type { UserProfile } from './types/couple'
+import ChangelogModal from './components/ChangelogModal'
 
 function AppInner({
   user,
@@ -36,6 +37,7 @@ function AppInner({
 
   return (
     <div className="fixed inset-0 flex flex-col">
+      <ChangelogModal />
       <UpdateNotifier
         onStatus={setUpdateStatus}
         onProgress={setUpdateProgress}

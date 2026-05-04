@@ -140,7 +140,7 @@ export default function MoodWidget({ coupleId, uid, partnerUid }: Props) {
         position: 'fixed',
         left: pos.x,
         top: pos.y,
-        zIndex: 200,
+        zIndex: 49,
         userSelect: 'none',
         fontFamily: 'Baloo 2, sans-serif',
       }}
