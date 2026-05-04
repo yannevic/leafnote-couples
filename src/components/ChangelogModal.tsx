@@ -19,7 +19,6 @@ export default function ChangelogModal() {
   }, [])
 
   if (!open || !CHANGELOG[version]) return null
-
   return (
     <div
       onClick={() => setOpen(false)}
