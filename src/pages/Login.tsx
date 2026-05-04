@@ -37,14 +37,28 @@ export default function Login() {
         await saveUserProfile(cred.user.uid, nickname.trim(), null)
       }
     } catch (e) {
-      const raw =
-        e instanceof Error
-          ? e.message
-          : typeof e === 'object' && e !== null && 'message' in e
-            ? String((e as { message: unknown }).message)
-            : String(e)
-      void raw
-      setError('ce errou burrinho, tenta dnv ai 🍂')
+      const code =
+        typeof e === 'object' && e !== null && 'code' in e
+          ? String((e as { code: unknown }).code)
+          : ''
+
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+        setError('senha incorreta')
+      } else if (code === 'auth/user-not-found') {
+        setError('nenhuma conta com esse email')
+      } else if (code === 'auth/email-already-in-use') {
+        setError('esse email já tem uma conta')
+      } else if (code === 'auth/invalid-email') {
+        setError('email inválido')
+      } else if (code === 'auth/weak-password') {
+        setError('senha fraca — mínimo 6 caracteres')
+      } else if (code === 'auth/too-many-requests') {
+        setError('muitas tentativas, tenta de novo mais tarde')
+      } else if (code === 'auth/network-request-failed') {
+        setError('sem conexão, verifica sua internet')
+      } else {
+        setError('algo deu errado, tenta de novo')
+      }
     } finally {
       setLoading(false)
     }
