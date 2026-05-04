@@ -8,6 +8,7 @@ import SeedRollModal from './SeedRollModal'
 import { bgCartoon } from '../../assets/garden'
 
 interface GardenViewProps {
+  coupleId: string
   uid: string
   partnerUid: string
   partnerName: string
@@ -15,8 +16,13 @@ interface GardenViewProps {
 }
 
 const PLANTS_PER_PAGE = 4
-
-export default function GardenView({ uid, partnerUid, partnerName, onClose }: GardenViewProps) {
+export default function GardenView({
+  coupleId,
+  uid,
+  partnerUid,
+  partnerName,
+  onClose,
+}: GardenViewProps) {
   const {
     plants,
     seeds,
@@ -35,7 +41,7 @@ export default function GardenView({ uid, partnerUid, partnerName, onClose }: Ga
     partnerRolledEvent,
     partnerRolledWelcome,
     iAlreadyRolledWelcome,
-  } = useGarden(uid, partnerUid)
+  } = useGarden(coupleId, uid, partnerUid)
 
   const [page, setPage] = useState(0)
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)

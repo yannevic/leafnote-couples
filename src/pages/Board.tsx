@@ -1053,9 +1053,9 @@ export default function Board({
             onClose={() => setShowMovies(false)}
           />
         )}
-
         {showGarden && (
           <GardenView
+            coupleId={coupleId ?? ''}
             uid={uid}
             partnerUid={partnerUid ?? ''}
             partnerName={otherName}
@@ -1231,7 +1231,7 @@ export default function Board({
           onOpenTrash={() => setTrashOpen(true)}
           trashCount={trashedItems.length}
         />
-        <StreakCounter />
+        <StreakCounter coupleId={coupleId ?? ''} />
         {showCalendar && (
           <WeekCalendar
             coupleId={coupleId ?? ''}

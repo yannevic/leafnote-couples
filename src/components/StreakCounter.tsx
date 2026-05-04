@@ -13,20 +13,20 @@ const MILESTONES = [
     days: 14,
     emoji: '🍕',
     title: '2 semanas!',
-    prize: 'Peçam a comida favorita de cada um e jantem juntos em chamada',
+    prize: 'Peçam a comida favorita de cada um e jantem juntos',
   },
   {
     days: 21,
     emoji: '🎮',
     title: '3 semanas!',
-    prize: 'Noite de jogos relaxantes juntos em chamada — escolham um jogo fofo pra jogar',
+    prize: 'Noite de jogos relaxantes juntos — escolham um jogo fofo pra jogar',
   },
   {
     days: 30,
     emoji: '🌙',
     title: '1 mês! Super prêmio!',
     prize:
-      'Filme com pipoca ao mesmo tempo em chamada e noite especial — e uma semente épica foi adicionada ao jardim de vocês!',
+      'Filme com pipoca -ou a comida favorita de vcs- para uma noite especial — e uma semente épica foi adicionada ao jardim de vocês!',
   },
 ]
 
@@ -38,8 +38,12 @@ function getNext(days: number) {
   return MILESTONES.find((m) => days < m.days) ?? null
 }
 
-export default function StreakCounter() {
-  const { streak, loading, days, setStart, reset } = useStreak()
+interface Props {
+  coupleId: string
+}
+
+export default function StreakCounter({ coupleId }: Props) {
+  const { streak, loading, days, setStart, reset } = useStreak(coupleId)
   const [showPanel, setShowPanel] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
