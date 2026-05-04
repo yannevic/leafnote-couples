@@ -3,9 +3,11 @@ import { PresenceData } from '../lib/presence'
 interface Props {
   myPresence: PresenceData | null
   partnerPresence: PresenceData | null
+  mySex: 'female' | 'male' | null
+  partnerSex: 'female' | 'male' | null
 }
 
-export default function PresenceBadge({ myPresence, partnerPresence }: Props) {
+export default function PresenceBadge({ myPresence, partnerPresence, mySex, partnerSex }: Props) {
   const myOnline = myPresence?.online === true
   const partnerOnline = partnerPresence?.online === true
   const myName = myPresence?.displayName ?? '...'
@@ -41,7 +43,7 @@ export default function PresenceBadge({ myPresence, partnerPresence }: Props) {
             filter: myOnline ? 'none' : 'grayscale(1) opacity(0.45)',
           }}
         >
-          {myOnline ? '🙆🏻‍♀️' : '🙇🏻‍♀️'}
+          {mySex === 'male' ? (myOnline ? '🙆🏻‍♂️' : '🙇🏻‍♂️') : myOnline ? '🙆🏻‍♀️' : '🙇🏻‍♀️'}
         </span>
       </div>
 
@@ -57,7 +59,7 @@ export default function PresenceBadge({ myPresence, partnerPresence }: Props) {
             filter: partnerOnline ? 'none' : 'grayscale(1) opacity(0.45)',
           }}
         >
-          {partnerOnline ? '🙆🏻‍♂️' : '🙇🏻‍♂️'}
+          {partnerSex === 'female' ? (partnerOnline ? '🙆🏻‍♀️' : '🙇🏻‍♀️') : partnerOnline ? '🙆🏻‍♂️' : '🙇🏻‍♂️'}
         </span>
         <span style={{ fontSize: 11, fontWeight: 800, color: '#7a3040' }}>{partnerName}</span>
       </div>

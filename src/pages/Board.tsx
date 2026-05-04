@@ -104,12 +104,14 @@ export default function Board({
   partnerUid: couplePartnerUid,
   pendingRequests,
   myProfile,
+  partnerProfile,
 }: {
   activeBoardId: string
   coupleId: string | null
   partnerUid: string | null
   pendingRequests: Record<string, import('../types/couple').CoupleRequest>
   myProfile: import('../types/couple').UserProfile | null
+  partnerProfile: import('../types/couple').UserProfile | null
 }) {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
@@ -151,6 +153,7 @@ export default function Board({
     dateKey: string
   } | null>(null)
   const isFemale = myProfile?.sex === 'female'
+  const partnerSex = partnerProfile?.sex ?? null
   const [showCycleModal, setShowCycleModal] = useState(false)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates(coupleId ?? '')
   const { extraBoards } = useBoards(uid, coupleId)
@@ -745,7 +748,12 @@ export default function Board({
           </div>
         )}
 
-        <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
+        <PresenceBadge
+          myPresence={myPresence}
+          partnerPresence={partnerPresence}
+          mySex={myProfile?.sex ?? null}
+          partnerSex={partnerSex}
+        />
         {coupleId && <JoinRequestToast coupleId={coupleId} requests={pendingRequests} />}
         <MoodWidget coupleId={coupleId ?? ''} uid={uid} partnerUid={partnerUid} />
 

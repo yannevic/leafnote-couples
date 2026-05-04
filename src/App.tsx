@@ -21,7 +21,7 @@ function AppInner({
   profile: UserProfile
   onProfileUpdate: () => void
 }) {
-  const { coupleId, partnerUid, pendingRequests } = useCouple(user.uid, profile)
+  const { coupleId, partnerUid, partnerProfile, pendingRequests } = useCouple(user.uid, profile)
 
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
     user.uid,
@@ -68,6 +68,7 @@ function AppInner({
                   partnerUid={partnerUid}
                   pendingRequests={pendingRequests}
                   myProfile={profile}
+                  partnerProfile={partnerProfile}
                 />
               }
             />
