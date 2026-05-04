@@ -10,7 +10,7 @@ interface Props {
   onAdd: (text: string, time: string | null) => void
   onRemove: (id: string) => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
-  onPinCycleToBoard: () => void
+  onPinCycleToBoard: () => boolean
   isFemale: boolean
   currentUser: string
 }
@@ -33,6 +33,7 @@ export default function WeekCalendarModal({
 }: Props) {
   const [newText, setNewText] = useState('')
   const [newTime, setNewTime] = useState('')
+  const [cycleError, setCycleError] = useState(false)
   const t = THEME_COLORS[theme]
 
   const { year, month, day } = parseDateKey(dateKey)
@@ -98,7 +99,8 @@ export default function WeekCalendarModal({
               }}
               onClick={(e) => {
                 e.stopPropagation()
-                onPinCycleToBoard()
+                const ok = onPinCycleToBoard()
+                if (!ok) setCycleError(true)
               }}
               title="fixar pin de ciclo no mural"
             >
@@ -114,7 +116,7 @@ export default function WeekCalendarModal({
               >
                 <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
               </svg>
-              ciclo
+              fixar ciclo no mural
             </button>
             <button
               className="rounded-full w-9 h-9 flex items-center justify-center text-sm hover:opacity-70 transition-opacity"
@@ -125,6 +127,39 @@ export default function WeekCalendarModal({
             </button>
           </div>
         </div>
+
+        {cycleError && (
+          <div
+            style={{
+              background: '#fce8ee',
+              border: '1px solid #e8a0b0',
+              borderRadius: 8,
+              margin: '8px 28px 0',
+              padding: '8px 14px',
+              fontSize: 12,
+              color: '#c87090',
+              fontFamily: 'Baloo 2, sans-serif',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            nenhum ciclo ativo para fixar no mural
+            <button
+              onClick={() => setCycleError(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#c87090',
+                fontSize: 14,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* lista */}
         <div

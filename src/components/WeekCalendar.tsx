@@ -69,19 +69,20 @@ export default function WeekCalendar({
 
   function getCycleDayState(dateKey: string): 'tpm' | 'active' | null {
     const found = Object.values(allCycles).find((cycle) => {
-      if (cycle.status === 'ended') return false
       const tpmStart = cycle.tpmStart
       const endDate = cycle.actualEndDate ?? cycle.endDate
       const predictedDate = cycle.predictedDate
-      if (cycle.status === 'active' && cycle.confirmedDate) {
-        return dateKey >= cycle.confirmedDate && dateKey <= endDate
+      if (cycle.confirmedDate) {
+        const confirmedEnd = endDate
+        return dateKey >= tpmStart && dateKey <= confirmedEnd
       }
       return dateKey >= tpmStart && dateKey <= predictedDate
     })
     if (!found) return null
-    if (found.status === 'active' && found.confirmedDate) {
+    if (found.confirmedDate) {
       const endDate = found.actualEndDate ?? found.endDate
       if (dateKey >= found.confirmedDate && dateKey <= endDate) return 'active'
+      if (dateKey >= found.tpmStart && dateKey < found.confirmedDate) return 'tpm'
     }
     return 'tpm'
   }
@@ -492,8 +493,11 @@ export default function WeekCalendar({
           onRemove={(id) => removeEvent(selectedDateKey, id)}
           onPinToBoard={onPinToBoard}
           onPinCycleToBoard={() => {
+            const hasActiveCycle = Object.values(allCycles).some((c) => c.status !== 'ended')
+            if (!hasActiveCycle) return false
             onPinCycleToBoard()
             setSelectedDateKey(null)
+            return true
           }}
           isFemale={isFemale}
           currentUser={displayName}

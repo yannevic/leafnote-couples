@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Save, CheckCircle, StopCircle, CalendarDays } from 'lucide-react'
+import DatePicker from './DatePicker'
 import {
   CycleData,
   saveCycle,
@@ -27,15 +28,18 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
   const [nextPrediction, setNextPrediction] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const [initialized, setInitialized] = useState(false)
+
   useEffect(() => {
-    if (currentCycle) {
+    if (currentCycle && !initialized) {
       setPredictedDate(currentCycle.data.predictedDate)
       setTpmDays(currentCycle.data.tpmDays)
       setDuration(currentCycle.data.duration)
       setConfirmedDate(currentCycle.data.confirmedDate ?? '')
       setActualEndDate(currentCycle.data.actualEndDate ?? '')
+      setInitialized(true)
     }
-  }, [currentCycle])
+  }, [currentCycle, initialized])
 
   useEffect(() => {
     predictNextCycle(coupleId).then(setNextPrediction)
@@ -51,8 +55,8 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
     const data: CycleData = {
       predictedDate,
       duration,
-      endDate: addDays(predictedDate, duration),
-      tpmStart: addDays(predictedDate, -tpmDays),
+      endDate: addDays(predictedDate, duration - 1),
+      tpmStart: addDays(predictedDate, -(tpmDays - 1)),
       tpmDays,
       status: 'predicted',
     }
@@ -165,15 +169,11 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
               Novo ciclo
             </p>
 
-            <div>
-              <label style={labelStyle}>Data prevista para descer</label>
-              <input
-                type="date"
-                value={predictedDate}
-                onChange={(e) => setPredictedDate(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
+            <DatePicker
+              label="Data prevista para descer"
+              value={predictedDate}
+              onChange={setPredictedDate}
+            />
 
             <div>
               <label style={labelStyle}>Dias de TPM antes (padrão 7)</label>
@@ -251,15 +251,11 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
               Previsão atual — {formatDate(currentCycle.data.predictedDate)}
             </p>
 
-            <div>
-              <label style={labelStyle}>Ajustar data prevista</label>
-              <input
-                type="date"
-                value={predictedDate}
-                onChange={(e) => setPredictedDate(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
+            <DatePicker
+              label="Ajustar data prevista"
+              value={predictedDate}
+              onChange={setPredictedDate}
+            />
 
             <div>
               <label style={labelStyle}>Dias de TPM antes</label>
@@ -308,15 +304,11 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
               Confirmar que desceu
             </p>
 
-            <div>
-              <label style={labelStyle}>Data real que desceu</label>
-              <input
-                type="date"
-                value={confirmedDate}
-                onChange={(e) => setConfirmedDate(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
+            <DatePicker
+              label="Data real que desceu"
+              value={confirmedDate}
+              onChange={setConfirmedDate}
+            />
 
             <div>
               <label style={labelStyle}>Duração prevista (dias)</label>
@@ -379,15 +371,11 @@ export default function CycleModal({ coupleId, myUid, onClose }: Props) {
               {formatDate(currentCycle.data.actualEndDate ?? currentCycle.data.endDate)}
             </p>
 
-            <div>
-              <label style={labelStyle}>Corrigir data de fim (opcional)</label>
-              <input
-                type="date"
-                value={actualEndDate}
-                onChange={(e) => setActualEndDate(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
+            <DatePicker
+              label="Corrigir data de fim (opcional)"
+              value={actualEndDate}
+              onChange={setActualEndDate}
+            />
 
             <button
               onClick={handleEndCycle}
