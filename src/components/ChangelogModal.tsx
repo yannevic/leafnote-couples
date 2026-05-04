@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {}
-
 export default function ChangelogModal() {
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState('')
