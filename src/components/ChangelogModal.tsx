@@ -2,114 +2,10 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CHANGELOG: Record<string, string[]> = {
-  '2.1.18': [
-    '🌸 leafnote',
-    '✨ módulo de ciclo menstrual: pin no mural com estados tpm/menstruada/chegando',
-    '✨ calendário colore e marca os dias do ciclo com ícones',
-    '✨ modal de gestão do ciclo (só nana): previsão, confirmação, duração e encerramento',
-    '✨ previsão automática do próximo ciclo baseada no histórico',
-    '✨ botão ciclo no calendário e no modal de dia para fixar pin no mural',
-  ],
-
-  '2.1.17': [
-    '🌸 leafnote',
-    '🐛 jardim: status de rega agora mostra os dois como regados após completar o dia',
-  ],
-
-  '2.1.16': [
-    '🌸 leafnote',
-    '🐛 jardim: rega agora reseta à meia-noite no horário local, não em UTC',
-  ],
-
-  '2.1.15': [
-    '🌸 leafnote',
-    '🐛 jardim: botão de regar agora bloqueia corretamente após os dois regarem no mesmo dia',
-  ],
-
-  '2.1.14': [
-    '🌸 leafnote',
-    '✨ novo widget no mural: fixe eventos do calendário e veja a contagem regressiva em tempo real',
-  ],
-
-  '2.1.13': [
-    '🌸 leafnote',
-    '🐛 jardim: corrigido bug que permitia regar mais de uma vez por dia',
-    '🐛 jardim: planta agora murcha apenas após 2 dias sem rega',
-  ],
-
-  '2.1.12': [
-    '🌸 leafnote',
-    '✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir',
-    '🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura',
-  ],
-
-  '2.1.11': [
-    '🌸 leafnote',
-    '🐛 jardim: rega do parceiro não é mais apagada ao regar',
-  ],
-
-  '2.1.10': [
-    '🌸 leafnote',
-    '🐛 jardim: rega não some mais ao reabrir o app',
-  ],
-
-  '2.1.9': [
-    '🌸 leafnote',
-    '🐛 jardim: rega diária agora reseta corretamente entre os dias',
-    '🐛 jardim: removido texto de estágio duplicado ao murchar',
-    '🐛 jardim: water reseta automaticamente ao abrir o jardim em dia novo',
-  ],
-
-  '2.1.8': [
-    '🌸 leafnote',
-    '✨ cartas especiais agora abrem para quem enviou, depois que o receptor abrir',
-    '🐛 corrigido bloqueio de carta especial — agora usa apenas o campo "disponível a partir de" para liberar abertura',
-  ],
-
-  '2.1.7': [
-    '🌸 leafnote',
-    '🐛 corrige Firebase no build do workflow',
-  ],
-
-  '2.1.6': [
-    '🌸 leafnote',
-    '🐛 ajustes internos',
-  ],
-
-  '2.1.5': [
-    '🌸 leafnote',
-    '✨ botão de atualização com progresso e status claros na barra de título',
-  ],
-
-  '2.1.4': [
-    '🌸 leafnote',
-    '✨ nome do instalador corrigido',
-    '🐛 banner de atualização agora aparece corretamente',
-  ],
-
-  '2.1.3': [
-    '🌸 leafnote',
-    '✨ teste updater',
-  ],
-
-  '2.1.2': [
-    '🌸 leafnote',
-    '✨ sistema de atualização automática',
-    '✨ changelog com novidades',
-  ],
-
-  '2.1.1': [
-    '🌸 leafnote',
-    '✨ sistema de atualização automática',
-    '✨ changelog de novidades',
-  ],
-
-  '2.1.0': [
-    '🌸 leafnote v2.1.0',
-    '✨ Campo "disponível a partir de" nas cartas especiais',
-    '✨ Itens migram pro mural principal ao deletar um board',
-    '🐛 Correção na rega simultânea do jardim',
-    '🐛 Correção na movimentação de itens entre murais',
+  '1.0.0': [
+    '🌸 leafnote couples',
+    '✨ app de casal multi-casal com código de convite',
+    '✨ mural colaborativo, jardim, cartas, streak e muito mais',
   ],
 }
 
@@ -121,7 +17,7 @@ export default function ChangelogModal() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(window as any).api.getVersion().then((v: string) => {
       setVersion(v)
-      const key = `leafnote-changelog-${v}`
+      const key = `leafnote-couples-changelog-${v}`
       if (!localStorage.getItem(key) && CHANGELOG[v]) {
         setOpen(true)
         localStorage.setItem(key, '1')

@@ -8,6 +8,8 @@ import {
   updateProfile,
 } from 'firebase/auth'
 
+import { saveUserProfile } from '../lib/couple'
+
 type Mode = 'login' | 'register'
 
 export default function Login() {
@@ -32,6 +34,7 @@ export default function Login() {
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password)
         await updateProfile(cred.user, { displayName: nickname.trim() })
+        await saveUserProfile(cred.user.uid, nickname.trim(), null)
       }
     } catch (e) {
       const raw =

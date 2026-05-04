@@ -1,6 +1,6 @@
 {
-  "name": "leafnote",
-  "version": "2.1.18",
+  "name": "leafnote-couples",
+  "version": "1.0.0",
   "description": "mural colaborativo de casal",
   "author": "Nana",
   "private": true,
@@ -47,8 +47,8 @@
     "vite-plugin-electron-renderer": "^0.14.0"
   },
   "build": {
-    "appId": "com.leafnote.app",
-    "productName": "leafnote",
+    "appId": "com.leafnote.couples",
+    "productName": "leafnote couples",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "directories": {
       "output": "release"

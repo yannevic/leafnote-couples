@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { RefreshCw, Download, ArrowDownToLine, Loader } from 'lucide-react'
+import { RefreshCw, Download, ArrowDownToLine, Loader, Copy, Check, LogOut } from 'lucide-react'
 import BoardSwitcher from './BoardSwitcher'
 import type { BoardMeta } from '../lib/boards'
+import { dissolveCouple } from '../lib/couple'
+import DissolveCoupleModal from './DissolveCoupleModal'
 
 const icon = new URL('../../resources/icon.png', import.meta.url).href
 
@@ -17,6 +19,10 @@ interface TitleBarProps {
   updateProgress?: number
   onInstallUpdate?: () => void
   onCheckUpdate?: () => void
+  inviteCode?: string | null
+  coupleId?: string | null
+  memberUids?: string[]
+  onCoupleDissolve?: () => void
 }
 
 export default function TitleBar({
@@ -29,10 +35,22 @@ export default function TitleBar({
   updateProgress = 0,
   onInstallUpdate,
   onCheckUpdate,
+  inviteCode,
+  coupleId,
+  memberUids = [],
+  onCoupleDissolve,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [version, setVersion] = useState('')
   const [now, setNow] = useState(new Date())
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [showDissolve, setShowDissolve] = useState(false)
+  function handleCopyCode() {
+    if (!inviteCode) return
+    void navigator.clipboard.writeText(inviteCode)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
+  }
 
   useEffect(() => {
     window.api.getVersion().then(setVersion)
@@ -92,6 +110,17 @@ export default function TitleBar({
         >
           <span style={{ color: '#7FB87F' }}>leaf</span>
           <span style={{ color: '#c4956a' }}>note</span>
+          <span
+            style={{
+              fontFamily: "'Caveat', cursive",
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#E8A0B0',
+              marginLeft: 4,
+            }}
+          >
+            couples
+          </span>
         </span>
         {version && (
           <span
@@ -108,6 +137,39 @@ export default function TitleBar({
 
         {/* Separador */}
         <span style={{ color: 'rgba(196,149,106,0.3)', fontSize: 12, marginLeft: 2 }}>|</span>
+
+        {/* Código de convite — some quando parceiro já entrou */}
+        {inviteCode && (
+          <button
+            onClick={handleCopyCode}
+            title="copiar código de convite"
+            style={
+              {
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                background: codeCopied ? 'rgba(127,184,127,0.18)' : 'rgba(196,149,106,0.12)',
+                border: `1px solid ${codeCopied ? '#7FB87F' : 'rgba(196,149,106,0.35)'}`,
+                borderRadius: 6,
+                padding: '2px 8px',
+                cursor: 'pointer',
+                fontFamily: 'Baloo 2, sans-serif',
+                fontSize: 11,
+                fontWeight: 800,
+                color: codeCopied ? '#7FB87F' : '#c4956a',
+                letterSpacing: '0.06em',
+                transition: 'all 0.15s',
+                WebkitAppRegion: 'no-drag',
+              } as React.CSSProperties
+            }
+          >
+            {codeCopied ? <Check size={11} /> : <Copy size={11} />}
+            {codeCopied ? 'copiado!' : inviteCode}
+          </button>
+        )}
+
+        {/* Separador 2 */}
+        {inviteCode && <span style={{ color: 'rgba(196,149,106,0.3)', fontSize: 12 }}>|</span>}
 
         {/* Board switcher */}
         <BoardSwitcher
@@ -174,6 +236,37 @@ export default function TitleBar({
           onInstall={onInstallUpdate}
           onCheck={onCheckUpdate}
         />
+        {coupleId && (
+          <button
+            onClick={() => setShowDissolve(true)}
+            title="encerrar cantinho"
+            style={
+              {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 22,
+                height: 22,
+                borderRadius: 6,
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: 'rgba(192,80,74,0.3)',
+                transition: 'color 0.15s',
+                padding: 0,
+                WebkitAppRegion: 'no-drag',
+              } as React.CSSProperties
+            }
+            onMouseEnter={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.color = '#c0504a'
+            }}
+            onMouseLeave={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(192,80,74,0.3)'
+            }}
+          >
+            <LogOut size={13} />
+          </button>
+        )}
         <WinBtn
           color="#e8a030"
           hoverColor="#f5b840"
@@ -196,10 +289,19 @@ export default function TitleBar({
           title="fechar"
         />
       </div>
+      {showDissolve && coupleId && (
+        <DissolveCoupleModal
+          onClose={() => setShowDissolve(false)}
+          onConfirm={async () => {
+            await dissolveCouple(coupleId, memberUids)
+            setShowDissolve(false)
+            if (onCoupleDissolve) onCoupleDissolve()
+          }}
+        />
+      )}
     </div>
   )
 }
-
 function UpdateBtn({
   status,
   progress,

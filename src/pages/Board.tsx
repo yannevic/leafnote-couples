@@ -33,6 +33,7 @@ import { PostItModal } from '../components/PostIt'
 import { ChecklistModal } from '../components/Checklist'
 import MoodWidget from '../components/MoodWidget'
 import MovieList from '../components/MovieList'
+import JoinRequestToast from '../components/JoinRequestToast'
 import { CalendarDays, LayoutGrid, Sprout, Film, ArrowRightLeft, Layers } from 'lucide-react'
 import SpecialLetterModal from '../components/SpecialLetterModal'
 import SpecialLetter from '../components/SpecialLetter'
@@ -97,7 +98,17 @@ const SPECIAL_LAYOUT_TEXT_AREA = {
   C: { top: '30%', bottom: '24%', left: '20%', right: '10%' },
 }
 
-export default function Board({ activeBoardId }: { activeBoardId: string }) {
+export default function Board({
+  activeBoardId,
+  coupleId,
+  partnerUid: couplePartnerUid,
+  pendingRequests,
+}: {
+  activeBoardId: string
+  coupleId: string | null
+  partnerUid: string | null
+  pendingRequests: Record<string, import('../types/couple').CoupleRequest>
+}) {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
   const [trashedItems, setTrashedItems] = useState<AnyBoardItem[]>([])
@@ -115,7 +126,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
-  const { myPresence, partnerPresence, partnerUid } = usePresence(uid, displayName)
+  const { myPresence, partnerPresence } = usePresence(uid, displayName, couplePartnerUid)
+  const partnerUid = couplePartnerUid ?? ''
   useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '')
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
@@ -730,6 +742,7 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         )}
 
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
+        {coupleId && <JoinRequestToast coupleId={coupleId} requests={pendingRequests} />}
         <MoodWidget uid={uid} partnerUid={partnerUid} />
 
         {/* Botão jardim */}

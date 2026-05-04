@@ -3,7 +3,7 @@ import { ref, onValue, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { PresenceData, publishPresence } from '../lib/presence'
 
-export function usePresence(uid: string, displayName: string) {
+export function usePresence(uid: string, displayName: string, partnerUid: string | null) {
   const [allPresence, setAllPresence] = useState<Record<string, PresenceData>>({})
 
   useEffect(() => {
@@ -20,10 +20,7 @@ export function usePresence(uid: string, displayName: string) {
   }, [])
 
   const myPresence = allPresence[uid] ?? null
+  const partnerPresence = partnerUid ? (allPresence[partnerUid] ?? null) : null
 
-  const partnerEntry = Object.entries(allPresence).find(([id]) => id !== uid)
-  const partnerUid = partnerEntry ? partnerEntry[0] : ''
-  const partnerPresence = partnerEntry ? partnerEntry[1] : null
-
-  return { myPresence, partnerPresence, partnerUid }
+  return { myPresence, partnerPresence, partnerUid: partnerUid ?? '' }
 }
