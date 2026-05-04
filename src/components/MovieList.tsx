@@ -1023,6 +1023,7 @@ function WishlistCard({
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 interface Props {
+  coupleId: string
   uid: string
   partnerUid: string
   displayName: string
@@ -1030,7 +1031,14 @@ interface Props {
   onClose: () => void
 }
 
-export default function MovieList({ uid, partnerUid, displayName, partnerName, onClose }: Props) {
+export default function MovieList({
+  coupleId,
+  uid,
+  partnerUid,
+  displayName,
+  partnerName,
+  onClose,
+}: Props) {
   const {
     movies,
     addNewMovie,
@@ -1042,7 +1050,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
     restoreMovieById,
     deleteMovieForever,
     reorderWishlistMovies,
-  } = useMovies(uid, displayName)
+  } = useMovies(coupleId, uid, displayName)
   const [tab, setTab] = useState<TabType>('watched')
   const [filter, setFilter] = useState<FilterType>('todos')
   const [sort, setSort] = useState<SortType>('data')
@@ -1058,8 +1066,8 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
   const [trashed, setTrashed] = useState<Movie[]>([])
 
   useEffect(() => {
-    return subscribeTrashedMovies(setTrashed)
-  }, [])
+    return subscribeTrashedMovies(coupleId, setTrashed)
+  }, [coupleId])
 
   // Drag state para wishlist
   const dragItem = useRef<number | null>(null)
@@ -1743,7 +1751,7 @@ export default function MovieList({ uid, partnerUid, displayName, partnerName, o
                           watchCount: isWatched ? maxCount + 1 : 0,
                           ...(isWishlist ? { wishlistOrder: wishlistCount } : {}),
                         }
-                        await addMovie(newMovie)
+                        await addMovie(coupleId, newMovie)
                         setAdding(false)
                       } catch (err) {
                         console.error('Erro ao duplicar filme:', err)

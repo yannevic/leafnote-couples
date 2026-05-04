@@ -7,14 +7,18 @@ export interface PresenceData {
   lastSeen: string
 }
 
-export function publishPresence(uid: string, displayName: string) {
-  const presRef = ref(db, `presence/${uid}`)
+export function publishPresence(coupleId: string, uid: string, displayName: string) {
+  const presRef = ref(db, `couples/${coupleId}/presence/${uid}`)
   set(presRef, { online: true, displayName, lastSeen: new Date().toISOString() })
   onDisconnect(presRef).set({ online: false, displayName, lastSeen: new Date().toISOString() })
 }
 
-export function subscribePresence(uid: string, callback: (data: PresenceData | null) => void) {
-  const presRef = ref(db, `presence/${uid}`)
+export function subscribePresence(
+  coupleId: string,
+  uid: string,
+  callback: (data: PresenceData | null) => void
+) {
+  const presRef = ref(db, `couples/${coupleId}/presence/${uid}`)
   onValue(presRef, (snap) => {
     callback(snap.val() as PresenceData | null)
   })

@@ -3,9 +3,6 @@ import { ref, onValue, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { AnyBoardItem } from '../types/board'
 
-const BOARD_PATH = 'board/items'
-const CALENDAR_PATH = 'calendar'
-
 function notify(title: string, body: string) {
   if (!('Notification' in window)) return
   if (Notification.permission === 'granted') {
@@ -29,7 +26,12 @@ const ITEM_TYPE_LABEL: Record<string, string> = {
   letter: 'uma cartinha',
 }
 
-export function useNotifications(uid: string, partnerUid: string, partnerName: string) {
+export function useNotifications(
+  coupleId: string,
+  uid: string,
+  partnerUid: string,
+  partnerName: string
+) {
   const knownBoardIds = useRef<Set<string> | null>(null)
   const knownCalendarIds = useRef<Set<string>>(new Set())
   const initialized = useRef(false)
@@ -37,7 +39,7 @@ export function useNotifications(uid: string, partnerUid: string, partnerName: s
   // notificações do mural
   useEffect(() => {
     if (!uid || !partnerUid) return
-    const boardRef = ref(db, BOARD_PATH)
+    const boardRef = ref(db, `couples/${coupleId}/board/items`)
 
     const unsub = onValue(boardRef, (snap) => {
       const data = snap.val() as Record<string, AnyBoardItem> | null
@@ -63,12 +65,12 @@ export function useNotifications(uid: string, partnerUid: string, partnerName: s
     })
 
     return () => off(boardRef, 'value', unsub)
-  }, [uid, partnerUid, partnerName])
+  }, [coupleId, uid, partnerUid, partnerName])
 
   // notificações do calendário
   useEffect(() => {
     if (!partnerUid) return
-    const calRef = ref(db, CALENDAR_PATH)
+    const calRef = ref(db, `couples/${coupleId}/calendar`)
 
     const unsub = onValue(calRef, (snap) => {
       const data = snap.val() as Record<
@@ -101,5 +103,5 @@ export function useNotifications(uid: string, partnerUid: string, partnerName: s
     })
 
     return () => off(calRef, 'value', unsub)
-  }, [partnerUid, partnerName])
+  }, [coupleId, partnerUid, partnerName])
 }

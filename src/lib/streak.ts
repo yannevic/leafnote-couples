@@ -2,35 +2,32 @@ import { ref, get, set, onValue, off } from 'firebase/database'
 import { db } from './firebase'
 
 export interface StreakData {
-  startDate: string // ISO string da data que escolheram
-  resetAt?: string // última vez que brigaram
+  startDate: string
+  resetAt?: string
 }
 
-const STREAK_PATH = 'streak'
-
-export function subscribeStreak(callback: (data: StreakData | null) => void) {
-  const streakRef = ref(db, STREAK_PATH)
+export function subscribeStreak(coupleId: string, callback: (data: StreakData | null) => void) {
+  const streakRef = ref(db, `couples/${coupleId}/streak`)
   onValue(streakRef, (snap) => {
-    const val = snap.val() as StreakData | null
-    callback(val)
+    callback(snap.val() as StreakData | null)
   })
   return () => off(streakRef, 'value')
 }
 
-export async function setStreakStart(startDate: string): Promise<void> {
-  const streakRef = ref(db, STREAK_PATH)
+export async function setStreakStart(coupleId: string, startDate: string): Promise<void> {
+  const streakRef = ref(db, `couples/${coupleId}/streak`)
   const snap = await get(streakRef)
   const current = snap.val() as StreakData | null
   await set(streakRef, { ...current, startDate })
 }
 
-export async function resetStreak(): Promise<void> {
+export async function resetStreak(coupleId: string): Promise<void> {
   const now = new Date().toISOString()
-  await set(ref(db, STREAK_PATH), {
+  await set(ref(db, `couples/${coupleId}/streak`), {
     startDate: now,
     resetAt: now,
   })
-  await set(ref(db, 'garden/specialSeedGiven'), false)
+  await set(ref(db, `couples/${coupleId}/garden/specialSeedGiven`), false)
 }
 
 export function calcDays(startDate: string): number {
@@ -40,15 +37,13 @@ export function calcDays(startDate: string): number {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
-const SPECIAL_SEED_GIVEN_PATH = 'garden/specialSeedGiven'
-
-export async function checkSpecialSeedReward(days: number): Promise<boolean> {
+export async function checkSpecialSeedReward(coupleId: string, days: number): Promise<boolean> {
   if (days < 30) return false
-  const snap = await get(ref(db, SPECIAL_SEED_GIVEN_PATH))
+  const snap = await get(ref(db, `couples/${coupleId}/garden/specialSeedGiven`))
   if (snap.val() === true) return false
   return true
 }
 
-export async function claimSpecialSeedReward(): Promise<void> {
-  await set(ref(db, SPECIAL_SEED_GIVEN_PATH), true)
+export async function claimSpecialSeedReward(coupleId: string): Promise<void> {
+  await set(ref(db, `couples/${coupleId}/garden/specialSeedGiven`), true)
 }

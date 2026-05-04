@@ -4,6 +4,7 @@ import type { CyclePinItem as CyclePinItemType } from '../types/board'
 import { useCycle } from '../hooks/useCycle'
 
 interface Props {
+  coupleId: string
   item: CyclePinItemType
   zIndex: number
   onUpdate: (id: string, data: Partial<CyclePinItemType>) => void
@@ -39,9 +40,16 @@ const STATE_CONFIG = {
   none: null,
 } as const
 
-export default function CyclePinItem({ item, zIndex, onUpdate, onDelete, onFocus }: Props) {
+export default function CyclePinItem({
+  coupleId,
+  item,
+  zIndex,
+  onUpdate,
+  onDelete,
+  onFocus,
+}: Props) {
   const dragRef = useRef({ dragging: false, moved: false, sx: 0, sy: 0, px: 0, py: 0 })
-  const { currentCycle } = useCycle()
+  const { currentCycle } = useCycle(coupleId)
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {

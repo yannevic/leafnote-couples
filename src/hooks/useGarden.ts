@@ -22,7 +22,7 @@ import {
   resetPlantWater,
 } from '../lib/garden'
 
-export function useGarden(uid: string, partnerUid: string) {
+export function useGarden(coupleId: string, uid: string, partnerUid: string) {
   const [plants, setPlants] = useState<PlantData[]>([])
   const [seeds, setSeeds] = useState<SeedData[]>([])
   const [stageEvents, setStageEvents] = useState<StageEvent[]>([])
@@ -32,7 +32,8 @@ export function useGarden(uid: string, partnerUid: string) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubPlants = subscribePlants((data) => {
+    if (!coupleId) return
+    const unsubPlants = subscribePlants(coupleId, (data) => {
       const today = new Date().toLocaleDateString('en-CA')
       data.forEach((plant) => {
         if (
@@ -40,17 +41,17 @@ export function useGarden(uid: string, partnerUid: string) {
           Object.keys(plant.water).length > 0 &&
           (plant as PlantData & { waterDate?: string }).waterDate !== today
         ) {
-          resetPlantWater(plant.id)
+          resetPlantWater(coupleId, plant.id)
         }
       })
       setPlants(data)
       setLoading(false)
     })
-    const unsubSeeds = subscribeSeeds(setSeeds)
-    const unsubEvents = subscribeStageEvents(setStageEvents)
-    const unsubPanic = subscribePanicMode(setPanicModeState)
-    const unsubWelcome = subscribeWelcomeSeedGiven(setWelcomeGiven)
-    checkWiltAll()
+    const unsubSeeds = subscribeSeeds(coupleId, setSeeds)
+    const unsubEvents = subscribeStageEvents(coupleId, setStageEvents)
+    const unsubPanic = subscribePanicMode(coupleId, setPanicModeState)
+    const unsubWelcome = subscribeWelcomeSeedGiven(coupleId, setWelcomeGiven)
+    checkWiltAll(coupleId)
     return () => {
       unsubPlants()
       unsubSeeds()
@@ -58,27 +59,27 @@ export function useGarden(uid: string, partnerUid: string) {
       unsubPanic()
       unsubWelcome()
     }
-  }, [])
+  }, [coupleId])
 
-  // Subscribe nos welcomeRolls
   useEffect(() => {
-    const r = ref(db, 'garden/welcomeRolls')
+    if (!coupleId) return
+    const r = ref(db, `couples/${coupleId}/garden/welcomeRolls`)
     const handler = onValue(r, (snap) => {
       setWelcomeRolls((snap.val() as Record<string, number>) ?? {})
     })
     return () => off(r, 'value', handler)
-  }, [])
+  }, [coupleId])
 
   const water = async (plantId: string) => {
-    await waterPlant(plantId, uid, partnerUid, panicMode)
+    await waterPlant(coupleId, plantId, uid, partnerUid, panicMode)
   }
 
   const plant = async (seedId: string, flowerType: FlowerType) => {
-    await plantSeed(seedId, flowerType)
+    await plantSeed(coupleId, seedId, flowerType)
   }
 
   const addNewSeed = async (flowerType: FlowerType) => {
-    await addSeed(flowerType)
+    await addSeed(coupleId, flowerType)
   }
 
   const alreadyWatered = (plantId: string) => {
@@ -97,7 +98,6 @@ export function useGarden(uid: string, partnerUid: string) {
     return (p.water ?? {})[partnerUid] === true
   }
 
-  // Eventos onde este uid ainda não rolou
   const pendingEvents = stageEvents.filter((e) => e.rolls?.[uid] == null)
   const currentEvent = pendingEvents[0] ?? null
 
@@ -105,17 +105,17 @@ export function useGarden(uid: string, partnerUid: string) {
     eventId: string,
     roll: number
   ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
-    return saveEventRoll(eventId, uid, roll, partnerUid, panicMode)
+    return saveEventRoll(coupleId, eventId, uid, roll, partnerUid, panicMode)
   }
 
   const rollForWelcome = async (
     roll: number
   ): Promise<{ done: boolean; flowerType: FlowerType | null }> => {
-    return saveWelcomeRoll(uid, roll, partnerUid, panicMode)
+    return saveWelcomeRoll(coupleId, uid, roll, partnerUid, panicMode)
   }
 
   const togglePanic = async () => {
-    await setPanicMode(!panicMode)
+    await setPanicMode(coupleId, !panicMode)
   }
 
   const partnerRolledEvent = (eventId: string) => {

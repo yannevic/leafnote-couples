@@ -17,8 +17,9 @@ const THEME_OPTIONS: { key: CalendarTheme; label: string }[] = [
 import type { CalendarEvent } from '../lib/calendar'
 
 interface Props {
+  coupleId: string
   displayName: string
-  isNana: boolean
+  isFemale: boolean
   onClose: () => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
   onOpenCycleModal: () => void
@@ -26,8 +27,9 @@ interface Props {
 }
 
 export default function WeekCalendar({
+  coupleId,
   displayName,
-  isNana,
+  isFemale,
   onClose,
   onPinToBoard,
   onOpenCycleModal,
@@ -45,7 +47,7 @@ export default function WeekCalendar({
     goToPrevMonth,
     goToNextMonth,
     goToDate,
-  } = useCalendar(displayName)
+  } = useCalendar(coupleId, displayName)
 
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
   const [showThemePicker, setShowThemePicker] = useState(false)
@@ -59,9 +61,9 @@ export default function WeekCalendar({
   const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
 
   useEffect(() => {
-    const unsub = subscribeAllCycles(setAllCycles)
+    const unsub = subscribeAllCycles(coupleId, setAllCycles)
     return unsub
-  }, [])
+  }, [coupleId])
 
   const t = theme ? THEME_COLORS[theme] : null
 
@@ -180,7 +182,7 @@ export default function WeekCalendar({
           </div>
 
           <div className="flex items-center gap-3">
-            {isNana && (
+            {isFemale && (
               <button
                 className="text-sm font-bold hover:opacity-80 transition-opacity"
                 style={{
@@ -493,7 +495,7 @@ export default function WeekCalendar({
             onPinCycleToBoard()
             setSelectedDateKey(null)
           }}
-          isNana={isNana}
+          isFemale={isFemale}
           currentUser={displayName}
         />
       )}

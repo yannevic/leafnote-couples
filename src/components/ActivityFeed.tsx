@@ -13,8 +13,12 @@ interface VisibleEntry extends ActivityEntry {
   dying: boolean
 }
 
-export default function ActivityFeed() {
-  const entries = useActivityLog()
+interface Props {
+  coupleId: string
+}
+
+export default function ActivityFeed({ coupleId }: Props) {
+  const entries = useActivityLog(coupleId)
   const [visible, setVisible] = useState<VisibleEntry[]>([])
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const sessionStart = useRef<number>(

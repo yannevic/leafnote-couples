@@ -7,24 +7,25 @@ import {
   deleteBoard,
 } from '../lib/boards'
 
-export function useBoards(uid: string) {
+export function useBoards(uid: string, coupleId: string | null) {
   const [extraBoards, setExtraBoards] = useState<BoardMeta[]>([])
   const [activeBoardId, setActiveBoardId] = useState<string>(DEFAULT_BOARD_ID)
 
   useEffect(() => {
-    const unsub = subscribeBoards(setExtraBoards)
+    if (!coupleId) return
+    const unsub = subscribeBoards(coupleId, setExtraBoards)
     return unsub
-  }, [])
+  }, [coupleId])
 
   const addBoard = async (name: string) => {
-    if (!name.trim()) return
-    const id = await createBoard(name, uid)
+    if (!name.trim() || !coupleId) return
+    const id = await createBoard(coupleId, name, uid)
     setActiveBoardId(id)
   }
 
   const removeBoard = async (boardId: string) => {
-    if (boardId === DEFAULT_BOARD_ID) return
-    await deleteBoard(boardId)
+    if (boardId === DEFAULT_BOARD_ID || !coupleId) return
+    await deleteBoard(coupleId, boardId)
     if (activeBoardId === boardId) setActiveBoardId(DEFAULT_BOARD_ID)
   }
 

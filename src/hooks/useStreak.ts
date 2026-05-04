@@ -9,39 +9,45 @@ import {
 } from '../lib/streak'
 import type { StreakData } from '../lib/streak'
 
-export function useStreak() {
+export function useStreak(coupleId: string | null) {
   const [streakData, setStreakData] = useState<StreakData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = subscribeStreak((data) => {
+    if (!coupleId) return
+    const unsub = subscribeStreak(coupleId, (data) => {
       setStreakData(data)
       setLoading(false)
     })
     return unsub
-  }, [])
+  }, [coupleId])
 
   const days = streakData?.startDate ? calcDays(streakData.startDate) : 0
   const checkedRef = useRef(false)
 
   useEffect(() => {
-    if (checkedRef.current || days < 30) return
+    if (!coupleId || checkedRef.current || days < 30) return
     checkedRef.current = true
-    checkSpecialSeedReward(days).then(async (eligible) => {
+    checkSpecialSeedReward(coupleId, days).then(async (eligible) => {
       if (!eligible) return
       const { addSeed } = await import('../lib/garden')
-      await addSeed('especial')
-      await claimSpecialSeedReward()
+      await addSeed(coupleId, 'especial')
+      await claimSpecialSeedReward(coupleId)
     })
-  }, [days])
+  }, [coupleId, days])
 
-  const setStart = useCallback(async (iso: string) => {
-    await setStreakStart(iso)
-  }, [])
+  const setStart = useCallback(
+    async (iso: string) => {
+      if (!coupleId) return
+      await setStreakStart(coupleId, iso)
+    },
+    [coupleId]
+  )
 
   const reset = useCallback(async () => {
-    await resetStreak()
-  }, [])
+    if (!coupleId) return
+    await resetStreak(coupleId)
+  }, [coupleId])
 
   return {
     streak: streakData,

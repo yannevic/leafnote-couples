@@ -9,37 +9,46 @@ import {
   CalendarTheme,
 } from '../lib/calendar'
 
-export default function useCalendar(displayName: string) {
+export default function useCalendar(coupleId: string, displayName: string) {
   const now = new Date()
   const [theme, setThemeState] = useState<CalendarTheme | null>(null)
   const [viewDate, setViewDate] = useState({ year: now.getFullYear(), month: now.getMonth() })
   const [dayEntries, setDayEntries] = useState<Record<string, CalendarEvent[]>>({})
 
   useEffect(() => {
-    getCalendarTheme().then(setThemeState)
-  }, [])
+    getCalendarTheme(coupleId).then(setThemeState)
+  }, [coupleId])
 
-  const subscribeDayEntries = useCallback((dateKey: string) => {
-    return subscribeCalendarDay(dateKey, (entries) => {
-      setDayEntries((prev) => ({ ...prev, [dateKey]: entries }))
-    })
-  }, [])
+  const subscribeDayEntries = useCallback(
+    (dateKey: string) => {
+      return subscribeCalendarDay(coupleId, dateKey, (entries) => {
+        setDayEntries((prev) => ({ ...prev, [dateKey]: entries }))
+      })
+    },
+    [coupleId]
+  )
 
   const addEvent = useCallback(
     async (dateKey: string, text: string, time: string | null) => {
-      await addCalendarEvent(dateKey, { text, time, createdBy: displayName })
+      await addCalendarEvent(coupleId, dateKey, { text, time, createdBy: displayName })
     },
-    [displayName]
+    [coupleId, displayName]
   )
 
-  const removeEvent = useCallback(async (dateKey: string, eventId: string) => {
-    await removeCalendarEvent(dateKey, eventId)
-  }, [])
+  const removeEvent = useCallback(
+    async (dateKey: string, eventId: string) => {
+      await removeCalendarEvent(coupleId, dateKey, eventId)
+    },
+    [coupleId]
+  )
 
-  const changeTheme = useCallback(async (t: CalendarTheme) => {
-    setThemeState(t)
-    await setCalendarTheme(t)
-  }, [])
+  const changeTheme = useCallback(
+    async (t: CalendarTheme) => {
+      setThemeState(t)
+      await setCalendarTheme(coupleId, t)
+    },
+    [coupleId]
+  )
 
   const goToPrevMonth = useCallback(() => {
     setViewDate((prev) => {

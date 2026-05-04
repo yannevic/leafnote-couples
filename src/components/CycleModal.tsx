@@ -11,12 +11,13 @@ import {
 import { useCycle } from '../hooks/useCycle'
 
 interface Props {
+  coupleId: string
   myUid: string
   onClose: () => void
 }
 
-export default function CycleModal({ myUid, onClose }: Props) {
-  const { currentCycle, allCycles } = useCycle()
+export default function CycleModal({ coupleId, myUid, onClose }: Props) {
+  const { currentCycle, allCycles } = useCycle(coupleId)
 
   const [predictedDate, setPredictedDate] = useState('')
   const [tpmDays, setTpmDays] = useState(7)
@@ -37,7 +38,7 @@ export default function CycleModal({ myUid, onClose }: Props) {
   }, [currentCycle])
 
   useEffect(() => {
-    predictNextCycle(myUid).then(setNextPrediction)
+    predictNextCycle(coupleId).then(setNextPrediction)
   }, [allCycles, myUid])
 
   const isActive = currentCycle?.data.status === 'active'
@@ -55,21 +56,21 @@ export default function CycleModal({ myUid, onClose }: Props) {
       tpmDays,
       status: 'predicted',
     }
-    await saveCycle(data)
+    await saveCycle(coupleId, data)
     setSaving(false)
   }
 
   async function handleConfirmStarted() {
     if (!currentCycle || !confirmedDate) return
     setSaving(true)
-    await confirmCycleStarted(currentCycle.key, confirmedDate, duration)
+    await confirmCycleStarted(coupleId, currentCycle.key, confirmedDate, duration)
     setSaving(false)
   }
 
   async function handleEndCycle() {
     if (!currentCycle) return
     setSaving(true)
-    await endCycle(currentCycle.key, actualEndDate || undefined)
+    await endCycle(coupleId, currentCycle.key, actualEndDate || undefined)
     setSaving(false)
   }
 

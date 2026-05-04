@@ -7,14 +7,14 @@ import {
   pushActivityLog,
 } from '../lib/widgets'
 
-export function useSharedDice(uid: string, displayName: string) {
+export function useSharedDice(coupleId: string, uid: string, displayName: string) {
   const [remote, setRemote] = useState<SharedDiceState | null>(null)
   const [isRolling, setIsRolling] = useState(false)
 
   useEffect(() => {
-    const unsub = subscribeDice(setRemote)
+    const unsub = subscribeDice(coupleId, setRemote)
     return unsub
-  }, [])
+  }, [coupleId])
 
   const rollTogether = useCallback(
     (diceCount: number) => {
@@ -30,7 +30,7 @@ export function useSharedDice(uid: string, displayName: string) {
           rolledBy: uid,
           rolledAt: Date.now(),
         }
-        saveDiceState(interim)
+        saveDiceState(coupleId, interim)
         frame += 1
         if (frame >= frames) {
           clearInterval(interval)
@@ -44,13 +44,13 @@ export function useSharedDice(uid: string, displayName: string) {
             rolledBy: uid,
             rolledAt: Date.now(),
           }
-          saveDiceState(final)
-          pushActivityLog(displayName, `girou ${finalValues[0]} no dado 🎲`)
+          saveDiceState(coupleId, final)
+          pushActivityLog(coupleId, displayName, `girou ${finalValues[0]} no dado 🎲`)
           setIsRolling(false)
         }
       }, 60)
     },
-    [isRolling, uid, displayName]
+    [coupleId, isRolling, uid, displayName]
   )
 
   const rollVersus = useCallback(() => {
@@ -68,7 +68,7 @@ export function useSharedDice(uid: string, displayName: string) {
         rolledBy: uid,
         rolledAt: Date.now(),
       }
-      saveDiceState(interim)
+      saveDiceState(coupleId, interim)
       if (frame >= frames) {
         clearInterval(interval)
         const finalVal = Math.floor(Math.random() * 6) + 1
@@ -78,12 +78,12 @@ export function useSharedDice(uid: string, displayName: string) {
           rolledBy: uid,
           rolledAt: Date.now(),
         }
-        saveDiceState(finalState)
-        pushActivityLog(displayName, `girou um ${finalVal} na disputa ⚔️`)
+        saveDiceState(coupleId, finalState)
+        pushActivityLog(coupleId, displayName, `girou um ${finalVal} na disputa ⚔️`)
         setIsRolling(false)
       }
     }, 60)
-  }, [isRolling, uid, displayName, remote])
+  }, [coupleId, isRolling, uid, displayName, remote])
 
   const setMode = useCallback(
     (mode: DiceMode) => {
@@ -93,9 +93,9 @@ export function useSharedDice(uid: string, displayName: string) {
         rolledBy: uid,
         rolledAt: Date.now(),
       }
-      saveDiceState(next)
+      saveDiceState(coupleId, next)
     },
-    [uid]
+    [coupleId, uid]
   )
 
   return { remote, isRolling, rollTogether, rollVersus, setMode }

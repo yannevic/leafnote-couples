@@ -21,13 +21,14 @@ function AppInner({
   profile: UserProfile
   onProfileUpdate: () => void
 }) {
+  const { coupleId, partnerUid, pendingRequests } = useCouple(user.uid, profile)
+
   const { extraBoards, activeBoardId, setActiveBoardId, addBoard, removeBoard } = useBoards(
-    user.uid
+    user.uid,
+    coupleId
   )
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
   const [updateProgress, setUpdateProgress] = useState(0)
-
-  const { coupleId, partnerUid, pendingRequests } = useCouple(user.uid, profile)
 
   if (!profile.coupleId) {
     return <Onboarding uid={user.uid} displayName={profile.displayName} onDone={onProfileUpdate} />
@@ -66,6 +67,7 @@ function AppInner({
                   coupleId={coupleId}
                   partnerUid={partnerUid}
                   pendingRequests={pendingRequests}
+                  myProfile={profile}
                 />
               }
             />

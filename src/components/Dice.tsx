@@ -116,13 +116,20 @@ function SingleDie({
 }
 
 interface DiceProps {
+  coupleId: string
   uid: string
   displayName: string
   partnerName?: string
   shared?: boolean
 }
 
-export default function Dice({ uid, displayName, partnerName, shared = false }: DiceProps) {
+export default function Dice({
+  coupleId,
+  uid,
+  displayName,
+  partnerName,
+  shared = false,
+}: DiceProps) {
   const [localValues, setLocalValues] = useState<number[]>([1, 1])
   const [localRolling, setLocalRolling] = useState(false)
   const [localDiceCount, setLocalDiceCount] = useState(2)
@@ -134,7 +141,7 @@ export default function Dice({ uid, displayName, partnerName, shared = false }: 
     rollTogether,
     rollVersus,
     setMode,
-  } = useSharedDice(uid, displayName)
+  } = useSharedDice(coupleId, uid, displayName)
 
   const diceMode = remote?.mode ?? 'together'
 

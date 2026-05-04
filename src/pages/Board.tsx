@@ -103,11 +103,13 @@ export default function Board({
   coupleId,
   partnerUid: couplePartnerUid,
   pendingRequests,
+  myProfile,
 }: {
   activeBoardId: string
   coupleId: string | null
   partnerUid: string | null
   pendingRequests: Record<string, import('../types/couple').CoupleRequest>
+  myProfile: import('../types/couple').UserProfile | null
 }) {
   const [user] = useAuthState(auth)
   const [items, setItems] = useState<AnyBoardItem[]>([])
@@ -121,14 +123,14 @@ export default function Board({
     trashItem,
     restoreItem: restoreFromDeleted,
     markMoving,
-  } = useBoard(items, setItems, activeBoardId)
+  } = useBoard(items, setItems, activeBoardId, coupleId ?? '')
   const boardRef = useRef<HTMLDivElement>(null)
 
   const uid = user?.uid ?? 'anon'
   const displayName = user?.displayName ?? ''
-  const { myPresence, partnerPresence } = usePresence(uid, displayName, couplePartnerUid)
+  const { myPresence, partnerPresence } = usePresence(uid, displayName, couplePartnerUid, coupleId)
   const partnerUid = couplePartnerUid ?? ''
-  useNotifications(uid, partnerUid, partnerPresence?.displayName ?? '')
+  useNotifications(coupleId ?? '', uid, partnerUid, partnerPresence?.displayName ?? '')
   const otherName = partnerPresence?.displayName ?? '...'
   const [nickSaved, setNickSaved] = useState(!!user?.displayName)
   const [nickInput, setNickInput] = useState('')
@@ -148,10 +150,10 @@ export default function Board({
     entry: { id: string; text: string }
     dateKey: string
   } | null>(null)
-  const isNana = uid === import.meta.env.VITE_NANA_UID
+  const isFemale = myProfile?.sex === 'female'
   const [showCycleModal, setShowCycleModal] = useState(false)
-  const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
-  const { extraBoards } = useBoards(uid)
+  const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates(coupleId ?? '')
+  const { extraBoards } = useBoards(uid, coupleId)
   const defaultBoard: BoardMeta = {
     id: DEFAULT_BOARD_ID,
     name: 'mural principal',
@@ -180,26 +182,27 @@ export default function Board({
 
   const handleMoveItem = useCallback(
     async (item: AnyBoardItem, toBoardId: string) => {
+      if (!coupleId) return
       setContextMenu(null)
       setItems((prev) => prev.filter((i) => i.id !== item.id))
       markMoving(item.id)
-      await moveItemToBoard(item, activeBoardId, toBoardId)
+      await moveItemToBoard(coupleId, item, activeBoardId, toBoardId)
     },
-    [activeBoardId, markMoving]
+    [activeBoardId, coupleId, markMoving]
   )
 
   const handleMoveByType = useCallback(
     async (type: string, toBoardId: string) => {
+      if (!coupleId) return
       setContextMenu(null)
       setItems((prev) => {
         const toMove = prev.filter((i) => i.type === type)
-        moveItemsByTypeToBoard(toMove, type, activeBoardId, toBoardId)
+        moveItemsByTypeToBoard(coupleId, toMove, type, activeBoardId, toBoardId)
         return prev.filter((i) => i.type !== type)
       })
     },
-    [activeBoardId, setItems]
+    [activeBoardId, coupleId, setItems]
   )
-
   const handleOpenModal = useCallback(
     (id: string) => {
       const found = items.find((i) => i.id === id) ?? null
@@ -470,7 +473,7 @@ export default function Board({
           <input
             autoFocus
             type="text"
-            placeholder="ex: nana, gueguel"
+            placeholder="ex: maju, lala, mimi"
             value={nickInput}
             onChange={(e) => setNickInput(e.target.value)}
             onKeyDown={(e) => {
@@ -707,6 +710,7 @@ export default function Board({
               return (
                 <CyclePinItem
                   key={item.id}
+                  coupleId={coupleId ?? ''}
                   item={item as CyclePinItemType}
                   zIndex={z}
                   onUpdate={handleUpdate as never}
@@ -743,7 +747,7 @@ export default function Board({
 
         <PresenceBadge myPresence={myPresence} partnerPresence={partnerPresence} />
         {coupleId && <JoinRequestToast coupleId={coupleId} requests={pendingRequests} />}
-        <MoodWidget uid={uid} partnerUid={partnerUid} />
+        <MoodWidget coupleId={coupleId ?? ''} uid={uid} partnerUid={partnerUid} />
 
         {/* Botão jardim */}
         <div
@@ -1007,6 +1011,7 @@ export default function Board({
                 )}
                 {activeWidget === 'dice' && (
                   <Dice
+                    coupleId={coupleId ?? ''}
                     uid={uid}
                     displayName={displayName}
                     partnerName={partnerPresence?.displayName ?? '...'}
@@ -1020,7 +1025,7 @@ export default function Board({
           </div>
         )}
 
-        <ActivityFeed />
+        <ActivityFeed coupleId={coupleId ?? ''} />
 
         {/* Modais postit e checklist dentro do board (sem modal próprio de carta) */}
         {openModalItem?.type === 'postit' && (
@@ -1040,6 +1045,7 @@ export default function Board({
 
         {showMovies && (
           <MovieList
+            coupleId={coupleId ?? ''}
             uid={uid}
             partnerUid={partnerUid ?? ''}
             displayName={displayName}
@@ -1228,8 +1234,9 @@ export default function Board({
         <StreakCounter />
         {showCalendar && (
           <WeekCalendar
+            coupleId={coupleId ?? ''}
             displayName={displayName}
-            isNana={isNana}
+            isFemale={isFemale}
             onClose={() => setShowCalendar(false)}
             onPinToBoard={(entry, dateKey) => setPinColorPicker({ entry, dateKey })}
             onOpenCycleModal={() => {
@@ -1256,7 +1263,13 @@ export default function Board({
             }}
           />
         )}
-        {showCycleModal && <CycleModal myUid={uid} onClose={() => setShowCycleModal(false)} />}
+        {showCycleModal && (
+          <CycleModal
+            coupleId={coupleId ?? ''}
+            myUid={uid}
+            onClose={() => setShowCycleModal(false)}
+          />
+        )}
         {trashOpen && (
           <div
             onClick={handleTrashClose}

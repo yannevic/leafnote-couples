@@ -7,18 +7,20 @@ import { boardItemsPath } from '../lib/boards'
 export function useBoard(
   _items: AnyBoardItem[],
   setItems: React.Dispatch<React.SetStateAction<AnyBoardItem[]>>,
-  boardId: string
+  boardId: string,
+  coupleId: string
 ) {
   const loaded = useRef(false)
   const localIds = useRef<Set<string>>(new Set())
   const deletedIds = useRef<Set<string>>(new Set())
 
   useEffect(() => {
+    if (!coupleId) return
     loaded.current = false
     localIds.current = new Set()
     deletedIds.current = new Set()
 
-    const path = boardItemsPath(boardId)
+    const path = boardItemsPath(coupleId, boardId)
     const boardRef = ref(db, path)
 
     const unsubscribe = onValue(boardRef, (snapshot) => {
@@ -36,12 +38,13 @@ export function useBoard(
     })
 
     return () => off(boardRef, 'value', unsubscribe)
-  }, [boardId, setItems])
+  }, [boardId, coupleId, setItems])
 
   const saveItem = useCallback(
     (item: AnyBoardItem) => {
+      if (!coupleId) return
       localIds.current.add(item.id)
-      const path = boardItemsPath(boardId)
+      const path = boardItemsPath(coupleId, boardId)
       const itemRef = ref(db, `${path}/${item.id}`)
       const clean = JSON.parse(JSON.stringify(item)) as AnyBoardItem
       set(itemRef, clean).catch((err: unknown) => {
@@ -54,13 +57,14 @@ export function useBoard(
         console.error('useBoard/saveItem:', msg)
       })
     },
-    [boardId]
+    [boardId, coupleId]
   )
 
   const deleteItem = useCallback(
     (id: string) => {
+      if (!coupleId) return
       deletedIds.current.add(id)
-      const path = boardItemsPath(boardId)
+      const path = boardItemsPath(coupleId, boardId)
       const itemRef = ref(db, `${path}/${id}`)
       remove(itemRef).catch((err: unknown) => {
         const msg =
@@ -72,7 +76,7 @@ export function useBoard(
         console.error('useBoard/deleteItem:', msg)
       })
     },
-    [boardId]
+    [boardId, coupleId]
   )
 
   const trashItem = useCallback((id: string) => {

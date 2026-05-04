@@ -11,7 +11,7 @@ interface Props {
   onRemove: (id: string) => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
   onPinCycleToBoard: () => void
-  isNana: boolean
+  isFemale: boolean
   currentUser: string
 }
 

@@ -3,21 +3,27 @@ import { ref, onValue, off } from 'firebase/database'
 import { db } from '../lib/firebase'
 import { PresenceData, publishPresence } from '../lib/presence'
 
-export function usePresence(uid: string, displayName: string, partnerUid: string | null) {
+export function usePresence(
+  uid: string,
+  displayName: string,
+  partnerUid: string | null,
+  coupleId: string | null
+) {
   const [allPresence, setAllPresence] = useState<Record<string, PresenceData>>({})
 
   useEffect(() => {
-    if (!uid || !displayName) return
-    publishPresence(uid, displayName)
-  }, [uid, displayName])
+    if (!uid || !displayName || !coupleId) return
+    publishPresence(coupleId, uid, displayName)
+  }, [uid, displayName, coupleId])
 
   useEffect(() => {
-    const presRef = ref(db, 'presence')
+    if (!coupleId) return
+    const presRef = ref(db, `couples/${coupleId}/presence`)
     onValue(presRef, (snap) => {
       setAllPresence((snap.val() as Record<string, PresenceData>) ?? {})
     })
     return () => off(presRef, 'value')
-  }, [])
+  }, [coupleId])
 
   const myPresence = allPresence[uid] ?? null
   const partnerPresence = partnerUid ? (allPresence[partnerUid] ?? null) : null
