@@ -19,6 +19,7 @@ export default function Login() {
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   async function handleSubmit() {
     setError('')
@@ -153,6 +154,87 @@ export default function Login() {
             }}
           />
 
+          {mode === 'register' && (
+            <div
+              style={{
+                background: '#eaf5ea',
+                border: '1.5px solid #a8d8a8',
+                borderRadius: 10,
+                padding: '0.75rem 1rem',
+                fontSize: '0.75rem',
+                color: '#2d4a2d',
+                maxHeight: 120,
+                overflowY: 'auto',
+                lineHeight: 1.6,
+              }}
+            >
+              <p style={{ fontWeight: 700, marginBottom: 4 }}>
+                Termos de Uso e Política de Privacidade
+              </p>
+              <p>Ao criar uma conta, você concorda com os termos abaixo.</p>
+              <p style={{ marginTop: 6 }}>
+                <strong>1. Sobre o app</strong>
+                <br />O leafnote couples é um aplicativo colaborativo para casais, distribuído de
+                forma pessoal e sem fins lucrativos.
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>2. Dados coletados</strong>
+                <br />
+                Coletamos apenas o necessário: e-mail, apelido e os dados inseridos pelo casal
+                (notas, datas, registros e outros).
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>3. Armazenamento</strong>
+                <br />
+                Seus dados são armazenados em servidores na nuvem de terceiros, protegidos por
+                autenticação. Apenas você e seu parceiro têm acesso ao conteúdo do casal.
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>4. Compartilhamento</strong>
+                <br />
+                Não vendemos, compartilhamos nem repassamos seus dados a terceiros.
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>5. Exclusão de dados</strong>
+                <br />
+                Para solicitar exclusão da sua conta e dados, entre em contato diretamente com a
+                Nana.
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>6. Uso</strong>
+                <br />O app é destinado a maiores de 18 anos residentes no Brasil.
+              </p>
+              <p style={{ marginTop: 6 }}>
+                <strong>7. Alterações</strong>
+                <br />
+                Estes termos podem ser atualizados a qualquer momento. O uso continuado implica
+                aceite das alterações.
+              </p>
+            </div>
+          )}
+
+          {mode === 'register' && (
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: '0.78rem',
+                color: '#2d4a2d',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                style={{ accentColor: '#4a7a4a', width: 14, height: 14, cursor: 'pointer' }}
+              />
+              Li e aceito os termos de uso e política de privacidade
+            </label>
+          )}
+
           {error !== '' && (
             <p className="text-xs text-center" style={{ color: '#c0504a' }}>
               {error}
@@ -161,7 +243,7 @@ export default function Login() {
 
           <button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || (mode === 'register' && !termsAccepted)}
             className="relative overflow-hidden font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 self-center cursor-pointer"
             style={{
               padding: '0.45rem 1.4rem',
@@ -213,6 +295,7 @@ export default function Login() {
           onClick={() => {
             setMode(mode === 'login' ? 'register' : 'login')
             setError('')
+            setTermsAccepted(false)
           }}
           className="text-xs transition-opacity hover:opacity-80 cursor-pointer"
           style={{ color: '#4a7a4a' }}

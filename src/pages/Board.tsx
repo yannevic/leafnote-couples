@@ -742,8 +742,8 @@ export default function Board({
               }}
             >
               {activeBoardId === DEFAULT_BOARD_ID
-                ? 'clique no mural pra adicionar algo 🌿'
-                : 'mural vazio — clique pra adicionar algo 🌿'}
+                ? 'use a toolbar abaixo pra adicionar algo 🌿'
+                : 'mural vazio — use a toolbar abaixo pra adicionar algo 🌿'}
             </p>
           </div>
         )}

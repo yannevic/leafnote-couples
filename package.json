@@ -48,7 +48,7 @@
   },
   "build": {
     "appId": "com.leafnote.couples",
-    "productName": "leafnote couples",
+    "productName": "leafnote-couples",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "directories": {
       "output": "release"

@@ -98,11 +98,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump.outputs.new_version }}
-          name: leafnote v${{ steps.bump.outputs.new_version }}
+          name: leafnote couples v${{ steps.bump.outputs.new_version }}
           body: ${{ steps.bump.outputs.changelog_input }}
           files: |
-            release/leafnote-Setup-*.exe
-            release/leafnote-Setup-*.exe.blockmap
+            release/leafnote-couples-Setup-*.exe
+            release/leafnote-couples-Setup-*.exe.blockmap
             release/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
