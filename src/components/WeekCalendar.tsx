@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import useCalendar from '../hooks/useCalendar'
 import { THEME_COLORS, DAY_NAMES, MONTH_NAMES, CalendarTheme, toDateKey } from '../lib/calendar'
 import WeekCalendarModal from './WeekCalendarModal'
+import { subscribeAllCycles } from '../lib/cycle'
+import type { CycleData } from '../lib/cycle'
 
 const THEME_OPTIONS: { key: CalendarTheme; label: string }[] = [
   { key: 'rosa', label: 'Rosa 🌸' },
@@ -16,11 +18,21 @@ import type { CalendarEvent } from '../lib/calendar'
 
 interface Props {
   displayName: string
+  isNana: boolean
   onClose: () => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
+  onOpenCycleModal: () => void
+  onPinCycleToBoard: () => void
 }
 
-export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Props) {
+export default function WeekCalendar({
+  displayName,
+  isNana,
+  onClose,
+  onPinToBoard,
+  onOpenCycleModal,
+  onPinCycleToBoard,
+}: Props) {
   const {
     theme,
     dayEntries,
@@ -44,7 +56,33 @@ export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Pro
   const dateButtonRef = useRef<HTMLButtonElement>(null)
   const themeButtonRef = useRef<HTMLButtonElement>(null)
 
+  const [allCycles, setAllCycles] = useState<Record<string, CycleData>>({})
+
+  useEffect(() => {
+    const unsub = subscribeAllCycles(setAllCycles)
+    return unsub
+  }, [])
+
   const t = theme ? THEME_COLORS[theme] : null
+
+  function getCycleDayState(dateKey: string): 'tpm' | 'active' | null {
+    const found = Object.values(allCycles).find((cycle) => {
+      if (cycle.status === 'ended') return false
+      const tpmStart = cycle.tpmStart
+      const endDate = cycle.actualEndDate ?? cycle.endDate
+      const predictedDate = cycle.predictedDate
+      if (cycle.status === 'active' && cycle.confirmedDate) {
+        return dateKey >= cycle.confirmedDate && dateKey <= endDate
+      }
+      return dateKey >= tpmStart && dateKey <= predictedDate
+    })
+    if (!found) return null
+    if (found.status === 'active' && found.confirmedDate) {
+      const endDate = found.actualEndDate ?? found.endDate
+      if (dateKey >= found.confirmedDate && dateKey <= endDate) return 'active'
+    }
+    return 'tpm'
+  }
 
   const today = new Date()
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate())
@@ -142,6 +180,42 @@ export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Pro
           </div>
 
           <div className="flex items-center gap-3">
+            {isNana && (
+              <button
+                className="text-sm font-bold hover:opacity-80 transition-opacity"
+                style={{
+                  background: '#fce8f528',
+                  color: '#c87090',
+                  fontFamily: 'Baloo 2, sans-serif',
+                  border: '1.5px solid #e8a0b0',
+                  borderRadius: 12,
+                  padding: '5px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenCycleModal()
+                }}
+                title="eii coisas de garotas aqui, pode ir saindo!"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#c87090"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+                </svg>
+                ciclo
+              </button>
+            )}
+
             <button
               ref={themeButtonRef}
               className="text-sm font-bold hover:opacity-80 transition-opacity"
@@ -201,14 +275,28 @@ export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Pro
               const dateKey = toDateKey(viewYear, viewMonth, day)
               const isToday = dateKey === todayKey
               const entries = dayEntries[dateKey] ?? []
+              const cycleState = getCycleDayState(dateKey)
 
               return (
                 <button
                   key={dateKey}
                   className="flex flex-col rounded-2xl text-left transition-all hover:scale-[1.03] hover:shadow-md active:scale-95 overflow-hidden"
                   style={{
-                    background: isToday ? `${t.accent}28` : `${t.accent}0d`,
-                    border: isToday ? `2px solid ${t.accent}` : `1.5px dashed ${t.border}`,
+                    background:
+                      cycleState === 'active'
+                        ? '#fce8ee'
+                        : cycleState === 'tpm'
+                          ? '#f5eaf0'
+                          : isToday
+                            ? `${t.accent}28`
+                            : `${t.accent}0d`,
+                    border: isToday
+                      ? `2px solid ${t.accent}`
+                      : cycleState === 'active'
+                        ? '1.5px solid #e8a0b0'
+                        : cycleState === 'tpm'
+                          ? '1.5px solid #c9a0d4'
+                          : `1.5px dashed ${t.border}`,
                     minHeight: 100,
                     maxHeight: 100,
                     overflow: 'hidden',
@@ -218,16 +306,43 @@ export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Pro
                   }}
                   onClick={() => setSelectedDateKey(dateKey)}
                 >
-                  <span
-                    className="text-sm font-bold"
-                    style={{
-                      color: isToday ? t.accent : t.text,
-                      marginBottom: 6,
-                      paddingLeft: 2,
-                    }}
-                  >
-                    {day}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: isToday ? t.accent : t.text, paddingLeft: 2 }}
+                    >
+                      {day}
+                    </span>
+                    {cycleState === 'active' && (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="#D94F4F"
+                        stroke="#D94F4F"
+                        strokeWidth="1"
+                      >
+                        <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+                      </svg>
+                    )}
+                    {cycleState === 'tpm' && (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#9B7FD4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9" />
+                        <path d="M16 14v2" />
+                        <path d="M8 14v2" />
+                        <path d="M12 16v2" />
+                      </svg>
+                    )}
+                  </div>
 
                   <div className="flex flex-col w-full" style={{ gap: 3 }}>
                     {entries.slice(0, 2).map((entry) => (
@@ -374,6 +489,11 @@ export default function WeekCalendar({ displayName, onClose, onPinToBoard }: Pro
           onAdd={(text, time) => addEvent(selectedDateKey, text, time)}
           onRemove={(id) => removeEvent(selectedDateKey, id)}
           onPinToBoard={onPinToBoard}
+          onPinCycleToBoard={() => {
+            onPinCycleToBoard()
+            setSelectedDateKey(null)
+          }}
+          isNana={isNana}
           currentUser={displayName}
         />
       )}

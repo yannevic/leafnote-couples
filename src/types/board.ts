@@ -6,6 +6,7 @@ export type BoardItemType =
   | 'letter'
   | 'special-letter'
   | 'countdown-pin'
+  | 'cycle-pin'
 
 export type PostItColor = 'yellow' | 'green' | 'pink' | 'blue' | 'lavender' | 'peach'
 export type LetterColor = 'rosa' | 'verde' | 'azul' | 'amarelo' | 'lilas'
@@ -77,6 +78,7 @@ export type AnyBoardItem =
   | LetterItem
   | SpecialLetterItem
   | CountdownPinItem
+  | CyclePinItem
 
 export type SpecialLetterLayout = 'A' | 'B' | 'C'
 
@@ -85,6 +87,10 @@ export interface CountdownPinItem extends BoardItem {
   label: string
   targetDate: string
   color: string
+}
+
+export interface CyclePinItem extends BoardItem {
+  type: 'cycle-pin'
 }
 
 export interface SpecialLetterItem extends BoardItem {

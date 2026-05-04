@@ -10,6 +10,8 @@ interface Props {
   onAdd: (text: string, time: string | null) => void
   onRemove: (id: string) => void
   onPinToBoard: (entry: CalendarEvent, dateKey: string) => void
+  onPinCycleToBoard: () => void
+  isNana: boolean
   currentUser: string
 }
 
@@ -26,6 +28,7 @@ export default function WeekCalendarModal({
   onAdd,
   onRemove,
   onPinToBoard,
+  onPinCycleToBoard,
   currentUser,
 }: Props) {
   const [newText, setNewText] = useState('')
@@ -78,13 +81,49 @@ export default function WeekCalendarModal({
           >
             🌸 {label}
           </span>
-          <button
-            className="rounded-full w-9 h-9 flex items-center justify-center text-sm hover:opacity-70 transition-opacity"
-            style={{ background: `${t.accent}33`, color: t.accent }}
-            onClick={onClose}
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              className="text-sm font-bold hover:opacity-80 transition-opacity"
+              style={{
+                background: '#fce8f528',
+                color: '#c87090',
+                fontFamily: 'Baloo 2, sans-serif',
+                border: '1.5px solid #e8a0b0',
+                borderRadius: 12,
+                padding: '5px 10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onPinCycleToBoard()
+              }}
+              title="fixar pin de ciclo no mural"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#c87090"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+              </svg>
+              ciclo
+            </button>
+            <button
+              className="rounded-full w-9 h-9 flex items-center justify-center text-sm hover:opacity-70 transition-opacity"
+              style={{ background: `${t.accent}33`, color: t.accent }}
+              onClick={onClose}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* lista */}

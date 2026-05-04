@@ -45,6 +45,9 @@ import { useBoards } from '../hooks/useBoards'
 import { CARD_MODELS } from '../assets/letters/index'
 import type { CountdownPinItem } from '../types/board'
 import CountdownPin from '../components/CountdownPin'
+import CyclePinItem from '../components/CyclePinItem'
+import CycleModal from '../components/CycleModal'
+import type { CyclePinItem as CyclePinItemType } from '../types/board'
 
 function makeId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -133,6 +136,8 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
     entry: { id: string; text: string }
     dateKey: string
   } | null>(null)
+  const isNana = uid === import.meta.env.VITE_NANA_UID
+  const [showCycleModal, setShowCycleModal] = useState(false)
   const { dates: specialDates, saveDates: saveSpecialDates } = useSpecialDates()
   const { extraBoards } = useBoards(uid)
   const defaultBoard: BoardMeta = {
@@ -686,6 +691,18 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
                 />
               )
             }
+            if (item.type === 'cycle-pin') {
+              return (
+                <CyclePinItem
+                  key={item.id}
+                  item={item as CyclePinItemType}
+                  zIndex={z}
+                  onUpdate={handleUpdate as never}
+                  onDelete={handleDelete}
+                  onFocus={handleFocus}
+                />
+              )
+            }
             return null
           })}
         </div>
@@ -1199,10 +1216,34 @@ export default function Board({ activeBoardId }: { activeBoardId: string }) {
         {showCalendar && (
           <WeekCalendar
             displayName={displayName}
+            isNana={isNana}
             onClose={() => setShowCalendar(false)}
             onPinToBoard={(entry, dateKey) => setPinColorPicker({ entry, dateKey })}
+            onOpenCycleModal={() => {
+              setShowCalendar(false)
+              setShowCycleModal(true)
+            }}
+            onPinCycleToBoard={() => {
+              const item: CyclePinItemType = {
+                id: makeId(),
+                type: 'cycle-pin',
+                x: 300,
+                y: 200,
+                width: 210,
+                height: 80,
+                createdBy: uid,
+                updatedBy: uid,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                zOrder: nextZOrder(),
+              }
+              setItems((prev) => [...prev, item as unknown as AnyBoardItem])
+              saveItem(item as unknown as AnyBoardItem)
+              setShowCalendar(false)
+            }}
           />
         )}
+        {showCycleModal && <CycleModal myUid={uid} onClose={() => setShowCycleModal(false)} />}
         {trashOpen && (
           <div
             onClick={handleTrashClose}
