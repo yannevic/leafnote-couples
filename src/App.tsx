@@ -54,6 +54,7 @@ function AppInner({
         onInstallUpdate={() => window.api.installUpdate()}
         onCheckUpdate={() => window.api.checkForUpdates()}
         coupleId={coupleId}
+        inviteCode={partnerUid ? null : coupleId}
         memberUids={[user.uid, ...(partnerUid ? [partnerUid] : [])]}
         onCoupleDissolve={onProfileUpdate}
       />
