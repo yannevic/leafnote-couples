@@ -128,6 +128,6 @@ export async function dissolveCouple(coupleId: string, memberUids: string[]): Pr
   await remove(ref(db, `couples/${coupleId}`))
   await remove(ref(db, `coupleCodes/${coupleId}`))
   memberUids.forEach((uid) => {
-    void update(ref(db, `users/${uid}`), { coupleId: null })
+    void remove(ref(db, `users/${uid}/coupleId`))
   })
 }
