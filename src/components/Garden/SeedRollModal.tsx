@@ -338,14 +338,13 @@ export default function SeedRollModal({
               🎲 Rolar
             </button>
           )}
-
           {isRolling && (
             <div style={{ fontSize: 13, color: 'var(--color-bark-700)', fontWeight: 600 }}>
               Rolando...
             </div>
           )}
 
-          {modalState === 'result' && (
+          {(modalState === 'result' || modalState === 'waiting' || modalState === 'idle') && (
             <button
               onClick={onClose}
               style={{
@@ -361,7 +360,7 @@ export default function SeedRollModal({
                 cursor: 'pointer',
               }}
             >
-              Fechar
+              {modalState === 'result' ? 'Fechar' : 'Agora não'}
             </button>
           )}
         </div>

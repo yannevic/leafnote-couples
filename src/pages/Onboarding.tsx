@@ -131,7 +131,7 @@ export default function Onboarding({ uid, displayName, onDone }: Props) {
                   style={btnStyle('#c4956a', '#5a2e0e')}
                 >
                   <Plus size={16} />
-                  criar casal
+                  criar nosso cantinho
                 </button>
                 <button
                   onClick={() => setStep('join')}
@@ -148,7 +148,7 @@ export default function Onboarding({ uid, displayName, onDone }: Props) {
           {step === 'created' && (
             <>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#2d4a2d', textAlign: 'center' }}>
-                casal criado
+                cantinho criado
               </div>
               <div style={{ fontSize: 13, color: '#4a7a4a', textAlign: 'center' }}>
                 manda esse código para o seu parceiro entrar no cantinho de vocês

@@ -47,7 +47,8 @@ export default function GardenView({
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   const [showSeedModal, setShowSeedModal] = useState(false)
   const [plantingSeed, setPlantingSeed] = useState<SeedData | null>(null)
-  const [_seedRollDone, setSeedRollDone] = useState(false)
+  const [dismissedWelcome, setDismissedWelcome] = useState(false)
+  const [dismissedEventId, setDismissedEventId] = useState<string | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(plants.length / PLANTS_PER_PAGE))
   const visiblePlants = plants.slice(page * PLANTS_PER_PAGE, (page + 1) * PLANTS_PER_PAGE)
@@ -66,8 +67,9 @@ export default function GardenView({
   }
 
   // Modal de roll ativo: welcome ou evento de estágio
-  const showWelcomeRoll = welcomePending
-  const showEventRoll = !showWelcomeRoll && currentEvent != null
+  const showWelcomeRoll = welcomePending && !dismissedWelcome
+  const showEventRoll =
+    !showWelcomeRoll && currentEvent != null && currentEvent.id !== dismissedEventId
 
   return (
     <>
@@ -339,11 +341,10 @@ export default function GardenView({
           partnerAlreadyRolled={partnerRolledWelcome}
           iAlreadyRolled={iAlreadyRolledWelcome}
           onRoll={rollForWelcome}
-          onClose={() => setSeedRollDone(true)}
+          onClose={() => setDismissedWelcome(true)}
         />
       )}
 
-      {/* Modal evento de estágio */}
       {showEventRoll && currentEvent && (
         <SeedRollModal
           eventId={currentEvent.id}
@@ -352,9 +353,9 @@ export default function GardenView({
           panicMode={panicMode}
           partnerName={partnerName}
           partnerAlreadyRolled={partnerRolledEvent(currentEvent.id)}
-          iAlreadyRolled={false}
+          iAlreadyRolled={iAlreadyRolledWelcome}
           onRoll={(roll: number) => rollForEvent(currentEvent.id, roll)}
-          onClose={() => setSeedRollDone(true)}
+          onClose={() => setDismissedEventId(currentEvent.id)}
         />
       )}
 
