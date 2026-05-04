@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
-const CHANGELOG: Record<string, string[]> = {
-  '1.0.0': [
-    '🌸 leafnote couples',
-    '✨ app de casal multi-casal com código de convite',
-    '✨ mural colaborativo, jardim, cartas, streak e muito mais',
-  ],
-}
+const CHANGELOG: Record<string, string[]> = {}
 
 export default function ChangelogModal() {
   const [open, setOpen] = useState(false)
