@@ -9,6 +9,14 @@ const CHANGELOG: Record<string, string[]> = {
     '✨ módulo de ciclo menstrual com pin no mural',
     '✨ entre no cantinho do seu casal com código de convite',
   ],
+
+  '1.0.0': [
+    '✨ mural colaborativo em tempo real para casais',
+    '✨ jardim compartilhado com plantas e sementes',
+    '✨ cartinhas, streak, calendário e widgets',
+    '✨ módulo de ciclo menstrual com pin no mural',
+    '✨ entre no cantinho do seu casal com código de convite',
+  ],
 }
 
 export default function ChangelogModal() {
